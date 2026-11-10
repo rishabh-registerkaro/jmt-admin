@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Enums ───────────────────────────
+
+enum Role {
+  superadmin
+  admin
+  editor
+  contributor
+}
+
+enum PublishStatus {
+  draft
+  published
+}
+
+enum LeadStatus {
+  new
+  contacted
+  converted
+  lost
+}
+
+// ─────────────────────────── Models ───────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      Role     @default(contributor)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts         Post[]
+  servicePages  ServicePage[]
+  packageBlocks PackageBlock[]
+
+  @@map("users")
+}
+
+model Post {
+  id               String        @id @default(cuid())
+  title            String        @db.VarChar(500)
+  slug             String        @unique
+  excerpt          String?       @db.Text
+  content          String?       @db.LongText
+  featuredImage    String?       @db.Text
+  status           PublishStatus @default(draft)
+  authorId         String
+  author           User          @relation(fields: [authorId], references: [id])
+  categories       Category[]    @relation("PostCategories")
+  // FAQ repeater: array of {question, answer}
+  faqItems         Json?         @map("faq_items")
+  // ACF-style fully flexible fields
+  additionalFields Json?
+  // JSON-LD schema objects (array)
+  schemaJson       Json?         @map("schema")
+  publishedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
+  @@index([authorId])
+  @@index([status, publishedAt])
+  // Paginated dashboard listing sorts by newest first
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  color     String   @default("")
+  parentId  String?  @map("parent_category_id")
+  parent    Category?  @relation("CategoryParent", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryParent")
+  posts     Post[]     @relation("PostCategories")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  // Paginated dashboard listing sorts by newest first
+  @@index([createdAt])
+  @@map("categories")
+}
+
+model Lead {
+  id      String     @id @default(cuid())
+  name    String
+  email   String
+  phoneNo String
+  status  LeadStatus @default(new)
+  // Which website form this lead came from (e.g. "Contact — Request a Quote")
+  leadSource String @default("Website")
+  // Form-specific fields as {"Field Label": value} pairs — differs per form
+  // (dropdowns, subject, message…), so new forms never need schema changes.
+  formData Json? @map("form_data")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([email])
+  // Paginated dashboard listing: newest first, optionally filtered by status
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@map("leads")
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // NOTE: MongoDB used a TTL index to auto-delete expired OTPs.
+  // In MySQL, expired rows are filtered in queries and cleaned up
+  // opportunistically in the request-otp route.
+  @@index([email, verified])
+  @@index([email, otp, verified])
+  @@index([expiresAt])
+  @@map("otps")
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  filename     String
+  format       String
+  resourceType String   @map("resource_type")
+  bytes        Int
+  url          String   @db.Text
+  createdAt    DateTime @default(now())
+
+  // Paginated media grid sorts by newest first
+  @@index([createdAt])
+  @@map("media_assets")
+}
+
+// Singleton page documents — content kept as JSON page-builder blobs
+
+model ContactPage {
+  id              String   @id @default(cuid())
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  content         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("contact_pages")
+}
+
+model TermsPolicy {
+  id                   String   @id @default(cuid())
+  metaTitle            String?
+  metaDescription      String?  @db.Text
+  title                String?
+  subTitle             String?
+  content              Json?
+  privacyPolicyContent Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("terms_policies")
+}
+
+model HeaderMenu {
+  id        String   @id @default(cuid())
+  mainMenu  Json     @map("main_menu")
+  // Utility-bar content: {whatsappLabel, whatsappNumber, careLabel, careNumber, ctaText, ctaUrl}
+  contactDetails Json? @map("contact_details")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("header_menus")
+}
+
+model FooterMenu {
+  id             String   @id @default(cuid())
+  mainMenu       Json     @map("main_menu")
+  contactDetails Json     @map("contact_details")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("footer_menus")
+}
+
+model ServicePage {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  // Which frontend layout renders this page (e.g. "division" → ServiceLayout).
+  // Plain string so new layouts never require a schema migration.
+  template        String        @default("division")
+  metaTitle       String?
+  metaDescription String?       @db.Text
+  // Entire page config as one flexible document (hero + ordered sections).
+  // Shape: app/lib/content/service-content.ts → ServicePageContent
+  content         Json
+  status          PublishStatus @default(draft)
+  authorId        String
+  author          User          @relation(fields: [authorId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status])
+  // Paginated dashboard listing sorts by newest first
+  @@index([createdAt])
+  // "Recent services" widget + sitemap sort by last update
+  @@index([updatedAt])
+  @@map("service_pages")
+}
+
+model PackageBlock {
+  id       String @id @default(cuid())
+  slug     String @unique
+  title    String @db.VarChar(500)
+  // Page slugs this block is injected into, e.g. ["travel", "education"].
+  // Free-text on purpose: a block can be prepared before its page exists.
+  targetPages Json @map("target_pages")
+  // Entire block as one flexible document (header + tabs + packages).
+  // Shape: app/lib/content/package-content.ts → PackageBlockContent
+  content  Json
+  status   PublishStatus @default(draft)
+  // Frontend on/off switch, independent of `status`: lets an admin pull a
+  // published block off the live pages (seasonal, sold out, being rewritten)
+  // without reverting it to draft or deleting it.
+  visible  Boolean       @default(true)
+  authorId String
+  author   User          @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  // Paginated dashboard listing sorts by newest first
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("package_blocks")
+}
+
+model AboutPage {
+  id              String   @id @default(cuid())
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  // Entire page as one flexible document (hero, metrics, pillars,
+  // accreditations, story, team, founder).
+  // Shape: app/lib/content/about-content.ts → AboutPageContent
+  content         Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("about_pages")
+}
