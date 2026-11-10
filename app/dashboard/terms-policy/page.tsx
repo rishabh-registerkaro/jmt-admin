@@ -186,7 +186,7 @@ export default function TermsPolicyDashboardPage() {
             <div className="mx-auto max-w-4xl">
 
                 {/* Header */}
-                <div className="mb-6 flex items-start justify-between gap-4">
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-100">Terms &amp; Policy</h1>
                         <p className="mt-1 text-sm text-slate-400">
@@ -195,7 +195,7 @@ export default function TermsPolicyDashboardPage() {
                                 : "Edit and save to update the live Terms & Policy page."}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                         {!isNew && (
                             <Button
                                 variant="outline"

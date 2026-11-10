@@ -41,8 +41,9 @@ export async function GET(
 ) {
     try {
         const { slug } = await context.params;
-        const servicePage = await prisma.servicePage.findUnique({
-            where: { slug },
+        // Public endpoint: never expose drafts (matches the sitemap route).
+        const servicePage = await prisma.servicePage.findFirst({
+            where: { slug, status: "published" },
             include: { author: { select: { id: true, username: true } } },
         });
 

@@ -217,7 +217,7 @@ export default function UpdateCategoryPage() {
 
   if (fetching) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
         <div className="text-white text-xl">Loading category data...</div>
       </div>
     );
@@ -231,11 +231,11 @@ export default function UpdateCategoryPage() {
   const topLevelCategories = categories.filter((cat) => !cat.parentCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Update Category</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Update Category</h1>
             <p className="text-slate-400">Edit the details of your category</p>
           </div>
           <Button
@@ -247,7 +247,7 @@ export default function UpdateCategoryPage() {
         </div>
 
         <form className="space-y-6" onSubmit={handleUpdate}>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6 space-y-6">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 space-y-6">
             {/* Name */}
             <div className="space-y-2">
               <label htmlFor="name" className="block text-sm font-medium text-slate-200">
@@ -369,7 +369,7 @@ export default function UpdateCategoryPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-end">
+          <div className="flex flex-wrap gap-4 justify-end">
             <Button
               type="button"
               variant="outline"

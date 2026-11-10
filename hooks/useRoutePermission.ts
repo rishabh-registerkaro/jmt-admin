@@ -24,6 +24,7 @@ const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/dashboard/header-menu": ["superadmin", "admin", "editor", "contributor"],
   "/dashboard/footer-menu": ["superadmin", "admin", "editor", "contributor"],
   "/dashboard/about": ["superadmin", "admin", "editor", "contributor"],
+  "/dashboard/homepage": ["superadmin", "admin", "editor", "contributor"],
   "/dashboard/profile": ["superadmin", "admin", "editor", "contributor"],
 };
 

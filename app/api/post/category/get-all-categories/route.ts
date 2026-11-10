@@ -1,4 +1,5 @@
 import prisma from "@/app/lib/config/db";
+import { intParam } from "@/app/lib/utils/pagination";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
 
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
     }
 
     const page = Math.max(1, parseInt(pageParam) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "20")));
+    const limit = Math.min(100, Math.max(1, intParam(searchParams.get("limit"), 20)));
     const skip = (page - 1) * limit;
 
     const [total, categories] = await Promise.all([

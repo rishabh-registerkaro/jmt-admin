@@ -1,7 +1,9 @@
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
+import { requireRole } from "@/app/lib/utils/authorization";
+import { ADMIN_ROLES } from "@/app/lib/constants/role";
 import { NextRequest, NextResponse } from "next/server";
+import { LeadStatus, Prisma } from "@prisma/client";
 
 export async function DELETE(
   req: NextRequest,
@@ -9,7 +11,7 @@ export async function DELETE(
 ) {
   const { id } = await context.params;
   try {
-    const userResult = await getCurrentUser(req);
+    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -55,7 +57,7 @@ export async function PUT(
 ) {
   const { id } = await context.params;
   try {
-    const userResult = await getCurrentUser(req);
+    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -84,6 +86,16 @@ export async function PUT(
       if (body[field] !== undefined) {
         data[field] = body[field];
       }
+    }
+
+    // Bad input → 400, not a Prisma validation 500.
+    if (data.status !== undefined && !(Object.values(LeadStatus) as unknown[]).includes(data.status)) {
+      return NextResponse.json({ message: "Invalid lead status" }, { status: 400 });
+    }
+    if (data.formData === null) {
+      data.formData = Prisma.DbNull; // JSON column: SQL NULL needs the sentinel
+    } else if (data.formData !== undefined && typeof data.formData !== "object") {
+      return NextResponse.json({ message: "formData must be an object" }, { status: 400 });
     }
 
     const existingLead = await prisma.lead.findUnique({ where: { id } });

@@ -940,7 +940,7 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-6 pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
               <Field label="Block title" required hint="Internal name, also used as the default heading">
                 <Input
                   className={inputCls}
@@ -1110,7 +1110,7 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-6 pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                   <Field label="Badge text">
@@ -1154,7 +1154,7 @@ export default function PackageBlockForm({
 
       {/* ── Tabs & packages ─────────────────────────────────────────────────── */}
       <div className={card}>
-        <div className="p-4 flex items-center justify-between border-b border-white/10">
+        <div className="p-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10">
           <div className="flex items-center gap-3">
             <Layers className="h-5 w-5 text-indigo-400" />
             <span className="text-lg font-semibold text-white">Tabs & packages</span>
@@ -1167,7 +1167,7 @@ export default function PackageBlockForm({
             label="Add tab"
           />
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           {content.tabs.length === 0 ? (
             <div className={emptyStateCls}>
               No tabs yet. A block needs at least one tab (e.g. &quot;International&quot;).
@@ -1180,9 +1180,9 @@ export default function PackageBlockForm({
                 onOpenChange={() => setOpenTabs((p) => ({ ...p, [ti]: !p[ti] }))}
               >
                 <div className="border border-slate-700 rounded-xl overflow-hidden bg-slate-900/30">
-                  <div className="flex items-center justify-between p-3 bg-slate-800/40">
+                  <div className="flex items-center justify-between gap-2 p-3 bg-slate-800/40">
                     <Collapsible.Trigger asChild>
-                      <button className="flex items-center gap-2 text-left flex-1">
+                      <button className="flex flex-wrap items-center gap-2 text-left flex-1 min-w-0">
                         {openTabs[ti] ? (
                           <ChevronDown className="h-4 w-4 text-slate-400" />
                         ) : (
@@ -1252,7 +1252,7 @@ export default function PackageBlockForm({
                                 <div className={cardWrapCls}>
                                   <div className="flex items-center justify-between gap-2">
                                     <Collapsible.Trigger asChild>
-                                      <button className="flex items-center gap-2 text-left flex-1">
+                                      <button className="flex flex-wrap items-center gap-2 text-left flex-1 min-w-0">
                                         {openPackages[key] ? (
                                           <ChevronDown className="h-4 w-4 text-slate-400" />
                                         ) : (
@@ -1330,7 +1330,7 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/10">
               <Field label="Itinerary heading">
                 <Input
                   className={inputCls}
@@ -1384,7 +1384,7 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-6 pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
               <p className="text-xs text-slate-400">
                 Submissions land in Leads, tagged with the package name and region.
               </p>

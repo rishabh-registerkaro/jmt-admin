@@ -390,10 +390,10 @@ export default function BlogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="w-full">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
             Create New Post
           </h1>
           <p className="text-slate-400">
@@ -402,7 +402,7 @@ export default function BlogPage() {
         </div>
 
         <form className="space-y-6">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6 space-y-6">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 space-y-6">
             {/* Title */}
             <div className="space-y-2">
               <label
@@ -503,7 +503,7 @@ export default function BlogPage() {
               >
                 Featured Image
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
               <Button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -530,7 +530,7 @@ export default function BlogPage() {
                   value={formData.featuredImage}
                   onChange={handleChange}
                   placeholder="Enter image URL or upload an image"
-                  className="flex-1 rounded-lg border border-slate-600 bg-slate-900/60 text-white"
+                  className="w-full sm:w-auto sm:flex-1 rounded-lg border border-slate-600 bg-slate-900/60 text-white"
                 />
 
                 <input
@@ -775,7 +775,7 @@ export default function BlogPage() {
             {/* Schema Section */}
             <div className="pt-6 border-t border-slate-700">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-200">
                       Schema (JSON-LD)
@@ -840,7 +840,7 @@ or
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-end">
+          <div className="flex flex-wrap gap-4 justify-end">
             <Button
               type="button"
               variant="outline"

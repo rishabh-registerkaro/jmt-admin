@@ -249,10 +249,10 @@ export default function PackagesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Packages</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Packages</h1>
           <p className="text-slate-400">
             Package blocks are injected into the pages you target — they appear after the
             2nd content section of each page.
@@ -260,7 +260,7 @@ export default function PackagesPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6 mb-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -292,8 +292,8 @@ export default function PackagesPage() {
         </div>
 
         {/* Blocks Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
-          <Table>
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+          <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="border-slate-700 hover:bg-transparent">
                 <TableHead className="text-slate-300">Title / Slug</TableHead>
@@ -517,7 +517,7 @@ export default function PackagesPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-700">
               <span className="text-sm text-slate-400">
                 Page {pagination.currentPage} of {pagination.totalPages} •{" "}
                 {pagination.totalCount} blocks

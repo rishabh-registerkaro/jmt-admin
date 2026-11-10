@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { intParam } from "@/app/lib/utils/pagination";
 import prisma from "@/app/lib/config/db";
 import { requireRole } from "@/app/lib/utils/authorization";
 import { ADMIN_ROLES } from "@/app/lib/constants/role";
@@ -117,8 +118,8 @@ export async function GET(req: NextRequest){
         const {searchParams} = new URL(req.url);
 
         // pagination parameters with validation
-        const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-        const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10', 10))); // Max 100 per page
+        const page = Math.max(1, intParam(searchParams.get('page'), 1));
+        const limit = Math.min(100, Math.max(1, intParam(searchParams.get('limit'), 10))); // Max 100 per page
         const skip = (page - 1) * limit;
 
         // search/filter parameters

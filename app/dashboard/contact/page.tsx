@@ -150,7 +150,7 @@ function SectionCard({
           </button>
         </Collapsible.Trigger>
         <Collapsible.Content>
-          <div className="p-6 pt-2 space-y-4 border-t border-white/10">{children}</div>
+          <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 space-y-4 border-t border-white/10">{children}</div>
         </Collapsible.Content>
       </div>
     </Collapsible.Root>
@@ -259,7 +259,7 @@ export default function ContactDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
         <p className="text-slate-300">Loading...</p>
       </div>
     );
@@ -268,16 +268,16 @@ export default function ContactDashboardPage() {
   const { hero, inquiry, aside, faq } = content;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-2">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Contact Page</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Contact Page</h1>
             <p className="text-slate-400">
               Every section of the live /contact page — save to publish instantly.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               onClick={handleRevalidate}
@@ -359,7 +359,7 @@ export default function ContactDashboardPage() {
           <Field label="Inquiry intro">
             <textarea rows={2} className={textareaCls} value={inquiry.inquiryIntro} onChange={(e) => set("inquiry", { ...inquiry, inquiryIntro: e.target.value })} />
           </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Field label="Phone codes">
               <StringListEditor items={inquiry.phoneCodes} onChange={(phoneCodes) => set("inquiry", { ...inquiry, phoneCodes })} placeholder="+91" addLabel="Add code" />
             </Field>
@@ -407,7 +407,7 @@ export default function ContactDashboardPage() {
         >
           <div className={`${cardWrapCls} space-y-3`}>
             <span className="text-sm font-semibold text-slate-300">WhatsApp card</span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <Field label="Title">
                 <Input className={inputCls} value={aside.whatsapp.title} onChange={(e) => set("aside", { ...aside, whatsapp: { ...aside.whatsapp, title: e.target.value } })} />
               </Field>
@@ -421,7 +421,7 @@ export default function ContactDashboardPage() {
           </div>
           <div className={`${cardWrapCls} space-y-3`}>
             <span className="text-sm font-semibold text-slate-300">Call card</span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <Field label="Title">
                 <Input className={inputCls} value={aside.call.title} onChange={(e) => set("aside", { ...aside, call: { ...aside.call, title: e.target.value } })} />
               </Field>
@@ -443,7 +443,7 @@ export default function ContactDashboardPage() {
             <div className="space-y-2">
               {aside.trust.map((t, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <div className="grid grid-cols-3 gap-2 flex-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 flex-1 min-w-0">
                     <IconSelect value={t.icon} onChange={(icon) => set("aside", { ...aside, trust: aside.trust.map((x, idx) => (idx === i ? { ...x, icon } : x)) })} />
                     <Input className={inputCls} value={t.value} placeholder="Value (99.7%)" onChange={(e) => set("aside", { ...aside, trust: aside.trust.map((x, idx) => (idx === i ? { ...x, value: e.target.value } : x)) })} />
                     <Input className={inputCls} value={t.label} placeholder="Label" onChange={(e) => set("aside", { ...aside, trust: aside.trust.map((x, idx) => (idx === i ? { ...x, label: e.target.value } : x)) })} />

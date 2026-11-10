@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { intParam } from "@/app/lib/utils/pagination";
 import prisma from "@/app/lib/config/db"
 import jwt from "jsonwebtoken"
 
@@ -116,19 +117,20 @@ export async function POST(req: NextRequest) {
         const maxLimit = 100;
 
         // Posts pagination
-        const postsPage = Math.max(1, parseInt(postsPageParam || pageParam || '1', 10));
-        const postsLimit = Math.min(maxLimit, Math.max(1, parseInt(postsLimitParam || limitParam || String(defaultLimit), 10)));
+        const postsPage = Math.max(1, intParam(postsPageParam || pageParam, 1));
+        const postsLimit = Math.min(maxLimit, Math.max(1, intParam(postsLimitParam || limitParam, defaultLimit)));
         const postsSkip = (postsPage - 1) * postsLimit;
 
         // Pages pagination
-        const pagesPage = Math.max(1, parseInt(pagesPageParam || pageParam || '1', 10));
-        const pagesLimit = Math.min(maxLimit, Math.max(1, parseInt(pagesLimitParam || limitParam || String(defaultLimit), 10)));
+        const pagesPage = Math.max(1, intParam(pagesPageParam || pageParam, 1));
+        const pagesLimit = Math.min(maxLimit, Math.max(1, intParam(pagesLimitParam || limitParam, defaultLimit)));
         const pagesSkip = (pagesPage - 1) * pagesLimit;
 
         // Run posts and services queries in parallel
         const [totalPostsCount, publishedPosts, totalServicesCount, services] = await Promise.all([
             prisma.post.count({
-                where: { authorId: userId, status: { in: ["published", "draft"] } },
+                // Must match the list below (published only) or the pager overcounts
+                where: { authorId: userId, status: "published" },
             }),
             prisma.post.findMany({
                 where: { authorId: userId, status: "published" },

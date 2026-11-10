@@ -204,15 +204,15 @@ export default function BlogPage() {
   };
  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Posts</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Posts</h1>
           <p className="text-slate-400">Manage your blog posts</p>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6 mb-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 mb-6">
           {/* First Row: Search Input (100% width) + Add New Post Button */}
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="flex-1">
@@ -271,8 +271,8 @@ export default function BlogPage() {
         </div>
 
         {/* Posts Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
-          <Table>
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+          <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow className="border-slate-700 hover:bg-transparent">
                 <TableHead className="text-slate-300">Title</TableHead>
@@ -404,8 +404,8 @@ export default function BlogPage() {
 
           {/* Pagination */}
           {!loading && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-700">
-              <div className="text-sm text-slate-400">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-700">
+              <div className="text-sm text-slate-400 text-center sm:text-left">
                 Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
                 {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
                 {pagination.total} posts
@@ -429,7 +429,7 @@ export default function BlogPage() {
                 >
                   {"<"}
                 </Button>
-                <span className="flex items-center px-4 text-slate-300 text-sm">
+                <span className="flex items-center px-2 sm:px-4 text-slate-300 text-sm whitespace-nowrap">
                   Page {pagination.page} of {pagination.totalPages}
                 </span>
                 <Button

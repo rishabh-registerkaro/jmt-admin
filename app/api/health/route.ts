@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
         dbStatus = "connected";
     } catch (err: any) {
         dbStatus = "error";
-        dbError = err.message || "Unknown DB error";
+        // Log details server-side only: Prisma connection errors can include
+        // the DB host/user, and this endpoint is public.
+        console.error("Health check DB error:", err);
+        dbError = err?.errorCode ? `Prisma ${err.errorCode}` : "Database query failed";
     }
 
     const healthy = dbStatus === "connected";

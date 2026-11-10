@@ -217,7 +217,7 @@ function IntroEditor({
         <div className="space-y-2">
           {stats.map((stat, i) => (
             <div key={i} className="flex items-start gap-2">
-              <div className="grid grid-cols-3 gap-2 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
                 <IconSelect value={stat.icon} onChange={(icon) => setStat(i, { icon })} />
                 <Input
                   className={inputCls}
@@ -1020,7 +1020,7 @@ export default function ServicePageForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-6 pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className={labelCls}>
@@ -1100,12 +1100,12 @@ export default function ServicePageForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-6 pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
               <Field label="Breadcrumb">
                 <div className="space-y-2">
                   {content.breadcrumb.map((b, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <div className="grid grid-cols-2 gap-2 flex-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1">
                         <Input
                           className={inputCls}
                           value={b.label}
@@ -1184,7 +1184,7 @@ export default function ServicePageForm({
                 <div className="space-y-2">
                   {content.chips.map((chip, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <div className="grid grid-cols-3 gap-2 flex-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
                         <IconSelect value={chip.icon} onChange={(icon) => setChip(i, { icon })} />
                         <Input
                           className={inputCls}
@@ -1267,7 +1267,7 @@ export default function ServicePageForm({
 
       {/* ── Article sections ───────────────────────────────────────────────── */}
       <div className={`${card} p-4 space-y-4`}>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <ListPlus className="h-5 w-5 text-indigo-400" />
           <span className="text-lg font-semibold text-white">Page Sections</span>
           <span className="text-xs text-slate-400">
@@ -1292,7 +1292,7 @@ export default function ServicePageForm({
               <div className="bg-slate-900/40 border border-slate-700 rounded-xl overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-2">
                   <Collapsible.Trigger asChild>
-                    <button className="flex items-center gap-2 flex-1 text-left hover:opacity-80">
+                    <button className="flex items-center gap-2 flex-1 min-w-0 text-left hover:opacity-80">
                       {open ? (
                         <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
                       ) : (

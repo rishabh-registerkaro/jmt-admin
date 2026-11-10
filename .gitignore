@@ -1,4 +1,26 @@
+# Dependencies
 node_modules/
+
+# Next.js build output
 .next/
+out/
+next-env.d.ts
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+
+# Environment (secrets) — commit .env.example only
 .env
-.env*.local
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS / editor / local tooling
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/

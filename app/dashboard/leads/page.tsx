@@ -279,11 +279,11 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="min-h-screen w-full p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Leads</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Leads</h1>
           <p className="text-slate-400">Manage your incoming leads</p>
         </div>
 
@@ -327,13 +327,13 @@ export default function LeadsPage() {
 
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-indigo-500 hover:bg-indigo-600 text-white">
+              <Button className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-600 text-white">
                 <Plus className="h-4 w-4 mr-2" />
                 Add New
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="bg-slate-900 text-white sm:max-w-[450px]">
+            <DialogContent className="bg-slate-900 text-white sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl">Add New Lead</DialogTitle>
                 <DialogDescription className="text-slate-400">
@@ -352,7 +352,7 @@ export default function LeadsPage() {
         </div>
 
         {/* Leads Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
           <Table>
             <TableHeader>
               <TableRow className="border-slate-700 hover:bg-transparent">
@@ -514,7 +514,7 @@ export default function LeadsPage() {
         >
           <SheetContent
             side="right"
-            className="bg-slate-900 w-[420px] text-white"
+            className="bg-slate-900 w-full sm:w-[420px] text-white overflow-y-auto"
           >
             {/* VIEW MODE */}
             {viewLead && (
@@ -550,13 +550,13 @@ export default function LeadsPage() {
 
         {/* Pagination */}
         {!loading && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-800/50 border border-slate-700 rounded-lg p-4">
             <div className="text-sm text-slate-400">
               Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
               {Math.min(pagination.currentPage * pagination.limit, pagination.totalCount)} of{" "}
               {pagination.totalCount} leads
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <Button
                 variant="outline"
                 size="sm"

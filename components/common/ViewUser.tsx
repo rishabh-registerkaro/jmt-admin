@@ -146,7 +146,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
         });
 
         // Update local displayed user immediately
-        setDisplayedUser(response.user);
+        // API returns only id/username/email/role — keep createdAt/updatedAt
+        setDisplayedUser((prev) => ({ ...prev, ...response.user }));
         setSelectedRole(response.user.role);
 
         // Call callback to refresh user list in parent
@@ -338,8 +339,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
         </Avatar>
 
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-white">{displayedUser.username}</h2>
-          <p className="text-sm text-slate-400">{displayedUser.email}</p>
+          <h2 className="text-2xl font-bold text-white break-words">{displayedUser.username}</h2>
+          <p className="text-sm text-slate-400 break-all">{displayedUser.email}</p>
           <div className="flex justify-center mt-3">
             <span
               className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${getRoleBadgeColor(displayedUser.role)}`}
@@ -374,8 +375,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
       {/* Role Management Section - Only for Admin/SuperAdmin */}
       {canUpdateRole && (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 sm:p-5 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-indigo-400" />
               <h3 className="text-lg font-semibold text-white">Role Management</h3>
@@ -485,7 +486,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex flex-wrap justify-end gap-3 pt-2">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -525,8 +526,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
       {/* Password Management Section - Only for Admin/SuperAdmin */}
       {canChangePassword && (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 sm:p-5 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-indigo-400" />
               <h3 className="text-lg font-semibold text-white">Password Management</h3>
@@ -668,7 +669,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex flex-wrap justify-end gap-3 pt-2">
                   <Button
                     variant="outline"
                     onClick={() => {

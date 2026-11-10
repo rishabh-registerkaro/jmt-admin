@@ -1,95 +1,20 @@
-// All outbound mail goes through Microsoft Graph (app-only, client credentials)
-// and is sent as GRAPH_SENDER. SMTP AUTH is disabled on this tenant, so the
-// nodemailer path below is retained only as a rollback reference.
+// All outbound mail goes through SMTP (Gmail) via nodemailer.
+import nodemailer from "nodemailer";
 
-// LEGACY SMTP — kept for rollback, remove once Graph is verified in production
-// import nodemailer from 'nodemailer';
-//
-// // Kept for admin notification emails (e.g. future "new lead" alerts).
-// export function createNotifyTransporter() {
-//   const user = process.env.NOTIFY_SMTP_USER || process.env.SMTP_USER;
-//   const pass = process.env.NOTIFY_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
-//   const host = process.env.NOTIFY_SMTP_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
-//   const port = parseInt(process.env.NOTIFY_SMTP_PORT || process.env.SMTP_PORT || '587');
-//   const secure = (process.env.NOTIFY_SMTP_SECURE || process.env.SMTP_SECURE) === 'true';
-//   // requireTLS aborts if STARTTLS cannot be negotiated, instead of silently
-//   // continuing in plaintext. Both Gmail and Microsoft always advertise it, so
-//   // this only removes the downgrade path — it changes nothing on a healthy send.
-//   return nodemailer.createTransport({
-//     host,
-//     port,
-//     secure,
-//     requireTLS: true,
-//     auth: { user: user!, pass: pass! },
-//   });
-// }
-//
-// // Auth transporter (OTP / password-reset emails)
-// const transporter = nodemailer.createTransport({
-//   host: process.env.SMTP_HOST || "smtp.gmail.com",
-//   port: parseInt(process.env.SMTP_PORT || "587"),
-//   secure: process.env.SMTP_SECURE === "true",
-//   requireTLS: true,
-//   auth: {
-//     user: process.env.SMTP_USER!,
-//     pass: process.env.SMTP_PASSWORD!,
-//   },
-// });
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
+const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
 
-// ── Microsoft Graph ─────────────────────────────────────────────────────────
+// requireTLS aborts if STARTTLS can't be negotiated (no plaintext fallback).
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true",
+  requireTLS: true,
+  auth: { user: SMTP_USER!, pass: SMTP_PASSWORD! },
+});
 
-const GRAPH_TENANT_ID = process.env.GRAPH_TENANT_ID;
-const GRAPH_CLIENT_ID = process.env.GRAPH_CLIENT_ID;
-const GRAPH_CLIENT_SECRET = process.env.GRAPH_CLIENT_SECRET;
-const GRAPH_SENDER = process.env.GRAPH_SENDER;
-
-/** Cached app-only token. Refreshed 5 minutes before Entra expires it. */
-let graphToken: { value: string; expiresAt: number } | null = null;
-
-/**
- * App-only access token for Graph (client credentials). Cached in module scope
- * because tokens last ~60 minutes and every send would otherwise pay a round
- * trip to Entra.
- */
-async function getGraphToken(): Promise<string> {
-  if (graphToken && Date.now() < graphToken.expiresAt) return graphToken.value;
-
-  const res = await fetch(
-    `https://login.microsoftonline.com/${GRAPH_TENANT_ID}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: GRAPH_CLIENT_ID!,
-        client_secret: GRAPH_CLIENT_SECRET!,
-        scope: "https://graph.microsoft.com/.default",
-        grant_type: "client_credentials",
-      }),
-    }
-  );
-
-  const json = await res.json();
-  if (!res.ok) {
-    // error_description carries the AADSTS code — the only useful part.
-    throw new Error(
-      `Graph token request failed (${res.status}): ${json.error ?? "unknown"} — ${
-        json.error_description ?? ""
-      }`.trim()
-    );
-  }
-
-  // Expire 5 minutes early so a token can never lapse mid-request.
-  graphToken = {
-    value: json.access_token,
-    expiresAt: Date.now() + ((json.expires_in ?? 3600) - 300) * 1000,
-  };
-  return graphToken.value;
-}
-
-/**
- * Send one message as GRAPH_SENDER. Graph answers 202 with an empty body —
- * there is no message id to return. Anything other than 202 throws.
- */
+/** Send one HTML message from SMTP_FROM. Throws on failure. */
 async function sendMail({
   to,
   cc,
@@ -100,40 +25,11 @@ async function sendMail({
   cc?: string;
   subject: string;
   html: string;
-}): Promise<void> {
-  const token = await getGraphToken();
-
-  const recipients = (value: string) =>
-    value
-      .split(",")
-      .map((address) => address.trim())
-      .filter(Boolean)
-      .map((address) => ({ emailAddress: { address } }));
-
-  const res = await fetch(
-    `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(GRAPH_SENDER!)}/sendMail`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: {
-          subject,
-          body: { contentType: "HTML", content: html },
-          toRecipients: recipients(to),
-          ...(cc ? { ccRecipients: recipients(cc) } : {}),
-        },
-        saveToSentItems: false,
-      }),
-    }
-  );
-
-  if (res.status !== 202) {
-    const body = await res.text();
-    throw new Error(`Graph sendMail failed (HTTP ${res.status}): ${body.slice(0, 400)}`);
+}) {
+  if (!SMTP_USER || !SMTP_PASSWORD) {
+    throw new Error("SMTP_USER and SMTP_PASSWORD are required in environment variables");
   }
+  return transporter.sendMail({ from: SMTP_FROM, to, cc, subject, html });
 }
 
 const escapeHtml = (s: unknown) =>
@@ -236,28 +132,6 @@ export async function sendLeadNotification(lead: {
   </body>
 </html>`;
 
-    // LEGACY SMTP — kept for rollback, remove once Graph is verified in production
-    // const text = [
-    //   `New lead received — ${lead.leadSource}`,
-    //   ``,
-    //   `Name: ${lead.name}`,
-    //   `Email: ${lead.email}`,
-    //   `Phone: ${lead.phoneNo}`,
-    //   ...Object.entries(lead.formData ?? {}).map(([k, v]) => `${k}: ${v}`),
-    //   ``,
-    //   `Received: ${when} IST`,
-    // ].join("\n");
-    //
-    // await createNotifyTransporter().sendMail({
-    //   from: process.env.NOTIFY_SMTP_FROM || process.env.SMTP_FROM,
-    //   to: adminEmail,
-    //   cc,
-    //   subject: `New lead: ${lead.name} — ${lead.leadSource}`,
-    //   text,
-    //   html,
-    // });
-
-    // `from` is fixed by GRAPH_SENDER, so it is not passed here.
     await sendMail({
       to: adminEmail,
       cc,
@@ -271,20 +145,9 @@ export async function sendLeadNotification(lead: {
 
 export async function sendOTP(email: string, otp: string) {
     try {
-        if (
-            !GRAPH_TENANT_ID ||
-            !GRAPH_CLIENT_ID ||
-            !GRAPH_CLIENT_SECRET ||
-            !GRAPH_SENDER
-        ) {
-            throw new Error(
-                "GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET and GRAPH_SENDER are required in environment variables"
-            );
+        if (!SMTP_USER || !SMTP_PASSWORD) {
+            throw new Error("SMTP_USER and SMTP_PASSWORD are required in environment variables");
         }
-
-        // Fail fast on bad credentials before building the message, the way
-        // transporter.verify() used to.
-        await getGraphToken();
 
         // Defensive escaping for anything interpolated into HTML
         const esc = (s: string) =>
@@ -298,7 +161,6 @@ export async function sendOTP(email: string, otp: string) {
         const safeOtp = esc(otp);
         const safeEmail = esc(email);
 
-        // `from` is fixed by GRAPH_SENDER, so it is not passed here.
         const mailOptions = {
             to: email,
             subject: "Your JMT CMS password reset code",
@@ -423,15 +285,11 @@ export async function sendOTP(email: string, otp: string) {
 </html>`,
         };
 
-        await sendMail(mailOptions);
-
-        // Graph answers 202 with an empty body, so there is no message id. The
-        // only caller (request-otp) ignores the return value; this minimal
-        // shape is returned so the signature stays useful to future callers.
-        console.log("Email accepted by Graph (202) for:", email);
-        return { accepted: [email] };
+        const info = await sendMail(mailOptions);
+        console.log("OTP email sent to:", email, info.messageId);
+        return info;
     } catch (error: any) {
-        console.error("Graph Mail.Send Error Details:", {
+        console.error("SMTP send error:", {
             message: error.message,
             code: error.code,
             command: error.command,

@@ -22,6 +22,7 @@ import {
   Contact,
   ScrollText,
   Package,
+  House,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +63,11 @@ const navigationItems = [
   {
     title: "Content",
     items: [
+      {
+        title: "Homepage",
+        url: "/dashboard/homepage",
+        icon: House,
+      },
       {
         title: "Posts",
         url: "/dashboard/blog",
@@ -202,6 +208,7 @@ const filterNavigationItemsByRole = (
           ...group,
           items: group.items.filter(
             (item) =>
+              item.title === "Homepage" ||
               item.title === "Posts" ||
               item.title === "Media Library" ||
               item.title === "Menus" ||
@@ -221,12 +228,19 @@ const filterNavigationItemsByRole = (
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { state } = useSidebar();
+  const { state: desktopState, isMobile, setOpenMobile } = useSidebar();
+  // The mobile drawer is always full-width, so always render the expanded layout there.
+  const state = isMobile ? "expanded" : desktopState;
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
     posts: false,
   });
+
+  // Close the mobile drawer after navigating
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname, setOpenMobile]);
 
   // Fetch user profile
   useEffect(() => {
@@ -563,13 +577,6 @@ export function AppSidebar() {
               >
                 <CircleUserRound className="mr-2 h-4 w-4" />
                 Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => router.push("/dashboard/settings")}
-                className="text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-slate-800" />
               <DropdownMenuItem

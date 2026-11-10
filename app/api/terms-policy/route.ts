@@ -4,6 +4,7 @@ import { requireRole } from "@/app/lib/utils/authorization";
 import { ADMIN_ROLES } from "@/app/lib/constants/role";
 import { NextResponse, NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
+import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 
 const getCorsHeaders = (origin: string | null) => {
     const PRODUCTION_URL = process.env.PRODUCTION_URL || "";
@@ -93,6 +94,8 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        await revalidateFrontendTags(["terms-policy"]);
+
         return NextResponse.json({ success: true, data: withMongoId(doc) }, { status: 201 });
     } catch (error) {
         console.error("POST /api/terms-policy error:", error);
@@ -131,6 +134,8 @@ export async function PATCH(req: NextRequest) {
             where: { id: doc.id },
             data,
         });
+
+        await revalidateFrontendTags(["terms-policy"]);
 
         return NextResponse.json({
             success: true,

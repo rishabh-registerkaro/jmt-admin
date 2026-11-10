@@ -476,22 +476,22 @@ export default function FooterMenuPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen w-full p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
+            <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
                 <p className="text-slate-300">Loading...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen w-full p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+        <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Footer Menu</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white">Footer Menu</h1>
                         <p className="text-slate-400">Manage your website footer navigation menu and contact details</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <Button
                             variant="outline"
                             onClick={handleRevalidate}
@@ -513,7 +513,7 @@ export default function FooterMenuPage() {
 
                 {/* Main Menu Section */}
                 <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-3 space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                         <h2 className="text-xl font-semibold text-white">Main Menu</h2>
                         <Button
                             onClick={addMainMenu}
@@ -528,11 +528,11 @@ export default function FooterMenuPage() {
                     {mainMenu.map((mainItem, mainIndex) => (
                         <div
                             key={mainIndex}
-                            className="bg-slate-800/50 border border-slate-700 rounded-lg p-5 space-y-5"
+                            className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-5 space-y-5"
                         >
                             {/* Main Menu Item */}
                             <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-300">Main Title</label>
                                         <Input
@@ -552,7 +552,7 @@ export default function FooterMenuPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex flex-wrap items-center justify-end gap-2">
                                     <Button
                                         onClick={() => toggleChildMenu(mainIndex)}
                                         size="sm"
@@ -574,8 +574,8 @@ export default function FooterMenuPage() {
 
                             {/* Child Menu - Same structure as header menu */}
                             {mainItem.child_menu !== false && (
-                                <div className="ml-4 border-l-2 border-indigo-500/30 pl-5 space-y-4">
-                                    <div className="flex items-center justify-between">
+                                <div className="ml-1 sm:ml-4 border-l-2 border-indigo-500/30 pl-3 sm:pl-5 space-y-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                         <h3 className="text-base font-semibold text-slate-300">Child Menu</h3>
                                         <Button
                                             onClick={() => addChildMenu(mainIndex)}
@@ -590,10 +590,10 @@ export default function FooterMenuPage() {
                                     {(mainItem.child_menu as ChildMenuItem[]).map((childItem, childIndex) => (
                                         <div
                                             key={childIndex}
-                                            className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 space-y-4"
+                                            className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 sm:p-4 space-y-4"
                                         >
                                             <div className="space-y-3">
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="space-y-2">
                                                         <label className="text-sm font-medium text-slate-300">Child Title</label>
                                                         <Input
@@ -617,7 +617,7 @@ export default function FooterMenuPage() {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center justify-end gap-2 pt-2">
+                                                <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
                                                     <Button
                                                         onClick={() => toggleSubChildMenu(mainIndex, childIndex)}
                                                         size="sm"
@@ -640,8 +640,8 @@ export default function FooterMenuPage() {
                                             </div>
 
                                             {childItem.sub_child_menu !== false && (
-                                                <div className="ml-4 border-l-2 border-indigo-400/30 pl-4 space-y-3 mt-4">
-                                                    <div className="flex items-center justify-between">
+                                                <div className="ml-1 sm:ml-4 border-l-2 border-indigo-400/30 pl-3 sm:pl-4 space-y-3 mt-4">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                                         <h4 className="text-sm font-semibold text-slate-400">Sub Child Menu</h4>
                                                         <Button
                                                             onClick={() => addSubChildMenu(mainIndex, childIndex)}
@@ -657,10 +657,10 @@ export default function FooterMenuPage() {
                                                         (subChildItem, subChildIndex) => (
                                                             <div
                                                                 key={subChildIndex}
-                                                                className="bg-slate-800/30 border border-slate-600 rounded-lg p-4 space-y-3"
+                                                                className="bg-slate-800/30 border border-slate-600 rounded-lg p-3 sm:p-4 space-y-3"
                                                             >
                                                                 <div className="space-y-3">
-                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                         <div className="space-y-2">
                                                                             <label className="text-xs font-medium text-slate-400">
                                                                                 Sub Child Title
@@ -700,7 +700,7 @@ export default function FooterMenuPage() {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    <div className="flex items-center gap-2 pt-2">
+                                                                    <div className="flex flex-wrap items-center gap-2 pt-2">
                                                                         <Button
                                                                             onClick={() =>
                                                                                 toggleSubSubChildMenu(mainIndex, childIndex, subChildIndex)
@@ -727,8 +727,8 @@ export default function FooterMenuPage() {
                                                                 </div>
 
                                                                 {subChildItem.sub_sub_child_menu !== false && (
-                                                                    <div className="ml-4 border-l-2 border-indigo-300/30 pl-4 space-y-3 mt-3">
-                                                                        <div className="flex items-center justify-between">
+                                                                    <div className="ml-1 sm:ml-4 border-l-2 border-indigo-300/30 pl-3 sm:pl-4 space-y-3 mt-3">
+                                                                        <div className="flex flex-wrap items-center justify-between gap-2">
                                                                             <h5 className="text-xs font-semibold text-slate-500">
                                                                                 Sub Sub Child Menu
                                                                             </h5>
@@ -750,7 +750,7 @@ export default function FooterMenuPage() {
                                                                                     key={subSubChildIndex}
                                                                                     className="flex items-start gap-3 bg-slate-700/20 border border-slate-500 rounded-lg p-3"
                                                                                 >
-                                                                                    <div className="flex-1 grid grid-cols-2 gap-3">
+                                                                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                                                         <div className="space-y-1.5">
                                                                                             <label className="text-xs font-medium text-slate-500">
                                                                                                 Sub Sub Child Title
@@ -833,7 +833,7 @@ export default function FooterMenuPage() {
 
                 {/* Contact Details Section */}
                 <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-3 space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                         <h2 className="text-xl font-semibold text-white">Contact Details</h2>
                         <Button
                             onClick={addContactDetail}
@@ -848,10 +848,10 @@ export default function FooterMenuPage() {
                     {contactDetails.map((contactItem, index) => (
                         <div
                             key={index}
-                            className="bg-slate-800/50 border border-slate-700 rounded-lg p-5 space-y-4"
+                            className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-5 space-y-4"
                         >
                             <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-300">Title</label>
                                         <Input
@@ -941,7 +941,7 @@ export default function FooterMenuPage() {
                                 {/* Image URL - shown for social media and optional for others */}
                                 {(contactItem.type === "social" || contactItem.type === "link" || !contactItem.type) && (
                                     <div className="space-y-2">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             <label className="text-sm font-medium text-slate-300">Image/Icon URL (Optional)</label>
                                             <button
                                                 type="button"
@@ -960,7 +960,7 @@ export default function FooterMenuPage() {
                                         />
                                     </div>
                                 )}
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex flex-wrap items-center justify-end gap-2">
                                     <Button
                                         onClick={() => toggleContactSubChild(index)}
                                         size="sm"
@@ -984,8 +984,8 @@ export default function FooterMenuPage() {
 
                             {/* Contact Sub Child */}
                             {contactItem.sub_child !== false && contactItem.sub_child !== undefined && (
-                                <div className="ml-4 border-l-2 border-indigo-500/30 pl-5 space-y-4">
-                                    <div className="flex items-center justify-between">
+                                <div className="ml-1 sm:ml-4 border-l-2 border-indigo-500/30 pl-3 sm:pl-5 space-y-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                         <h3 className="text-base font-semibold text-slate-300">Sub Child</h3>
                                         <Button
                                             onClick={() => addContactSubChild(index)}
@@ -1001,9 +1001,9 @@ export default function FooterMenuPage() {
                                         (subChildItem, subChildIndex) => (
                                             <div
                                                 key={subChildIndex}
-                                                className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 space-y-3"
+                                                className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 sm:p-4 space-y-3"
                                             >
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="space-y-2">
                                                         <label className="text-sm font-medium text-slate-300">Title</label>
                                                         <Input
@@ -1096,7 +1096,7 @@ export default function FooterMenuPage() {
 
                                                 {(subChildItem.type === "social" || subChildItem.type === "link" || !subChildItem.type) && (
                                                     <div className="space-y-2">
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex flex-wrap items-center gap-2">
                                                             <label className="text-sm font-medium text-slate-300">Image/Icon URL (Optional)</label>
                                                             <button
                                                                 type="button"

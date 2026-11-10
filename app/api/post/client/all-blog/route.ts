@@ -1,4 +1,5 @@
 import prisma from "@/app/lib/config/db";
+import { intParam } from "@/app/lib/utils/pagination";
 import { NextRequest, NextResponse } from "next/server";
 
 function computeReadTimeMinutes(html: string): number {
@@ -51,8 +52,8 @@ export async function OPTIONS(req: NextRequest) {
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const page  = Math.max(1, parseInt(searchParams.get("page")  ?? "1"));
-        const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") ?? "10")));
+        const page  = Math.max(1, intParam(searchParams.get("page"), 1));
+        const limit = Math.min(50, Math.max(1, intParam(searchParams.get("limit"), 10)));
         const skip  = (page - 1) * limit;
 
         // "Most recent activity" = the later of updatedAt / publishedAt.

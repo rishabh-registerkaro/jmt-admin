@@ -75,7 +75,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen w-full p-4 sm:p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-400 mx-auto" />
           <p className="text-slate-300">Loading dashboard...</p>
@@ -86,7 +86,7 @@ export default function Dashboard() {
 
   if (!stats) {
     return (
-      <div className="min-h-screen w-full p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen w-full p-4 sm:p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
         <p className="text-slate-300">Failed to load dashboard data</p>
       </div>
     );
@@ -96,7 +96,7 @@ export default function Dashboard() {
   const postsMax = Math.max(stats.posts.published, stats.posts.draft, 1);
 
   return (
-    <div className="min-h-screen w-full p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen w-full p-4 sm:p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Header */}
@@ -106,7 +106,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Services */}
           <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-5 hover:border-indigo-500/50 transition-colors">
             <div className="flex items-center justify-between mb-3">
@@ -179,7 +179,7 @@ export default function Dashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Services Status */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="h-4 w-4 text-indigo-400" />
               <h2 className="text-base font-semibold text-white">Services Status</h2>
@@ -219,7 +219,7 @@ export default function Dashboard() {
           </div>
 
           {/* Blog Posts Status */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="h-4 w-4 text-slate-400" />
               <h2 className="text-base font-semibold text-white">Blog Posts Status</h2>
@@ -260,8 +260,8 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Services */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-5">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="text-base font-semibold text-white mb-1">Recent Services</h2>
               <p className="text-xs text-slate-400">Your latest service pages</p>
@@ -280,7 +280,7 @@ export default function Dashboard() {
                   href={`/dashboard/services/update-service?slug=${svc.slug}`}
                   className="block p-3 rounded-md bg-slate-900/50 border border-slate-700 hover:bg-slate-900/70 hover:border-slate-600 transition-colors"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Layers className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
@@ -288,13 +288,13 @@ export default function Dashboard() {
                           {svc.content?.badge || svc.slug}
                         </h4>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-400 ml-5">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-400 ml-5">
                         <span>Updated {formatDate(svc.updatedAt)}</span>
                         {svc.author && <span>• {svc.author.username}</span>}
                       </div>
                     </div>
                     <span
-                      className={`ml-3 px-2 py-0.5 rounded text-xs font-medium ${
+                      className={`ml-3 shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
                         svc.status === "published"
                           ? "bg-green-500/15 text-green-400"
                           : "bg-slate-700/50 text-slate-400"
@@ -320,7 +320,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
           <div className="mb-5">
             <h2 className="text-base font-semibold text-white mb-1">Quick Actions</h2>
             <p className="text-xs text-slate-400">Common tasks and shortcuts</p>

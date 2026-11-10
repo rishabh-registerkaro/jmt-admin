@@ -263,3 +263,18 @@ model AboutPage {
 
   @@map("about_pages")
 }
+
+// Public homepage (Joy Maa Tara) served by this app at "/". Singleton.
+// Owns its own navbar/footer/contact details so editing it never touches the
+// HeaderMenu/FooterMenu records used by the separate Global Elite frontend.
+model HomePage {
+  id              String   @id @default(cuid())
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  // Shape: app/lib/content/home-content.ts → HomePageContent
+  content         Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("home_pages")
+}

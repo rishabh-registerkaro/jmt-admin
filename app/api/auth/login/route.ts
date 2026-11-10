@@ -17,18 +17,17 @@ export async function POST(req: NextRequest) {
       );
     }
     // Fetch WITH password (needed for bcrypt comparison); never returned to client
+    // Emails are stored lowercased (signup/users routes) — match that here.
     const user = await prisma.user.findUnique({
-      where: email ? { email } : { username },
+      where: email ? { email: String(email).toLowerCase().trim() } : { username },
     });
 
-    if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    // Same response for unknown account and wrong password, so the login form
+    // can't be used to discover which emails/usernames exist.
+    const isMatch = user ? await bcrypt.compare(password, user.password) : false;
+    if (!user || !isMatch) {
       return NextResponse.json(
-        { message: " Invalid Credentials" },
+        { message: "Invalid credentials" },
         { status: 401 }
       );
     }

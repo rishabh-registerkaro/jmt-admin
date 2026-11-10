@@ -584,7 +584,7 @@ function UpdatePostPageContent() {
 
   if (fetching) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
         <div className="text-white text-xl">Loading post data...</div>
       </div>
     );
@@ -595,11 +595,11 @@ function UpdatePostPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="w-full">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-x-4 mb-6 sm:mb-0">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">Update Post</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Update Post</h1>
             <p className="text-slate-400">Edit the details of your blog post</p>
           </div>
           <Button className="bg-indigo-500 hover:bg-indigo-600 text-white disabled:bg-slate-600 disabled:cursor-not-allowed cursor-pointer" onClick={() => router.push("/dashboard/blog/create-blog")}>
@@ -608,7 +608,7 @@ function UpdatePostPageContent() {
         </div>
 
         <form className="space-y-6" onSubmit={handleUpdate}>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6 space-y-6">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 space-y-6">
             {/* Title */}
             <div className="space-y-2">
               <label htmlFor="title" className="block text-sm font-medium text-slate-200">
@@ -694,7 +694,7 @@ function UpdatePostPageContent() {
               <label htmlFor="featuredImage" className="block text-sm font-medium text-slate-200">
                 Featured Image
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -721,7 +721,7 @@ function UpdatePostPageContent() {
                   value={formData.featuredImage}
                   onChange={handleChange}
                   placeholder="Enter image URL or upload an image"
-                  className="flex-1 rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white"
+                  className="w-full sm:w-auto sm:flex-1 rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white"
                 />
                 <input
                   ref={fileInputRef}
@@ -832,7 +832,7 @@ function UpdatePostPageContent() {
               <label className="block text-sm font-medium text-slate-200">
                 Author
               </label>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">Username</label>
                   <Input
@@ -936,7 +936,7 @@ function UpdatePostPageContent() {
             {/* Schema Section */}
             <div className="pt-6 border-t border-slate-700">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-200">
                       Schema (JSON-LD)
@@ -1001,7 +1001,7 @@ or
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-end">
+          <div className="flex flex-wrap gap-4 justify-end">
             <Button
               type="button"
               variant="outline"
@@ -1040,7 +1040,7 @@ or
 // Loading fallback component
 function UpdatePostPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
       <div className="text-white text-xl">Loading...</div>
     </div>
   );

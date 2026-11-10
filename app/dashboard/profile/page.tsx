@@ -148,14 +148,12 @@ export default function Profile() {
         username: formData.username,
       })
 
-      if (response.success) {
-        toast.dismiss(loadingToastId);
-        toast.success("Profile updated successfully!", {
-          closeButton: true,
-        });
-      }
-
       toast.dismiss(loadingToastId);
+      if (!response.success) {
+        // e.g. 400 "email/username already taken" — nothing was saved
+        toast.error(response.message || "Failed to update profile", { closeButton: true });
+        return;
+      }
       toast.success("Profile updated successfully!", {
         closeButton: true,
       });
@@ -187,7 +185,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full p-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen w-full p-6 sm:p-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
         <div className="text-xl">Loading profile...</div>
       </div>
     );
@@ -195,7 +193,7 @@ export default function Profile() {
 
   if (!userData) {
     return (
-      <div className="min-h-screen w-full p-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen w-full p-6 sm:p-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
         <div className="text-xl text-red-400">Failed to load profile data</div>
       </div>
     );
@@ -203,10 +201,10 @@ export default function Profile() {
 
 
   return (
-    <div className="min-h-screen w-full p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <div className="max-w-6xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
           <p className="text-slate-400">Manage your account settings and preferences</p>
         </div>
 
@@ -331,7 +329,7 @@ function ProfileTab({
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-2 mb-0">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Row 1: Email and Username */}
             <div className="space-y-2">
@@ -488,7 +486,7 @@ function ProfileTab({
 
             {/* Posts Pagination */}
             {pagination?.posts && pagination.posts.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
                 <div className="text-sm text-slate-400">
                   Page {pagination.posts.currentPage} of {pagination.posts.totalPages} ({pagination.posts.totalItems} total)
                 </div>
@@ -565,7 +563,7 @@ function ProfileTab({
 
             {/* Services Pagination */}
             {pagination?.pages && pagination.pages.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
                 <div className="text-sm text-slate-400">
                   Page {pagination.pages.currentPage} of {pagination.pages.totalPages} ({pagination.pages.totalItems} total)
                 </div>
@@ -826,7 +824,7 @@ function SecurityTab({ userData }: SecurityTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
         <h2 className="text-xl font-semibold text-white mb-2">Change Password</h2>
         <p className="text-slate-400 mb-4">
           Update your account password to keep your account secure.

@@ -258,12 +258,12 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="min-h-screen w-full p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Users</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Users</h1>
             <p className="text-slate-400">Manage all system users</p>
           </div>
           {(currentUserRole === "superadmin" || currentUserRole === "admin") && (
@@ -278,7 +278,7 @@ export default function UsersPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search Input */}
             <div className="relative flex-1">
@@ -340,7 +340,7 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
           <Table>
             <TableHeader>
               <TableRow className="border-slate-700 hover:bg-transparent">
@@ -436,13 +436,13 @@ export default function UsersPage() {
 
           {/* Pagination */}
           {!loading && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-700">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-700">
               <div className="text-sm text-slate-400">
                 Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
                 {Math.min(pagination.currentPage * pagination.limit, pagination.totalCount)} of{" "}
                 {pagination.totalCount} users
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -547,7 +547,7 @@ export default function UsersPage() {
                     <div className="text-slate-400">Loading user details...</div>
                   </div>
                 ) : (
-                  <ViewUser user={viewUser} />
+                  <ViewUser user={viewUser} onRoleUpdate={() => fetchUsers(pagination.currentPage)} />
                 )}
               </>
             )}
@@ -559,7 +559,7 @@ export default function UsersPage() {
           setCreateDialogOpen(open);
           if (!open) setCreateForm({ username: "", email: "", password: "", role: "" });
         }}>
-          <DialogContent className="bg-slate-900 border border-white/10 text-white sm:max-w-md">
+          <DialogContent className="bg-slate-900 border border-white/10 text-white sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-white text-xl">Create New User</DialogTitle>
               <DialogDescription className="text-slate-400">

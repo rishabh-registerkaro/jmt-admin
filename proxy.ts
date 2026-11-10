@@ -6,6 +6,10 @@ export default function proxy(req: NextRequest) {
   const token = req.cookies.get("authToken")?.value;
   const pathname = req.nextUrl.pathname;
 
+  // The public homepage now lives in the separate jmt-frontend project, so
+  // "/" here is just the admin entry point: /login when signed out, and
+  // app/page.tsx sends signed-in users on to /dashboard.
+
   // /signup is disabled — user creation is handled by admins via the dashboard
   // const isPublic =pathname === "/login" ||pathname === "/signup" || pathname === "/forgot-password";
   const isPublic = pathname === "/login" || pathname === "/forgot-password";
@@ -15,7 +19,7 @@ export default function proxy(req: NextRequest) {
     }
     return NextResponse.redirect(new URL("/login", req.url));
   }
-  if (isPublic || pathname === "/" || pathname === "/signup") {
+  if (isPublic || pathname === "/signup") {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
@@ -44,6 +48,7 @@ export const config = {
     // App-icon files are served from the app directory like any other route, so
     // they must be exempted here or an unauthenticated request for the favicon
     // is redirected to /login and the browser receives HTML instead of a PNG.
-    "/((?!_next|api|favicon.ico|icon.png|apple-icon.png).*)",
+    // `homepage/` holds the public homepage's static images (public/homepage).
+    "/((?!_next|api|homepage/|favicon.ico|icon.png|apple-icon.png).*)",
   ],
 };

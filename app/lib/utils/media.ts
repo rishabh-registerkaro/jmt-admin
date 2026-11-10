@@ -9,7 +9,7 @@ export async function uploadFileToMedia(file: File): Promise<{ url: string; publ
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || "Upload failed");
+    throw new Error(data.error || data.message || "Upload failed");
   }
   return {
     url: data.url,
@@ -28,14 +28,20 @@ export async function uploadMediaAsset(file: File) {
 
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.error || "Upload failed");
+    throw new Error(data.error || data.message || "Upload failed");
   }
   return data;
 }
 
+/**
+ * Delete an uploaded file. Best-effort by default (form editors use it to clean
+ * up replaced images and must not fail on it); pass `{ strict: true }` to throw
+ * so the caller can show the real error (Media page).
+ */
 export async function deleteFileFromMedia(
   public_id: string,
-  resource_type: string
+  resource_type: string,
+  { strict = false }: { strict?: boolean } = {}
 ): Promise<void> {
   try {
     const res = await fetch("/api/media", {
@@ -44,9 +50,11 @@ export async function deleteFileFromMedia(
       body: JSON.stringify({ public_id, resource_type }),
     });
     if (!res.ok) {
-      console.error("Failed to delete file");
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || data.message || "Failed to delete file");
     }
   } catch (error) {
+    if (strict) throw error;
     console.error("Error deleting file:", error);
   }
 }

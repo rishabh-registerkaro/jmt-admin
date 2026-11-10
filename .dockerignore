@@ -1,0 +1,11 @@
+# Host node_modules contain platform-specific binaries (Prisma engine, bcrypt)
+# and would overwrite the Linux install made inside the image by `COPY . .`.
+node_modules
+.next
+.git
+# Secrets are injected at runtime, never baked into the image.
+.env
+.env.*
+!.env.example
+tsconfig.tsbuildinfo
+npm-debug.log*

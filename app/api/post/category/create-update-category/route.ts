@@ -2,7 +2,8 @@ import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import { withMongoId } from "@/app/lib/utils/serialize";
 import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { EDITOR_ROLES } from "@/app/lib/constants/role";
+import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 
 // Palette that matches JMT frontend design system
 const CATEGORY_PALETTE = [
@@ -24,7 +25,7 @@ function generateCategoryColor(name: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requireRole(req, EDITOR_ROLES) /* matches the UI: editor and above */;
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -95,6 +96,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Category names/slugs appear on blog cards — refresh post listings
+
+    await revalidateFrontendTags(["post-list"]);
+
     // Return success response
     return NextResponse.json(
       {
@@ -139,7 +144,7 @@ export async function POST(req: NextRequest) {
 // PUT - Update category
 export async function PUT(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requireRole(req, EDITOR_ROLES) /* matches the UI: editor and above */;
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -233,6 +238,26 @@ export async function PUT(req: NextRequest) {
           { status: 404 }
         );
       }
+
+      // Prevent cycles (A → B → A): walk up from the new parent; if we reach
+      // this category, the new parent is one of its descendants.
+      let cursor: string | null = parent.parentId;
+      for (let depth = 0; cursor && depth < 100; depth++) {
+        if (cursor === id) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "A category cannot be moved under one of its own subcategories.",
+            },
+            { status: 400 }
+          );
+        }
+        const next: { parentId: string | null } | null = await prisma.category.findUnique({
+          where: { id: cursor },
+          select: { parentId: true },
+        });
+        cursor = next?.parentId ?? null;
+      }
     }
 
     // Save the updated category
@@ -248,6 +273,9 @@ export async function PUT(req: NextRequest) {
           : (category.color || generateCategoryColor(name.trim())),
       },
     });
+
+    // Renamed category / slug shows on blog cards — refresh post listings
+    await revalidateFrontendTags(["post-list"]);
 
     // Return success response
     return NextResponse.json(
@@ -293,7 +321,7 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     // Get current user (authorization check)
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requireRole(req, EDITOR_ROLES) /* matches the UI: editor and above */;
 
 
     // Check if getCurrentUser returned an error response (NextResponse)
@@ -368,6 +396,7 @@ export async function DELETE(req: NextRequest) {
 
     // Delete the category
     await prisma.category.delete({ where: { id } });
+    await revalidateFrontendTags(["post-list"]);
 
     return NextResponse.json(
       {

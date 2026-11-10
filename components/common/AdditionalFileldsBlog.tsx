@@ -342,7 +342,7 @@ const AdditionalFieldsBlog = ({
   return (
     <div>
       <div className="pt-6 border-t border-slate-700">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <h3 className="text-lg font-semibold text-slate-200">
             Additional Fields
           </h3>
@@ -439,7 +439,7 @@ const AdditionalFieldsBlog = ({
                       const file = e.target.files?.[0] || null;
                       setNewField((prev) => ({ ...prev, value: file }));
                     }}
-                    className="text-slate-300"
+                    className="text-slate-300 max-w-full"
                   />
                   {newField.value instanceof File && (
                     <div className="mt-2 p-2 bg-slate-900/60 rounded border border-slate-600">
@@ -456,7 +456,7 @@ const AdditionalFieldsBlog = ({
                   )}
                   <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
                     <span>⚡</span>
-                    File will be uploaded to S3 when you click "Add
+                    File will be uploaded when you click "Add
                     Field"
                   </p>
                 </div>
@@ -501,12 +501,12 @@ const AdditionalFieldsBlog = ({
                   key={fieldName}
                   className="bg-slate-800/40 p-4 rounded-lg border border-slate-700"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="min-w-0">
                       <h4 className="text-sm font-semibold text-slate-200">
                         {fieldData.label}
                       </h4>
-                      <p className="text-xs text-slate-500 font-mono mt-1">
+                      <p className="text-xs text-slate-500 font-mono mt-1 break-all">
                         {fieldName}
                       </p>
                       <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
@@ -554,7 +554,7 @@ const AdditionalFieldsBlog = ({
                       {isUploading ? (
                         <div className="flex items-center gap-2 text-slate-400 text-sm">
                           <div className="animate-spin h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full"></div>
-                          <span>Uploading to S3...</span>
+                          <span>Uploading...</span>
                         </div>
                       ) : fieldData.value ? (
                         <>
@@ -596,7 +596,7 @@ const AdditionalFieldsBlog = ({
                               e.target.files &&
                               handleFileUpload(fieldName, e.target.files[0])
                             }
-                            className="text-slate-300"
+                            className="text-slate-300 max-w-full"
                           />
                           <p className="text-xs text-slate-500 mt-1">
                             Max size: {MAX_FILE_SIZE / 1024 / 1024}MB |
@@ -613,13 +613,13 @@ const AdditionalFieldsBlog = ({
                       {isUploading ? (
                         <div className="flex items-center gap-2 text-slate-400 text-sm">
                           <div className="animate-spin h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full"></div>
-                          <span>Uploading to S3...</span>
+                          <span>Uploading...</span>
                         </div>
                       ) : fieldData.value ? (
                         <>
                           <div className="space-y-1">
                             <p className="text-xs text-emerald-400">
-                              ✓ Uploaded to S3
+                              ✓ Uploaded
                             </p>
                             <a
                               href={fieldData.value}
@@ -660,7 +660,7 @@ const AdditionalFieldsBlog = ({
                               e.target.files &&
                               handleFileUpload(fieldName, e.target.files[0])
                             }
-                            className="text-slate-300"
+                            className="text-slate-300 max-w-full"
                           />
                           <p className="text-xs text-slate-500 mt-1">
                             Max size: {MAX_FILE_SIZE / 1024 / 1024}MB |

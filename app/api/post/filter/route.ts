@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
 import prisma from "@/app/lib/config/db";
 import { Prisma } from "@prisma/client";
+import { intParam } from "@/app/lib/utils/pagination";
 import { withMongoIds } from "@/app/lib/utils/serialize";
 
 export const dynamic = 'force-dynamic';
@@ -14,8 +15,8 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search")?.trim() || '';
     const status = searchParams.get("status") as "draft" | "published" | null;
     const authorId = searchParams.get("author");
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
+    const page = Math.max(1, intParam(searchParams.get('page'), 1));
+    const limit = Math.min(50, Math.max(1, intParam(searchParams.get('limit'), 10)));
 
     // Auth
     const userResult = await getCurrentUser(req);

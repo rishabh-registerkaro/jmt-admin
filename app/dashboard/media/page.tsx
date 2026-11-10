@@ -77,12 +77,12 @@ export default function MediaLibrary() {
     const toastId = toast.loading("Deleting file...");
 
     try {
-      await deleteFileFromMedia(publicId, resource_type);
+      await deleteFileFromMedia(publicId, resource_type, { strict: true });
       toast.success("File deleted", { id: toastId });
       setIsModalOpen(false);
       loadAssets(page);
     } catch (err) {
-      toast.error("Failed to delete file", { id: toastId });
+      toast.error((err as Error)?.message || "Failed to delete file", { id: toastId });
     }
   };
 
@@ -149,14 +149,14 @@ export default function MediaLibrary() {
 
   return (
     <div className="flex bg-slate-900 min-h-screen text-white">
-      <div className="flex-1 p-8">
-        <h1 className="text-3xl font-semibold">Media Library</h1>
+      <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl sm:text-3xl font-semibold">Media Library</h1>
         <p className="text-slate-400 mb-6">
           Manage your uploaded images, videos, and documents.
         </p>
 
         {/* UPLOAD */}
-        <div className="bg-slate-800 border border-slate-700 p-8 rounded-xl text-center mb-8">
+        <div className="bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-xl text-center mb-8">
           <p className="text-slate-400 mb-4">
             Drag & drop files or click to upload
           </p>
@@ -227,7 +227,7 @@ export default function MediaLibrary() {
 
         {/* PAGINATION */}
         {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
             <span className="text-sm text-slate-400">
               Page {pagination.currentPage} of {pagination.totalPages} •{" "}
               {pagination.totalCount} files
@@ -255,28 +255,28 @@ export default function MediaLibrary() {
 
         {/* MODAL */}
         {isModalOpen && selectedAsset && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl w-[900px] h-[520px] flex">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto md:overflow-visible md:h-[520px] flex flex-col md:flex-row">
               {/* LEFT: Preview */}
-              <div className="w-1/2 p-4 flex items-center justify-center bg-slate-800">
+              <div className="w-full md:w-1/2 h-56 md:h-auto shrink-0 p-4 flex items-center justify-center bg-slate-800">
                 {renderPreview(selectedAsset)}
               </div>
 
               {/* RIGHT: Details */}
-              <div className="w-1/2 p-6 overflow-y-auto space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">
+              <div className="w-full md:w-1/2 p-4 sm:p-6 md:overflow-y-auto space-y-4">
+                <div className="flex justify-between items-center gap-3">
+                  <h2 className="text-xl font-semibold min-w-0 break-words">
                     {selectedAsset.filename}
                   </h2>
                   <button
-                    className="text-slate-400 hover:text-white"
+                    className="shrink-0 text-slate-400 hover:text-white"
                     onClick={() => setIsModalOpen(false)}
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="text-sm text-slate-400 space-y-1">
+                <div className="text-sm text-slate-400 space-y-1 break-words">
                   <p>
                     <span className="text-slate-300">Public ID:</span>{" "}
                     {selectedAsset.public_id}

@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
                 status: "published",
             },
             include: {
-                author: { select: { id: true, username: true, email: true } },
+                author: { select: { id: true, username: true } },
                 categories: { select: { id: true, name: true, slug: true, color: true } },
             },
         });
@@ -89,7 +89,6 @@ export async function GET(req: NextRequest) {
             author: post.author ? {
                 id: post.author.id,
                 username: post.author.username,
-                email: post.author.email
             } : null,
             category: Array.isArray(post.categories)
                 ? post.categories.map((cat) => ({

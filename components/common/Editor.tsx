@@ -288,7 +288,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 relative">
+    <div className="max-w-6xl mx-auto p-0 sm:p-4 relative">
       <div className="rounded-xl overflow-hidden border border-gray-800 shadow-xl bg-black">
         {/* Toolbar */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-2 flex items-center justify-center gap-2 flex-wrap border-b border-gray-700">
@@ -415,7 +415,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
 
         {/* Editor */}
         <div className="relative">
-          <EditorContent editor={editor} className="bg-black min-h-[400px] max-h-[600px] overflow-y-auto" />
+          <EditorContent editor={editor} className="bg-black min-h-[300px] sm:min-h-[400px] max-h-[600px] overflow-y-auto" />
           
           {/* Link Input Modal - Overlay */}
           {showLinkInput && (
@@ -429,7 +429,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                     onChange={(e) => setLinkUrl(e.target.value)}
                     onKeyDown={handleLinkInputKeyDown}
                     placeholder="Enter URL or search..."
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <button
                     type="button"
@@ -475,7 +475,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
           {/* Image Upload Section - Overlay */}
           {showImageUpload && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-md w-full shadow-2xl">
+              <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6 max-w-md w-full max-h-full overflow-y-auto shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-white">Upload Image</h3>
                   <button
@@ -548,7 +548,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                       }}
                       placeholder="https://…/media/your-image.jpg"
                       disabled={uploading}
-                      className="flex-1 rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
+                      className="flex-1 min-w-0 rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
                     />
                     <button
                       type="button"

@@ -1,6 +1,9 @@
 # Use Node.js official image
 FROM node:20-alpine
 
+# Prisma's query engine needs OpenSSL, which the Alpine base image doesn't ship.
+RUN apk add --no-cache openssl
+
 # Create app directory
 WORKDIR /app
 

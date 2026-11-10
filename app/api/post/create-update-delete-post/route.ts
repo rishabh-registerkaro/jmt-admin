@@ -1,4 +1,5 @@
 import prisma from "@/app/lib/config/db";
+import { intParam } from "@/app/lib/utils/pagination";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { withMongoId } from "@/app/lib/utils/serialize";
@@ -328,8 +329,8 @@ export async function GET(req: NextRequest) {
 
     // Otherwise, fetch list of posts (existing logic)
     const status = searchParams.get("status");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const page = parseInt(searchParams.get("page") || "1");
+    const limit = Math.min(100, Math.max(1, intParam(searchParams.get("limit"), 10)));
+    const page = Math.max(1, intParam(searchParams.get("page"), 1));
     const skip = (page - 1) * limit;
 
     // Build query

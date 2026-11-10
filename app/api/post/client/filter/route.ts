@@ -1,4 +1,5 @@
 import prisma from "@/app/lib/config/db";
+import { intParam } from "@/app/lib/utils/pagination";
 import { NextRequest, NextResponse } from "next/server";
 
 // Helper function to get CORS headers based on origin
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
         const categoryParam = searchParams.get("category") || "";
 
         // Pagination parameters (only used when fetching posts)
-        const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+        const page = Math.max(1, intParam(searchParams.get("page"), 1));
         const limit = 10; // Fixed limit of 10 posts per page
 
         // If no category parameter, return all categories (no pagination)
@@ -126,7 +127,7 @@ export async function GET(req: NextRequest) {
                 publishedAt: true,
                 createdAt: true,
                 updatedAt: true,
-                author: { select: { id: true, username: true, email: true } },
+                author: { select: { id: true, username: true } },
             },
         });
 
@@ -150,7 +151,6 @@ export async function GET(req: NextRequest) {
                 ? {
                     _id: post.author.id,
                     username: post.author.username,
-                    email: post.author.email,
                 }
                 : null,
         }));

@@ -1,3 +1,4 @@
+import { randomInt } from "crypto";
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import { sendOTP } from "@/app/lib/config/email";
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Generate 6-digit OTP
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpCode = randomInt(100000, 1000000).toString(); // CSPRNG, not Math.random
 
         // Opportunistic cleanup of expired OTPs (replaces MongoDB TTL index)
         await prisma.otp.deleteMany({

@@ -1,8 +1,16 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
+import { requireRole } from "@/app/lib/utils/authorization";
+import { ADMIN_ROLES } from "@/app/lib/constants/role";
 
+// Public self-signup is disabled: accounts are created by admins only.
+// Without this guard anyone could POST here, get a "contributor" account and
+// log in to the dashboard.
 export async function POST(req: NextRequest) {
+  const auth = await requireRole(req, ADMIN_ROLES);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const body = await req.json();
     const { username, password } = body;

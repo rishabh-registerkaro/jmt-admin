@@ -172,7 +172,7 @@ function SectionCard({
           </button>
         </Collapsible.Trigger>
         <Collapsible.Content>
-          <div className="p-6 pt-2 space-y-4 border-t border-white/10">{children}</div>
+          <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 space-y-4 border-t border-white/10">{children}</div>
         </Collapsible.Content>
       </div>
     </Collapsible.Root>
@@ -276,7 +276,7 @@ export default function AboutDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
         <p className="text-slate-300">Loading...</p>
       </div>
     );
@@ -285,16 +285,16 @@ export default function AboutDashboardPage() {
   const { hero, metrics, pillars, accreditations, story, team, founder } = content;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-2">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">About Us Page</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">About Us Page</h1>
             <p className="text-slate-400">
               Every section of the live /about page — save to publish instantly.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               onClick={handleRevalidate}
@@ -365,7 +365,7 @@ export default function AboutDashboardPage() {
             <div className="space-y-2">
               {hero.chips.map((chip, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <div className="grid grid-cols-2 gap-2 flex-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 min-w-0">
                     <IconSelect
                       value={chip.icon}
                       onChange={(icon) =>
@@ -422,7 +422,7 @@ export default function AboutDashboardPage() {
           <div className="space-y-2">
             {metrics.map((m, i) => (
               <div key={i} className="flex items-start gap-2">
-                <div className="grid grid-cols-4 gap-2 flex-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1 min-w-0">
                   <Input className={inputCls} value={m.value} placeholder="Value (15)" onChange={(e) => set("metrics", metrics.map((x, idx) => (idx === i ? { ...x, value: e.target.value } : x)))} />
                   <Input className={inputCls} value={m.suffix} placeholder="Suffix (+)" onChange={(e) => set("metrics", metrics.map((x, idx) => (idx === i ? { ...x, suffix: e.target.value } : x)))} />
                   <Input className={inputCls} value={m.label} placeholder="Label (Years)" onChange={(e) => set("metrics", metrics.map((x, idx) => (idx === i ? { ...x, label: e.target.value } : x)))} />
@@ -498,7 +498,7 @@ export default function AboutDashboardPage() {
           <div className="space-y-2">
             {accreditations.items.map((a, i) => (
               <div key={i} className="flex items-start gap-2">
-                <div className="grid grid-cols-3 gap-2 flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 flex-1 min-w-0">
                   <IconSelect value={a.icon} onChange={(icon) => set("accreditations", { ...accreditations, items: accreditations.items.map((x, idx) => (idx === i ? { ...x, icon } : x)) })} />
                   <Input className={inputCls} value={a.title} placeholder="Title (ISO 27001)" onChange={(e) => set("accreditations", { ...accreditations, items: accreditations.items.map((x, idx) => (idx === i ? { ...x, title: e.target.value } : x)) })} />
                   <Input className={inputCls} value={a.sub} placeholder="Subtext" onChange={(e) => set("accreditations", { ...accreditations, items: accreditations.items.map((x, idx) => (idx === i ? { ...x, sub: e.target.value } : x)) })} />
@@ -543,9 +543,9 @@ export default function AboutDashboardPage() {
           </div>
           {story.timeline.map((t, i) => (
             <div key={i} className={`${cardWrapCls} space-y-3`}>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-semibold text-slate-300">Milestone {i + 1}</span>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ml-auto">
                   <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
                     <input
                       type="checkbox"
@@ -558,7 +558,7 @@ export default function AboutDashboardPage() {
                   <RemoveButton onClick={() => set("story", { ...story, timeline: story.timeline.filter((_, idx) => idx !== i) })} />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Field label="Year">
                   <Input className={inputCls} value={t.year} onChange={(e) => set("story", { ...story, timeline: story.timeline.map((x, idx) => (idx === i ? { ...x, year: e.target.value } : x)) })} />
                 </Field>
@@ -619,7 +619,7 @@ export default function AboutDashboardPage() {
               <Field label="Photo URL">
                 <Input className={inputCls} value={m.photo} placeholder="/assets/about-team-1.jpg or a Media Library URL" onChange={(e) => set("team", { ...team, members: team.members.map((x, idx) => (idx === i ? { ...x, photo: e.target.value } : x)) })} />
               </Field>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Field label="Email (optional)">
                   <Input className={inputCls} value={m.email ?? ""} placeholder="meera@jmt.in" onChange={(e) => set("team", { ...team, members: team.members.map((x, idx) => (idx === i ? { ...x, email: e.target.value } : x)) })} />
                 </Field>

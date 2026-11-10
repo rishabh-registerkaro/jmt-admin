@@ -1,5 +1,6 @@
 import prisma from "@/app/lib/config/db";
-import { Prisma } from "@prisma/client";
+import { intParam } from "@/app/lib/utils/pagination";
+import { LeadStatus, Prisma } from "@prisma/client";
 import { sendLeadNotification } from "@/app/lib/config/email";
 import { withMongoId } from "@/app/lib/utils/serialize";
 import { getCorsHeaders } from "@/app/lib/utils/corsHeader";
@@ -69,6 +70,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Website visitors always create "new" leads; the dashboard's "Add Lead"
+    // form may pick a status, which is honoured only for a logged-in admin.
+    let status: LeadStatus = "new";
+    if (typeof body.status === "string" && (Object.values(LeadStatus) as string[]).includes(body.status)) {
+      const admin = await requireRole(req, ADMIN_ROLES);
+      if (!(admin instanceof NextResponse)) status = body.status as LeadStatus;
+    }
+
     // Every submission is its own lead — the same person submitting from a
     // different page (or twice) must never overwrite an earlier lead.
     const lead = await prisma.lead.create({
@@ -80,7 +89,7 @@ export async function POST(req: NextRequest) {
           ? body.leadSource.trim().slice(0, 200)
           : "Website"),
         formData: sanitizeFormData(body.formData) as Prisma.InputJsonValue | undefined,
-        status: "new",
+        status,
       },
     });
 
@@ -146,8 +155,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     // Pagination parameters
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const page = Math.max(1, intParam(searchParams.get("page"), 1));
+    const limit = Math.min(100, Math.max(1, intParam(searchParams.get("limit"), 10)));
     const skip = (page - 1) * limit;
 
     // Filter parameters — an invalid status value would make Prisma throw on

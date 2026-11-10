@@ -259,17 +259,17 @@ export default function CategoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Categories</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Categories</h1>
           <p className="text-slate-400">Manage your post categories</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Panel - Add Category Form */}
           <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
               <h2 className="text-xl font-semibold text-white mb-4">Add Category</h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -406,10 +406,10 @@ export default function CategoryPage() {
 
           {/* Right Panel - Category List */}
           <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
               {/* Search and Bulk Actions */}
               <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <div className="flex-1 flex gap-2">
+                <div className="flex-1 flex flex-col sm:flex-row gap-2">
                   <Input
                     type="text"
                     value={searchTerm}
@@ -428,7 +428,7 @@ export default function CategoryPage() {
               </div>
 
               {/* Category Table */}
-              <Table>
+              <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow className="border-slate-700 hover:bg-transparent">
                     <TableHead className="w-12">
@@ -536,7 +536,7 @@ export default function CategoryPage() {
               </Table>
 
               {/* Pagination */}
-              <div className="mt-4 flex items-center justify-between text-sm text-slate-400">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-400">
                 <span>
                   {totalCount} {totalCount === 1 ? "item" : "items"}
                 </span>

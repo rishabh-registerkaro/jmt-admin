@@ -1,6 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
+import { requireRole } from "@/app/lib/utils/authorization";
+import { ADMIN_ROLES } from "@/app/lib/constants/role";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma, PublishStatus } from "@prisma/client";
 import { revalidateFrontendTags, serviceTags } from "@/app/lib/utils/revalidateFrontend";
@@ -10,7 +11,7 @@ export async function GET(
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const userResult = await getCurrentUser(req);
+    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
         if (userResult instanceof NextResponse) {
           return userResult;
         }
@@ -59,7 +60,7 @@ export async function PUT(
 ) {
   const { slug } = await context.params;
   try {
-    const userResult = await getCurrentUser(req);
+    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -141,7 +142,7 @@ export async function DELETE(
 ) {
   const { slug } = await context.params;
   try {
-    const userResult = await getCurrentUser(req);
+    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
         if (userResult instanceof NextResponse) {
           return userResult;
         }

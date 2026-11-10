@@ -27,7 +27,7 @@ export default function AccessDenied({
         </div>
         
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-white">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">{title}</h1>
           <p className="text-slate-400 text-lg">{message}</p>
           <p className="text-slate-500 text-sm mt-4">
             If you believe this is an error, please contact your administrator.

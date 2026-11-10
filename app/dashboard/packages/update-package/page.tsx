@@ -11,9 +11,9 @@ import PackageBlockForm, {
 
 function UpdatePackageLoading() {
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto space-y-4">
-        <div className="h-9 w-64 bg-slate-700 rounded animate-pulse" />
+        <div className="h-9 w-full max-w-64 bg-slate-700 rounded animate-pulse" />
         <div className="h-40 bg-slate-800/60 rounded-2xl animate-pulse" />
         <div className="h-72 bg-slate-800/60 rounded-2xl animate-pulse" />
       </div>
@@ -67,7 +67,7 @@ function UpdatePackageInner() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-slate-300">{error}</p>
           <Button asChild className="bg-indigo-500 hover:bg-indigo-600 text-white">
@@ -81,13 +81,13 @@ function UpdatePackageInner() {
   if (!initialData) return <UpdatePackageLoading />;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Update Package Block</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Update Package Block</h1>
             <p className="text-slate-400 flex items-center gap-2 flex-wrap">
-              Editing <code className="text-indigo-300">{initialData.slug}</code>
+              Editing <code className="text-indigo-300 break-all">{initialData.slug}</code>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                   status === "published"

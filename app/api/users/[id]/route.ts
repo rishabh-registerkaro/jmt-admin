@@ -126,11 +126,13 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
                 }, { status: 400 })
             }
 
-            // Security check: Admin cannot change superadmin's password
-            if (currentUser.role === "admin" && targetUser.role === "superadmin") {
+            // Security check: an admin may only manage editors/contributors — not
+            // superadmins or other admins (otherwise one admin could reset another
+            // admin's password and log in as them).
+            if (currentUser.role === "admin" && !isChangingOwnData && (targetUser.role === "superadmin" || targetUser.role === "admin")) {
                 return NextResponse.json({
                     success: false,
-                    message: "You don't have permission to change Super Admin's password"
+                    message: "You don't have permission to change this user's password"
                 }, { status: 403 })
             }
 
@@ -202,15 +204,15 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
             if (isChangingOwnData) {
                 return NextResponse.json({
                     success: false,
-                    meessage: "You cannot change your own role"
+                    message: "You cannot change your own role"
                 }, { status: 403 })
             }
 
-            // security check: admin cannot change superadmin's role
-            if (currentUser.role === "admin" && targetUser.role === "superadmin") {
+            // security check: an admin cannot change a superadmin's or another admin's role
+            if (currentUser.role === "admin" && (targetUser.role === "superadmin" || targetUser.role === "admin")) {
                 return NextResponse.json({
                     success: false,
-                    message: "You don't have permission to change Super Admin's role"
+                    message: "You don't have permission to change this user's role"
                 }, { status: 403 })
             }
 

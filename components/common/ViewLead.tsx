@@ -24,7 +24,7 @@ export default function ViewLead({ lead }: ViewLeadProps) {
 
         <div>
           <h2 className="text-xl font-bold text-white">{lead.name}</h2>
-          <p className="text-sm text-slate-400">{lead.email}</p>
+          <p className="text-sm text-slate-400 break-all">{lead.email}</p>
         </div>
       </div>
 
@@ -77,15 +77,15 @@ function Item({
   badge?: boolean;
 }) {
   return (
-    <div className="flex justify-between border-b border-slate-700 py-2">
-      <span className="text-slate-400 text-sm">{label}</span>
+    <div className="flex justify-between gap-4 border-b border-slate-700 py-2">
+      <span className="text-slate-400 text-sm shrink-0">{label}</span>
 
       {badge ? (
         <span className="px-3 py-1 text-xs rounded-full bg-blue-500/20 text-blue-300 capitalize">
           {value}
         </span>
       ) : (
-        <span className="text-white font-medium">{value}</span>
+        <span className="text-white font-medium min-w-0 text-right break-words">{value}</span>
       )}
     </div>
   );

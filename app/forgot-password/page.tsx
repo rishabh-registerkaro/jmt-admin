@@ -387,7 +387,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 px-4">
-      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-xl">
+      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 p-6 sm:p-8 rounded-2xl shadow-xl">
         {/* Back to Login Link */}
         <button
           onClick={handleBackToLogin}
@@ -398,7 +398,7 @@ export default function ForgotPasswordPage() {
         </button>
 
         {/* Header */}
-        <h1 className="text-3xl font-bold text-center text-white mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">
           Reset Password
         </h1>
         <p className="text-center text-slate-300 mb-8 text-sm">
@@ -522,7 +522,7 @@ export default function ForgotPasswordPage() {
             >
               {loading ? "Verifying..." : "Verify OTP"}
             </button>
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <button
                 type="button"
                 onClick={() => handleStepChange("email")}
