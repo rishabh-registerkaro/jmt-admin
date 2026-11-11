@@ -11,6 +11,7 @@ const FIELD_NAMES: Record<LeadField, string> = {
   companyName: "Company name field (optional)",
   name: "Name field",
   phone: "Phone field",
+  email: "Email field",
   siteLocation: "Site location field",
   headcount: "Headcount field",
   startDate: "Start date field (optional)",

@@ -498,6 +498,7 @@ export const LEAD_FORM_COPY: LeadFormCopy = {
     companyName: "Company name",
     name: "Your name",
     phone: "Phone / WhatsApp",
+    email: "Email",
     siteLocation: "Site location",
     headcount: "Headcount",
     startDate: "Start date",

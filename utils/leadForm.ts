@@ -20,6 +20,7 @@ const LIMITS: Record<LeadField, number> = {
   companyName: 150,
   name: 100,
   phone: 20,
+  email: 254,
   siteLocation: 200,
   headcount: 6,
   startDate: 10,
@@ -29,6 +30,7 @@ export const EMPTY_LEAD_VALUES: LeadFormValues = {
   companyName: "",
   name: "",
   phone: "",
+  email: "",
   siteLocation: "",
   headcount: "",
   startDate: "",
@@ -50,9 +52,82 @@ export function readLeadValues(formData: FormData): LeadFormValues {
   return values;
 }
 
-function phoneDigits(phone: string): string {
-  return phone.replace(/[\s\-().]/g, "").replace(/^\+/, "");
+// ── Contact validation ───────────────────────────────────────────────────────
+// Each validator returns `null` when the value is valid, otherwise one specific,
+// user-facing message. Pure functions: safe on both client and server.
+
+/** Checks, in order, for a 10-digit Indian mobile number starting with 5–9. */
+export const PHONE_ERRORS = {
+  required: "Mobile number is required.",
+  characters: "Mobile number can only contain digits (spaces, dashes and +91 are fine).",
+  length: "Mobile number must be exactly 10 digits.",
+  start: "Mobile number must start with 5, 6, 7, 8 or 9.",
+} as const;
+
+/**
+ * Indian mobile number → the bare 10 digits, or the reason it isn't one.
+ * Accepts the ways people actually type it: "98765 43210", "98765-43210",
+ * "+91 98765 43210", "91 9876543210", "09876543210".
+ */
+export function validateIndianMobile(input: string): string | null {
+  const value = input.trim();
+  if (!value) return PHONE_ERRORS.required;
+
+  // Separators people type; a single leading "+" is allowed for the country code.
+  const compact = value.replace(/[\s\-().]/g, "");
+  if (!/^\+?\d+$/.test(compact)) return PHONE_ERRORS.characters;
+
+  let digits = compact.replace(/^\+/, "");
+  // Strip a country code (+91 / 91) or trunk prefix (0) only when what's left is 10 digits,
+  // so a genuine 10-digit number starting with 9 is never mangled.
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+
+  if (digits.length !== 10) return PHONE_ERRORS.length;
+  if (!/^[5-9]/.test(digits)) return PHONE_ERRORS.start;
+  return null;
 }
+
+export const EMAIL_ERRORS = {
+  required: "Email is required.",
+  spaces: "Email can't contain spaces.",
+  at: "Invalid email format: it must contain a single @, like name@example.com.",
+  local: "Invalid email format: add your name before the @.",
+  domain: "Invalid email format: the part after @ should look like example.com.",
+  dots: "Invalid email format: dots can't be at the start, the end or next to each other.",
+  tooLong: "Email is too long.",
+  format: "Invalid email format.",
+} as const;
+
+// Deliberately permissive local part (anything but whitespace and @, which
+// covers +tags, dots and international characters); stricter domain: labels of
+// letters, digits or inner hyphens, ending in an alphabetic TLD of 2+ letters.
+const EMAIL_DOMAIN_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
+const EMAIL_RE = /^[^\s@]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
+
+/** Valid email → null; otherwise the most specific reason it's invalid. */
+export function validateEmail(input: string): string | null {
+  const value = input.trim();
+  if (!value) return EMAIL_ERRORS.required;
+  if (value.length > 254) return EMAIL_ERRORS.tooLong;
+  if (/\s/.test(value)) return EMAIL_ERRORS.spaces;
+
+  const parts = value.split("@");
+  if (parts.length !== 2) return EMAIL_ERRORS.at;
+  const [local, domain] = parts;
+
+  if (!local) return EMAIL_ERRORS.local;
+  if (local.length > 64) return EMAIL_ERRORS.tooLong;
+  if (local.startsWith(".") || local.endsWith(".") || local.includes("..")) return EMAIL_ERRORS.dots;
+  if (!domain || !EMAIL_DOMAIN_RE.test(domain)) return EMAIL_ERRORS.domain;
+
+  // Belt and braces: the full pattern must also match.
+  return EMAIL_RE.test(value) ? null : EMAIL_ERRORS.format;
+}
+
+/** Boolean convenience wrappers. */
+export const isValidIndianMobile = (phone: string) => validateIndianMobile(phone) === null;
+export const isValidEmail = (email: string) => validateEmail(email) === null;
 
 function isRealDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -66,13 +141,16 @@ export function validateLead(values: LeadFormValues): Partial<Record<LeadField, 
 
   if (values.name.length < 2) {
     errors.name = "Please enter your name (at least 2 characters).";
+  } else if (/\p{N}/u.test(values.name)) {
+    // \p{N} also catches Bengali (০–৯) and Devanagari (०–९) digits.
+    errors.name = "Name can't contain numbers.";
   }
 
-  if (!values.phone) {
-    errors.phone = "Please enter a phone or WhatsApp number.";
-  } else if (!/^\d{7,15}$/.test(phoneDigits(values.phone))) {
-    errors.phone = "Please enter a valid phone number (7–15 digits).";
-  }
+  const phoneError = validateIndianMobile(values.phone);
+  if (phoneError) errors.phone = phoneError;
+
+  const emailError = validateEmail(values.email);
+  if (emailError) errors.email = emailError;
 
   if (values.siteLocation.length < 2) {
     errors.siteLocation = "Please tell us where the site is.";

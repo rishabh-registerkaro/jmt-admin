@@ -20,8 +20,7 @@ import type { LeadFormState } from "@/types/homepage";
 //
 // Shape matches what the dashboard already understands (app/types/lead.ts):
 // common fields in columns, form-specific answers in `formData` as
-// {"Field Label": value} pairs. The form collects no email, so `email` is
-// stored empty — the dashboard shows phone as the contact.
+// {"Field Label": value} pairs. Name, email and phone go in their own columns.
 
 const NOTIFY_TIMEOUT_MS = 8000;
 
@@ -143,7 +142,7 @@ export async function POST(req: NextRequest) {
     const lead = await prisma.lead.create({
       data: {
         name: values.name,
-        email: "",
+        email: values.email.toLowerCase(),
         phoneNo: values.phone,
         leadSource: LEAD_SOURCE,
         formData: leadFormData,
@@ -156,7 +155,7 @@ export async function POST(req: NextRequest) {
     await Promise.race([
       sendLeadNotification({
         name: lead.name,
-        email: "Not provided",
+        email: lead.email || "Not provided",
         phoneNo: lead.phoneNo,
         leadSource: lead.leadSource,
         formData: leadFormData,

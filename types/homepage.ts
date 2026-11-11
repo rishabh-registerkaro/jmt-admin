@@ -333,6 +333,7 @@ export const LEAD_FIELDS = [
   "companyName",
   "name",
   "phone",
+  "email",
   "siteLocation",
   "headcount",
   "startDate",

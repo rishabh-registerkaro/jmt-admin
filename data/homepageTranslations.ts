@@ -282,6 +282,7 @@ const ROWS: readonly Row[] = [
   ["Company name", "কোম্পানির নাম", "कंपनी का नाम"],
   ["Your name", "আপনার নাম", "आपका नाम"],
   ["Phone / WhatsApp", "ফোন / WhatsApp", "फ़ोन / WhatsApp"],
+  ["Email", "ইমেল", "ईमेल"],
   ["Site location", "সাইটের ঠিকানা", "साइट का पता"],
   ["Headcount", "লোকসংখ্যা", "श्रमिकों की संख्या"],
   ["Start date", "শুরুর তারিখ", "शुरू की तारीख़"],
