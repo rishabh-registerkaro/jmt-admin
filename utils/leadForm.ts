@@ -55,13 +55,15 @@ export function readLeadValues(formData: FormData): LeadFormValues {
 // ── Contact validation ───────────────────────────────────────────────────────
 // Each validator returns `null` when the value is valid, otherwise one specific,
 // user-facing message. Pure functions: safe on both client and server.
+// Keep messages short (≈30 characters): the homepage form shows them on a
+// single fixed-height line under each field so the layout never shifts.
 
 /** Checks, in order, for a 10-digit Indian mobile number starting with 5–9. */
 export const PHONE_ERRORS = {
   required: "Mobile number is required.",
-  characters: "Mobile number can only contain digits (spaces, dashes and +91 are fine).",
-  length: "Mobile number must be exactly 10 digits.",
-  start: "Mobile number must start with 5, 6, 7, 8 or 9.",
+  characters: "Use digits only.",
+  length: "Must be 10 digits.",
+  start: "Must start with 5, 6, 7, 8 or 9.",
 } as const;
 
 /**
@@ -90,13 +92,13 @@ export function validateIndianMobile(input: string): string | null {
 
 export const EMAIL_ERRORS = {
   required: "Email is required.",
-  spaces: "Email can't contain spaces.",
-  at: "Invalid email format: it must contain a single @, like name@example.com.",
-  local: "Invalid email format: add your name before the @.",
-  domain: "Invalid email format: the part after @ should look like example.com.",
-  dots: "Invalid email format: dots can't be at the start, the end or next to each other.",
+  spaces: "Remove the spaces.",
+  at: "Use one @, like name@site.com",
+  local: "Add your name before the @.",
+  domain: "Check the part after the @.",
+  dots: "Check the dots in your email.",
   tooLong: "Email is too long.",
-  format: "Invalid email format.",
+  format: "Enter a valid email.",
 } as const;
 
 // Deliberately permissive local part (anything but whitespace and @, which
@@ -140,7 +142,7 @@ export function validateLead(values: LeadFormValues): Partial<Record<LeadField, 
   const errors: Partial<Record<LeadField, string>> = {};
 
   if (values.name.length < 2) {
-    errors.name = "Please enter your name (at least 2 characters).";
+    errors.name = "Enter at least 2 characters.";
   } else if (/\p{N}/u.test(values.name)) {
     // \p{N} also catches Bengali (০–৯) and Devanagari (०–९) digits.
     errors.name = "Name can't contain numbers.";
@@ -153,18 +155,18 @@ export function validateLead(values: LeadFormValues): Partial<Record<LeadField, 
   if (emailError) errors.email = emailError;
 
   if (values.siteLocation.length < 2) {
-    errors.siteLocation = "Please tell us where the site is.";
+    errors.siteLocation = "Enter the site location.";
   }
 
   const headcount = Number(values.headcount);
   if (!values.headcount) {
-    errors.headcount = "Please enter how many workers you need.";
+    errors.headcount = "Enter how many workers.";
   } else if (!Number.isInteger(headcount) || headcount < 1 || headcount > MAX_HEADCOUNT) {
-    errors.headcount = `Enter a whole number between 1 and ${MAX_HEADCOUNT}.`;
+    errors.headcount = `Enter 1 to ${MAX_HEADCOUNT}.`;
   }
 
   if (values.startDate && !isRealDate(values.startDate)) {
-    errors.startDate = "Please choose a valid start date.";
+    errors.startDate = "Choose a valid date.";
   }
 
   return errors;
