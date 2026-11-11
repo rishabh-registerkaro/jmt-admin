@@ -18,6 +18,7 @@
 // Page content comes from the `home_pages` singleton edited at
 // /dashboard/homepage (app/lib/content/home-content.ts → HomePageContent).
 
+import { createHash } from "node:crypto";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
@@ -25,14 +26,12 @@ import prisma from "@/app/lib/config/db";
 import {
   HOMEPAGE_REVALIDATE_SECONDS,
   HOMEPAGE_TAGS,
-  MAX_INSIGHTS,
   MEDIA_PREFIX,
   MEDIA_SLOTS,
   buildHomepageData,
   buildSiteChrome,
-  type PostInput,
 } from "@/lib/homepage/buildHomepage";
-import type { HomepageData, SiteChrome } from "@/types/homepage";
+import type { HomepageData, SiteChrome, SwitcherLanguage } from "@/types/homepage";
 
 export { HOMEPAGE_REVALIDATE_SECONDS, HOMEPAGE_TAGS, resolveHref } from "@/lib/homepage/buildHomepage";
 
@@ -42,17 +41,6 @@ const menuSelect = {
   mainMenu: true,
   contactDetails: true,
 } satisfies Prisma.HeaderMenuSelect & Prisma.FooterMenuSelect;
-
-const postSelect = {
-  id: true,
-  slug: true,
-  title: true,
-  excerpt: true,
-  featuredImage: true,
-  publishedAt: true,
-  createdAt: true,
-  categories: { select: { name: true }, take: 1 },
-} satisfies Prisma.PostSelect;
 
 const mediaSelect = {
   filename: true,
@@ -90,27 +78,6 @@ const readFooterMenu = unstable_cache(
   cacheOptions(HOMEPAGE_TAGS.footerMenu),
 );
 
-// unstable_cache JSON-serialises results, so Dates come back as strings —
-// convert them inside the cached function and return plain strings.
-const readPosts = unstable_cache(
-  async (): Promise<PostInput[]> => {
-    const rows = await prisma.post.findMany({
-      where: { status: "published" },
-      select: postSelect,
-      // MySQL sorts NULL lowest, so undated posts fall to the end on DESC.
-      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-      take: MAX_INSIGHTS,
-    });
-    return rows.map((row) => ({
-      ...row,
-      publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
-      createdAt: row.createdAt.toISOString(),
-    }));
-  },
-  ["homepage", "posts"],
-  cacheOptions(HOMEPAGE_TAGS.posts),
-);
-
 const readMediaOverrides = unstable_cache(
   (): Promise<MediaRow[]> =>
     prisma.mediaAsset.findMany({
@@ -132,20 +99,6 @@ const readHomePage = unstable_cache(
   cacheOptions(HOMEPAGE_TAGS.homePage),
 );
 
-/**
- * When the homepage document last changed (ISO string), for open browser tabs
- * to detect a new save. Cached under the same tag, so it costs no DB query
- * until the admin saves.
- */
-const readHomePageVersion = unstable_cache(
-  async (): Promise<string | null> => {
-    const row = await prisma.homePage.findFirst({ select: { updatedAt: true }, orderBy: { updatedAt: "desc" } });
-    return row ? row.updatedAt.toISOString() : null;
-  },
-  ["homepage", "version"],
-  cacheOptions(HOMEPAGE_TAGS.homePage),
-);
-
 /** Runs a query; on any error logs once and returns the fallback instead. */
 async function withFallback<T>(label: string, query: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -162,27 +115,39 @@ async function withFallback<T>(label: string, query: () => Promise<T>, fallback:
 /** The saved homepage document, or null when none exists or MySQL is down. Per request. */
 const getHomePageRow = cache(() => withFallback("homepage content", readHomePage, null));
 
-/** Navbar, footer and contact details. Deduplicated per request via React `cache`. */
-export const getSiteChrome = cache(async (): Promise<SiteChrome> => {
+/** Navbar, footer and contact details in `lang`. Deduplicated per request via React `cache`. */
+export const getSiteChrome = cache(async (lang: SwitcherLanguage = "en"): Promise<SiteChrome> => {
   const [header, footer, row] = await Promise.all([
     withFallback("header menu", readHeaderMenu, null),
     withFallback("footer menu", readFooterMenu, null),
     getHomePageRow(),
   ]);
-  return buildSiteChrome(header, footer, row);
+  return buildSiteChrome(header, footer, row, lang);
 });
 
-/** Version stamp of the saved homepage ("" when none). Used by LiveRefresh. */
-export async function getHomepageVersion(): Promise<string> {
-  return (await withFallback("homepage version", readHomePageVersion, null)) ?? "";
-}
-
-/** All section content for the homepage, resolved in parallel. */
-export const getHomepageData = cache(async (): Promise<HomepageData> => {
-  const [row, posts, media] = await Promise.all([
+/** All section content for the homepage in `lang`, resolved in parallel. */
+export const getHomepageData = cache(async (lang: SwitcherLanguage = "en"): Promise<HomepageData> => {
+  const [row, media] = await Promise.all([
     getHomePageRow(),
-    withFallback("blog posts", readPosts, []),
     withFallback("media overrides", readMediaOverrides, []),
   ]);
-  return buildHomepageData(row, posts, media);
+  return buildHomepageData(row, media, lang);
 });
+
+/**
+ * Fingerprint of everything the homepage shows (sections, navbar, footer,
+ * contact details, photos). Open homepage tabs poll it (LiveRefresh) and
+ * reload when it changes — so a Header/Footer Menu or Media edit refreshes
+ * them too, not only a Homepage save. Covers every language (a Bengali-only
+ * edit changes it too). Built from the cached reads above, so it costs no
+ * database query until one of their tags is expired.
+ */
+export async function getHomepageVersion(): Promise<string> {
+  const [data, chrome, row] = await Promise.all([getHomepageData(), getSiteChrome(), getHomePageRow()]);
+  const content = row?.content;
+  const translations =
+    typeof content === "object" && content !== null && !Array.isArray(content)
+      ? (content as Record<string, unknown>).translations ?? null
+      : null;
+  return createHash("sha1").update(JSON.stringify({ data, chrome, translations })).digest("hex").slice(0, 16);
+}

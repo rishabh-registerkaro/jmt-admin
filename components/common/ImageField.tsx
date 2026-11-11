@@ -17,8 +17,8 @@ import {
 } from "@/app/lib/content/home-content";
 
 const inputCls =
-  "w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-indigo-500";
-const btnCls = "border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white";
+  "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
+const btnCls = "";
 
 interface ImageFieldProps {
   label: string;
@@ -61,9 +61,9 @@ export default function ImageField({ label, value, onChange, defaultSrc, hint }:
 
   return (
     <div className="space-y-2">
-      <span className="block text-sm font-medium text-slate-200">{label}</span>
-      <div className="flex flex-col gap-4 rounded-lg border border-slate-700 bg-slate-900/40 p-3 sm:flex-row">
-        <div className="relative flex h-32 w-full shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-800 sm:w-48">
+      <span className="block text-sm font-medium text-foreground">{label}</span>
+      <div className="flex flex-col gap-4 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row">
+        <div className="relative flex h-32 w-full shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted sm:w-48">
           {previewSrc && !urlInvalid ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -73,10 +73,10 @@ export default function ImageField({ label, value, onChange, defaultSrc, hint }:
               style={{ objectPosition: value.focus === "upper" ? "center 20%" : value.focus }}
             />
           ) : (
-            <ImageIcon className="h-8 w-8 text-slate-600" />
+            <ImageIcon className="h-8 w-8 text-muted-foreground" />
           )}
           {usingDefault && (
-            <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[11px] text-slate-200">
+            <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[11px] text-white">
               Default
             </span>
           )}
@@ -104,7 +104,7 @@ export default function ImageField({ label, value, onChange, defaultSrc, hint }:
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:bg-white/10 hover:text-white"
+                className="text-muted-foreground hover:bg-accent hover:text-foreground"
                 onClick={() => onChange({ ...value, src: "" })}
               >
                 <RotateCcw className="mr-1.5 h-4 w-4" /> {defaultSrc ? "Use default" : "Remove"}
@@ -118,7 +118,7 @@ export default function ImageField({ label, value, onChange, defaultSrc, hint }:
             onChange={(e) => onChange({ ...value, src: e.target.value })}
           />
           {urlInvalid && (
-            <p className="text-xs text-red-400">Use a full https:// URL or a path starting with “/”.</p>
+            <p className="text-xs text-destructive">Use a full https:// URL or a path starting with “/”.</p>
           )}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
             <input
@@ -128,7 +128,7 @@ export default function ImageField({ label, value, onChange, defaultSrc, hint }:
               onChange={(e) => onChange({ ...value, alt: e.target.value })}
             />
             <select
-              className="rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500"
+              className="rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring"
               value={value.focus}
               title="Which part of the photo stays visible when it is cropped"
               onChange={(e) => onChange({ ...value, focus: e.target.value as HomeImageValue["focus"] })}
@@ -140,7 +140,7 @@ export default function ImageField({ label, value, onChange, defaultSrc, hint }:
               ))}
             </select>
           </div>
-          {hint && <p className="text-xs text-slate-500">{hint}</p>}
+          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
         </div>
       </div>
 

@@ -249,18 +249,18 @@ export default function PackagesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Packages</h1>
-          <p className="text-slate-400">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Packages</h1>
+          <p className="text-sm text-muted-foreground">
             Package blocks are injected into the pages you target — they appear after the
             2nd content section of each page.
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 mb-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -268,13 +268,13 @@ export default function PackagesPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by title, slug or target page..."
-                className="w-full bg-slate-900/60 text-white border-slate-600"
+                className="w-full"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-white text-sm"
+              className="px-4 py-2 rounded-lg border border-border-strong bg-background text-foreground text-sm"
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
@@ -284,7 +284,7 @@ export default function PackagesPage() {
               onClick={() => {
                 window.location.href = "/dashboard/packages/create-package";
               }}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer whitespace-nowrap"
+              className="cursor-pointer whitespace-nowrap"
             >
               Add New Block
             </Button>
@@ -292,17 +292,17 @@ export default function PackagesPage() {
         </div>
 
         {/* Blocks Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
           <Table className="min-w-[800px]">
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-transparent">
-                <TableHead className="text-slate-300">Title / Slug</TableHead>
-                <TableHead className="text-slate-300">Appears on</TableHead>
-                <TableHead className="text-slate-300">Packages</TableHead>
-                <TableHead className="text-slate-300">Status</TableHead>
-                <TableHead className="text-slate-300">On website</TableHead>
-                <TableHead className="text-slate-300">Last Modified</TableHead>
-                <TableHead className="text-slate-300 text-center">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">Title / Slug</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Appears on</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Packages</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">On website</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Last Modified</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -310,29 +310,29 @@ export default function PackagesPage() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow
                     key={`skeleton-${index}`}
-                    className="border-slate-700 hover:bg-transparent"
+                    className="hover:bg-transparent"
                   >
                     <TableCell>
-                      <div className="h-5 bg-slate-700 rounded animate-pulse w-3/4"></div>
+                      <div className="h-5 bg-muted rounded animate-pulse w-3/4"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-12"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-12"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-6 bg-slate-700 rounded-full animate-pulse w-24"></div>
+                      <div className="h-6 bg-muted rounded-full animate-pulse w-24"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-5 bg-slate-700 rounded-full animate-pulse w-16"></div>
+                      <div className="h-5 bg-muted rounded-full animate-pulse w-16"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-32"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-center">
-                        <div className="h-8 w-8 bg-slate-700 rounded animate-pulse"></div>
+                        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -343,16 +343,16 @@ export default function PackagesPage() {
                   return (
                     <TableRow
                       key={block._id}
-                      className="border-slate-700 hover:bg-slate-800/30 transition-colors"
+                      className="hover:bg-muted/40 transition-colors"
                     >
-                      <TableCell className="text-slate-200 font-medium">
+                      <TableCell className="text-foreground-light font-medium">
                         <div>
                           {block.title || "(no title)"}
                           {block.status === "draft" && (
-                            <span className="ml-2 text-xs text-slate-400">- Draft</span>
+                            <span className="ml-2 text-xs text-muted-foreground">- Draft</span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500 mt-1">{block.slug}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{block.slug}</div>
                       </TableCell>
                       <TableCell>
                         {targets.length > 0 ? (
@@ -360,19 +360,19 @@ export default function PackagesPage() {
                             {targets.map((p) => (
                               <span
                                 key={p}
-                                className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-indigo-500/20 text-indigo-300"
+                                className="inline-flex items-center px-2 py-0.5 rounded-md border text-xs bg-muted/50 text-foreground-light"
                               >
                                 /{p}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-xs text-amber-400/80">No target pages</span>
+                          <span className="text-xs text-warning">No target pages</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-300 text-sm">
+                      <TableCell className="text-foreground-light text-sm">
                         {block.packageCount ?? 0}
-                        <span className="text-slate-500">
+                        <span className="text-muted-foreground">
                           {" "}
                           in {block.tabCount ?? 0} tab{block.tabCount === 1 ? "" : "s"}
                         </span>
@@ -381,8 +381,8 @@ export default function PackagesPage() {
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             block.status === "published"
-                              ? "bg-green-500/20 text-green-300"
-                              : "bg-yellow-500/20 text-yellow-300"
+                              ? "border border-brand/30 bg-brand/10 text-brand-link"
+                              : "border border-warning/30 bg-warning/10 text-warning"
                           }`}
                         >
                           {block.status === "published" ? "Published" : "Draft"}
@@ -404,30 +404,30 @@ export default function PackagesPage() {
                         >
                           <span
                             className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${
-                              block.visible !== false ? "bg-green-500/70" : "bg-slate-600"
+                              block.visible !== false ? "bg-brand" : "bg-border-strong"
                             }`}
                           >
                             <span
-                              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                              className={`absolute top-0.5 left-0 h-4 w-4 rounded-full bg-background shadow-sm transition-transform ${
                                 block.visible !== false ? "translate-x-4.5" : "translate-x-0.5"
                               }`}
                             />
                           </span>
                           <span
                             className={`text-xs font-medium ${
-                              block.visible !== false ? "text-green-300" : "text-slate-400"
+                              block.visible !== false ? "text-brand-link" : "text-muted-foreground"
                             }`}
                           >
                             {block.visible !== false ? "Visible" : "Hidden"}
                           </span>
                         </button>
                         {block.status === "draft" && block.visible !== false && (
-                          <div className="text-[11px] text-slate-500 mt-1">
+                          <div className="text-[11px] text-muted-foreground mt-1">
                             Draft — not live either way
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-400 text-sm">
+                      <TableCell className="text-muted-foreground text-sm">
                         {block.updatedAt
                           ? formatDate(block.updatedAt)
                           : block.createdAt
@@ -443,7 +443,7 @@ export default function PackagesPage() {
                                 size="sm"
                                 title="Actions"
                                 aria-label={`Actions for ${block.title || block.slug}`}
-                                className="text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer"
+                                className="cursor-pointer"
                               >
                                 {duplicatingSlug === block.slug ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -454,26 +454,26 @@ export default function PackagesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                               align="end"
-                              className="w-56 bg-slate-900 border-slate-700 text-white"
+                              className="w-56"
                             >
                               <DropdownMenuItem
                                 onClick={() => {
                                   window.location.href = `/dashboard/packages/update-package?slug=${block.slug}`;
                                 }}
-                                className="text-slate-200 focus:bg-slate-800 focus:text-white cursor-pointer"
+                                className="cursor-pointer"
                               >
-                                <FilePenLine className="mr-2 h-4 w-4 text-blue-400" />
+                                <FilePenLine className="mr-2 h-4 w-4 text-muted-foreground" />
                                 Edit
                               </DropdownMenuItem>
 
                               <DropdownMenuItem
                                 disabled={duplicatingSlug !== null}
                                 onClick={() => handleDuplicate(block)}
-                                className="text-slate-200 focus:bg-slate-800 focus:text-white cursor-pointer"
+                                className="cursor-pointer"
                               >
-                                <Copy className="mr-2 h-4 w-4 text-indigo-400" />
+                                <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                                 Duplicate
-                                <span className="ml-auto text-[11px] text-slate-500">
+                                <span className="ml-auto text-[11px] text-muted-foreground">
                                   as draft
                                 </span>
                               </DropdownMenuItem>
@@ -481,18 +481,18 @@ export default function PackagesPage() {
                               {block.status === "published" && (
                                 <DropdownMenuItem
                                   onClick={() => handleRevalidate(targets)}
-                                  className="text-slate-200 focus:bg-slate-800 focus:text-white cursor-pointer"
+                                  className="cursor-pointer"
                                 >
-                                  <RefreshCw className="mr-2 h-4 w-4 text-amber-400" />
+                                  <RefreshCw className="mr-2 h-4 w-4 text-warning" />
                                   Clear frontend cache
                                 </DropdownMenuItem>
                               )}
 
-                              <DropdownMenuSeparator className="bg-slate-700" />
+                              <DropdownMenuSeparator />
 
                               <DropdownMenuItem
                                 onClick={() => handleDelete(block.slug)}
-                                className="text-red-400 focus:bg-red-500/10 focus:text-red-300 cursor-pointer"
+                                className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
@@ -506,7 +506,7 @@ export default function PackagesPage() {
                 })
               ) : (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-400">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No package blocks found. Create your first one using the &quot;Add New
                     Block&quot; button.
                   </TableCell>
@@ -517,8 +517,8 @@ export default function PackagesPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-700">
-              <span className="text-sm text-slate-400">
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-border">
+              <span className="text-sm text-muted-foreground">
                 Page {pagination.currentPage} of {pagination.totalPages} •{" "}
                 {pagination.totalCount} blocks
               </span>
@@ -528,7 +528,7 @@ export default function PackagesPage() {
                   size="sm"
                   disabled={!pagination.hasPrevPage || loading}
                   onClick={() => fetchBlocks(pagination.currentPage - 1)}
-                  className="border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white disabled:opacity-40"
+                  className="disabled:opacity-40"
                 >
                   Previous
                 </Button>
@@ -537,7 +537,7 @@ export default function PackagesPage() {
                   size="sm"
                   disabled={!pagination.hasNextPage || loading}
                   onClick={() => fetchBlocks(pagination.currentPage + 1)}
-                  className="border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white disabled:opacity-40"
+                  className="disabled:opacity-40"
                 >
                   Next
                 </Button>

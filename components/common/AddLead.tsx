@@ -35,7 +35,6 @@ export default function AddLeadForm({ onCreate }: Props) {
       <div className="flex flex-col gap-2">
         <Label>Name</Label>
         <Input
-          className="bg-slate-800 border-slate-700 text-white"
           value={form.name}
           onChange={(e) => updateField("name", e.target.value)}
         />
@@ -44,7 +43,6 @@ export default function AddLeadForm({ onCreate }: Props) {
       <div className="flex flex-col gap-2">
         <Label>Email</Label>
         <Input
-          className="bg-slate-800 border-slate-700 text-white"
           type="email"
           value={form.email}
           onChange={(e) => updateField("email", e.target.value)}
@@ -54,7 +52,6 @@ export default function AddLeadForm({ onCreate }: Props) {
       <div className="flex flex-col gap-2">
         <Label>Phone</Label>
         <Input
-          className="bg-slate-800 border-slate-700 text-white"
           value={form.phoneNo}
           onChange={(e) => updateField("phoneNo", e.target.value)}
         />
@@ -63,7 +60,6 @@ export default function AddLeadForm({ onCreate }: Props) {
       <div className="flex flex-col gap-2">
         <Label>Topic</Label>
         <Input
-          className="bg-slate-800 border-slate-700 text-white"
           placeholder="What is this lead about?"
           value={form.topic}
           onChange={(e) => updateField("topic", e.target.value)}
@@ -76,10 +72,10 @@ export default function AddLeadForm({ onCreate }: Props) {
           value={form.status}
           onValueChange={(value) => updateField("status", value)}
         >
-          <SelectTrigger className="bg-slate-800 border-slate-700 text-white w-full">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 text-white border-slate-700">
+          <SelectContent>
             <SelectItem value="new">New</SelectItem>
             <SelectItem value="contacted">Contacted</SelectItem>
             <SelectItem value="converted">Converted</SelectItem>
@@ -89,7 +85,7 @@ export default function AddLeadForm({ onCreate }: Props) {
       </div>
 
       <Button
-        className="w-full bg-indigo-500 hover:bg-indigo-600 mt-3"
+        className="w-full mt-3"
         onClick={() =>
           onCreate({
             name: form.name,

@@ -11,11 +11,11 @@ import ServicePageForm, {
 
 function UpdateServiceLoading() {
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-4">
-        <div className="h-9 w-full max-w-64 bg-slate-700 rounded animate-pulse" />
-        <div className="h-40 bg-slate-800/60 rounded-2xl animate-pulse" />
-        <div className="h-72 bg-slate-800/60 rounded-2xl animate-pulse" />
+        <div className="h-9 w-full max-w-64 bg-muted rounded animate-pulse" />
+        <div className="h-40 bg-muted rounded-lg animate-pulse" />
+        <div className="h-72 bg-muted rounded-lg animate-pulse" />
       </div>
     </div>
   );
@@ -64,10 +64,10 @@ function UpdateServiceInner() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-slate-300">{error}</p>
-          <Button asChild className="bg-indigo-500 hover:bg-indigo-600 text-white">
+          <p className="text-foreground-light">{error}</p>
+          <Button asChild>
             <Link href="/dashboard/services">Back to Services</Link>
           </Button>
         </div>
@@ -78,25 +78,25 @@ function UpdateServiceInner() {
   if (!initialData) return <UpdateServiceLoading />;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Update Service</h1>
-            <p className="text-slate-400 flex flex-wrap items-center gap-2">
-              Editing <code className="text-indigo-300 break-all">{initialData.slug}</code>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Update Service</h1>
+            <p className="text-muted-foreground flex flex-wrap items-center gap-2">
+              Editing <code className="text-brand-link break-all">{initialData.slug}</code>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                   status === "published"
-                    ? "bg-green-500/20 text-green-300"
-                    : "bg-yellow-500/20 text-yellow-300"
+                    ? "bg-brand/10 text-brand-link"
+                    : "bg-warning/10 text-warning"
                 }`}
               >
                 {status === "published" ? "Published" : "Draft"}
               </span>
             </p>
           </div>
-          <Button asChild className="bg-indigo-500 hover:bg-indigo-600 text-white">
+          <Button asChild>
             <Link href="/dashboard/services/create-service">Create New Service</Link>
           </Button>
         </div>

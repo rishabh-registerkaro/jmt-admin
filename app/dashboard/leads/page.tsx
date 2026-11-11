@@ -98,14 +98,14 @@ export default function LeadsPage() {
       } else {
         toast.error(data.message || "Failed to fetch leads", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error) {
       console.error("Error fetching leads:", error);
       toast.error("Failed to load leads", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       setLoading(false);
@@ -164,14 +164,14 @@ export default function LeadsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "converted":
-        return "bg-green-500/20 text-green-400";
+        return "border border-brand/30 bg-brand/10 text-brand-link";
       case "contacted":
-        return "bg-blue-500/20 text-blue-400";
+        return "border bg-secondary text-foreground-light";
       case "lost":
-        return "bg-red-500/20 text-red-400";
+        return "border border-destructive/30 bg-destructive/10 text-destructive";
       case "new":
       default:
-        return "bg-yellow-500/20 text-yellow-400";
+        return "border border-warning/30 bg-warning/10 text-warning";
     }
   };
 
@@ -207,7 +207,7 @@ export default function LeadsPage() {
     toast.warning("Are you sure you want to delete this lead?", {
       description: "This action cannot be undone.",
       duration: 6000,
-      className: "!bg-transparent !text-white",
+      className: "!bg-transparent !text-foreground",
       closeButton: true,
       action: {
         label: "Delete",
@@ -215,7 +215,7 @@ export default function LeadsPage() {
           try {
             const loadingToastId = toast.loading("Deleting lead...", {
               closeButton: true,
-              className: "!bg-transparent !text-white",
+              className: "!bg-transparent !text-foreground",
             });
 
             const res = await fetch(`/api/lead/${leadId}`, {
@@ -227,20 +227,20 @@ export default function LeadsPage() {
             if (res.ok) {
               toast.success("Lead deleted successfully!", {
                 closeButton: true,
-                className: "!bg-transparent !text-white",
+                className: "!bg-transparent !text-foreground",
               });
               fetchLeads(); // Refresh the list
             } else {
               const data = await res.json();
               toast.error(data.message || "Failed to delete lead", {
                 closeButton: true,
-                className: "!bg-transparent !text-white",
+                className: "!bg-transparent !text-foreground",
               });
             }
           } catch (error) {
             toast.error("Failed to delete lead", {
               closeButton: true,
-              className: "!bg-transparent !text-white",
+              className: "!bg-transparent !text-foreground",
             });
           }
         },
@@ -279,23 +279,23 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Leads</h1>
-          <p className="text-slate-400">Manage your incoming leads</p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Leads</h1>
+          <p className="text-sm text-muted-foreground">Manage your incoming leads</p>
         </div>
 
         {/* Filters and Actions */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search leads by name, email, phone, company..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400"
+              className="pl-10 w-full rounded-lg border"
             />
           </div>
 
@@ -303,23 +303,23 @@ export default function LeadsPage() {
             value={status}
             onValueChange={(value) => setStatus(value as any)}
           >
-            <SelectTrigger className="w-full sm:w-[180px] rounded-lg border border-slate-600 bg-slate-900/60 text-white">
+            <SelectTrigger className="w-full sm:w-[180px] rounded-lg border">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-600 text-white">
-              <SelectItem value="all" className="hover:bg-slate-800">
+            <SelectContent className="">
+              <SelectItem value="all" className="">
                 All Status
               </SelectItem>
-              <SelectItem value="new" className="hover:bg-slate-800">
+              <SelectItem value="new" className="">
                 New
               </SelectItem>
-              <SelectItem value="contacted" className="hover:bg-slate-800">
+              <SelectItem value="contacted" className="">
                 Contacted
               </SelectItem>
-              <SelectItem value="converted" className="hover:bg-slate-800">
+              <SelectItem value="converted" className="">
                 Converted
               </SelectItem>
-              <SelectItem value="lost" className="hover:bg-slate-800">
+              <SelectItem value="lost" className="">
                 Lost
               </SelectItem>
             </SelectContent>
@@ -327,16 +327,16 @@ export default function LeadsPage() {
 
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-600 text-white">
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Add New
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="bg-slate-900 text-white sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl">Add New Lead</DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="">
                   Enter lead details and save.
                 </DialogDescription>
               </DialogHeader>
@@ -352,17 +352,17 @@ export default function LeadsPage() {
         </div>
 
         {/* Leads Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-transparent">
-                <TableHead className="text-slate-300">Name/Email</TableHead>
-                <TableHead className="text-slate-300">Phone</TableHead>
-                <TableHead className="text-slate-300">Topic</TableHead>
-                <TableHead className="text-slate-300">Status</TableHead>
-                <TableHead className="text-slate-300">Source</TableHead>
-                <TableHead className="text-slate-300">Created</TableHead>
-                <TableHead className="text-slate-300 text-center">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">Name/Email</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Phone</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Topic</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Source</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Created</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground text-center">
                   Actions
                 </TableHead>
               </TableRow>
@@ -373,36 +373,36 @@ export default function LeadsPage() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow
                     key={`skeleton-${index}`}
-                    className="border-slate-700 hover:bg-transparent"
+                    className="hover:bg-transparent"
                   >
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-32"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-28"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-28"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-6 bg-slate-700 rounded-full animate-pulse w-20"></div>
+                      <div className="h-6 bg-muted rounded-full animate-pulse w-20"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-16"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-16"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-28"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-28"></div>
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-center gap-2">
-                        <div className="h-8 w-8 bg-slate-700 rounded animate-pulse"></div>
-                        <div className="h-8 w-8 bg-slate-700 rounded animate-pulse"></div>
+                        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -411,38 +411,36 @@ export default function LeadsPage() {
                 filteredLeads.map((lead) => (
                   <TableRow
                     key={lead._id}
-                    className="border-slate-700 hover:bg-slate-800/30 transition-colors"
+                    className="hover:bg-muted/40 transition-colors"
                   >
-                    <TableCell className="text-slate-200 font-medium">
+                    <TableCell className="text-foreground-light font-medium">
                       <div className="flex flex-col">
-                        <span className="text-slate-200 text-sm font-medium">
+                        <span className="text-foreground-light text-sm font-medium">
                           {lead.name}
                         </span>
-                        <span className="text-xs text-slate-400 mt-0.5">
+                        <span className="text-xs text-muted-foreground mt-0.5">
                           {lead.email}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-foreground-light">
                       {lead.phoneNo}
                     </TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-foreground-light">
                       {Object.values(lead.formData ?? {})[0] || "-"}
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                          lead.status
-                        )}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor( lead.status )}`}
                       >
                         {lead.status.charAt(0).toUpperCase() +
                           lead.status.slice(1)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-slate-300 text-sm">
+                    <TableCell className="text-foreground-light text-sm">
                       {lead.leadSource || "Website"}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {formatDate(lead.createdAt)}
                     </TableCell>
                     <TableCell>
@@ -456,7 +454,7 @@ export default function LeadsPage() {
                             setEditLead(null);
                             setDrawerOpen(true);
                           }}
-                          className="h-8 w-8 p-0 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/20"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                         >
                           <View className="h-4 w-4" />
                         </Button>
@@ -470,7 +468,7 @@ export default function LeadsPage() {
                             setViewLead(null);
                             setDrawerOpen(true);
                           }}
-                          className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -479,7 +477,7 @@ export default function LeadsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(lead._id)}
-                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -488,10 +486,10 @@ export default function LeadsPage() {
                   </TableRow>
                 ))
               ) : (
-                <TableRow className="border-slate-700 hover:bg-transparent">
+                <TableRow className="hover:bg-transparent">
                   <TableCell
                     colSpan={9}
-                    className="text-center py-8 text-slate-400"
+                    className="text-center py-8 text-muted-foreground"
                   >
                     {search || status !== "all"
                       ? "No leads found matching your filters"
@@ -514,16 +512,16 @@ export default function LeadsPage() {
         >
           <SheetContent
             side="right"
-            className="bg-slate-900 w-full sm:w-[420px] text-white overflow-y-auto"
+            className="w-full sm:w-[420px] overflow-y-auto"
           >
             {/* VIEW MODE */}
             {viewLead && (
               <>
                 <SheetHeader>
-                  <SheetTitle className="text-white text-2xl">
+                  <SheetTitle className="text-2xl">
                     View Lead
                   </SheetTitle>
-                  <SheetDescription className="text-slate-400">
+                  <SheetDescription className="">
                     Lead details
                   </SheetDescription>
                 </SheetHeader>
@@ -534,10 +532,10 @@ export default function LeadsPage() {
             {editLead && (
               <>
                 <SheetHeader>
-                  <SheetTitle className="text-white text-2xl">
+                  <SheetTitle className="text-2xl">
                     Edit Lead
                   </SheetTitle>
-                  <SheetDescription className="text-slate-400">
+                  <SheetDescription className="">
                     Update the lead and save.
                   </SheetDescription>
                 </SheetHeader>
@@ -550,8 +548,8 @@ export default function LeadsPage() {
 
         {/* Pagination */}
         {!loading && pagination.totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-            <div className="text-sm text-slate-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-lg border bg-card p-4">
+            <div className="text-sm text-muted-foreground">
               Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
               {Math.min(pagination.currentPage * pagination.limit, pagination.totalCount)} of{" "}
               {pagination.totalCount} leads
@@ -562,7 +560,7 @@ export default function LeadsPage() {
                 size="sm"
                 onClick={() => fetchLeads(pagination.currentPage - 1)}
                 disabled={!pagination.hasPrevPage}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+                className="disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
@@ -587,8 +585,8 @@ export default function LeadsPage() {
                       onClick={() => fetchLeads(pageNum)}
                       className={
                         pagination.currentPage === pageNum
-                          ? "bg-indigo-500 hover:bg-indigo-600 text-white"
-                          : "border-slate-600 text-slate-300 hover:bg-slate-800"
+                          ? ""
+                          : ""
                       }
                     >
                       {pageNum}
@@ -601,7 +599,7 @@ export default function LeadsPage() {
                 size="sm"
                 onClick={() => fetchLeads(pagination.currentPage + 1)}
                 disabled={!pagination.hasNextPage}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+                className="disabled:opacity-50"
               >
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -612,7 +610,7 @@ export default function LeadsPage() {
 
         {/* Summary */}
         {!loading && filteredLeads.length > 0 && (
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-muted-foreground">
             Showing {filteredLeads.length} of {pagination.totalCount} leads
             {search && " (filtered by search)"}
           </div>

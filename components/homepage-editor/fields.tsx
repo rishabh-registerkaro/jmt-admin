@@ -10,15 +10,15 @@ import { Button } from "@/components/ui/button";
 import type { HomeLinkValue } from "@/app/lib/content/home-content";
 
 export const inputCls =
-  "w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
 export const textareaCls = `${inputCls} resize-y`;
 export const selectCls =
-  "w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500";
-export const itemCardCls = "rounded-lg border border-slate-700 bg-slate-800/30 p-4 space-y-3";
-const labelCls = "text-sm font-medium text-slate-200";
-const hintCls = "text-xs text-slate-500";
-const addBtnCls = "border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white";
-const iconBtnCls = "h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-white/10 disabled:opacity-30";
+  "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
+export const itemCardCls = "rounded-lg border bg-muted/40 p-4 space-y-3";
+const labelCls = "text-sm font-medium text-foreground";
+const hintCls = "text-xs text-muted-foreground";
+const addBtnCls = "text-foreground-light hover:text-foreground";
+const iconBtnCls = "h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30";
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -126,7 +126,7 @@ export function Grid({ children, cols = 2 }: { children: ReactNode; cols?: 2 | 3
 }
 
 export function SubHeading({ children }: { children: ReactNode }) {
-  return <h3 className="pt-2 text-sm font-semibold uppercase tracking-wide text-indigo-300">{children}</h3>;
+  return <h3 className="pt-2 text-sm font-semibold uppercase tracking-wide text-brand-link">{children}</h3>;
 }
 
 export function AddButton({ onClick, label, disabled }: { onClick: () => void; label: string; disabled?: boolean }) {
@@ -173,7 +173,7 @@ export function ListEditor<T>({
       {items.map((item, index) => (
         <div key={index} className={itemCardCls}>
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-medium text-slate-300">{itemLabel(item, index)}</span>
+            <span className="truncate text-sm font-medium text-foreground-light">{itemLabel(item, index)}</span>
             <div className="flex shrink-0 items-center gap-1">
               <Button
                 type="button"
@@ -202,7 +202,7 @@ export function ListEditor<T>({
                 variant="ghost"
                 size="sm"
                 title="Remove"
-                className="h-8 w-8 p-0 text-red-400 hover:bg-red-400/20 hover:text-red-300"
+                className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => onChange(items.filter((_, i) => i !== index))}
               >
                 <Trash2 className="h-4 w-4" />
@@ -255,7 +255,7 @@ export function StringListEditor({
             variant="ghost"
             size="sm"
             title="Remove"
-            className="h-8 w-8 shrink-0 p-0 text-red-400 hover:bg-red-400/20 hover:text-red-300"
+            className="h-8 w-8 shrink-0 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => onChange(items.filter((_, i) => i !== index))}
           >
             <Trash2 className="h-4 w-4" />
@@ -279,7 +279,7 @@ export function Toggle({
 }) {
   const id = useId();
   return (
-    <label htmlFor={id} className="flex shrink-0 cursor-pointer items-center gap-2 text-xs text-slate-300">
+    <label htmlFor={id} className="flex shrink-0 cursor-pointer items-center gap-2 text-xs text-foreground-light">
       <span>{checked ? "Visible" : "Hidden"}</span>
       <button
         id={id}
@@ -288,11 +288,11 @@ export function Toggle({
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative h-5 w-9 rounded-full transition-colors ${checked ? "bg-emerald-500" : "bg-slate-600"}`}
+        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0 transition-colors ${checked ? "bg-brand" : "bg-muted-foreground/40"}`}
       >
         <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-            checked ? "translate-x-4" : "translate-x-0.5"
+          className={`absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+            checked ? "translate-x-[18px]" : "translate-x-0.5"
           }`}
         />
       </button>
@@ -324,22 +324,22 @@ export function SectionCard({
   return (
     <Collapsible.Root open={open} onOpenChange={onToggle}>
       <div
-        className={`overflow-hidden rounded-2xl border bg-white/10 shadow-xl backdrop-blur-xl ${
-          hidden ? "border-white/5 opacity-70" : "border-white/10"
+        className={`overflow-hidden rounded-lg border bg-card ${
+          hidden ? "border-border opacity-70" : "border-border"
         }`}
       >
-        <div className="flex items-center gap-3 pr-4 hover:bg-white/5">
+        <div className="flex items-center gap-3 pr-4 hover:bg-muted/50">
           <Collapsible.Trigger asChild>
             <button type="button" className="flex min-w-0 flex-1 items-center gap-3 p-4 text-left">
               {open ? (
-                <ChevronDown className="h-5 w-5 shrink-0 text-slate-400" />
+                <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
               )}
-              <Icon className="h-5 w-5 shrink-0 text-indigo-400" />
+              <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
               <div className="min-w-0">
-                <span className="text-lg font-semibold text-white">{title}</span>
-                {hint && <p className="truncate text-xs text-slate-400">{hint}</p>}
+                <span className="text-lg font-semibold text-foreground">{title}</span>
+                {hint && <p className="truncate text-xs text-muted-foreground">{hint}</p>}
               </div>
             </button>
           </Collapsible.Trigger>
@@ -348,7 +348,7 @@ export function SectionCard({
           )}
         </div>
         <Collapsible.Content>
-          <div className="space-y-4 border-t border-white/10 p-4 sm:px-6 sm:pb-6">{children}</div>
+          <div className="space-y-4 border-t border-border p-4 sm:px-6 sm:pb-6">{children}</div>
         </Collapsible.Content>
       </div>
     </Collapsible.Root>

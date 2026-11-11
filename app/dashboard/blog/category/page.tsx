@@ -13,7 +13,7 @@ import { createCategory, deleteCategory } from "@/lib/apiCallingCategory";
 
 const toastConfig = {
   closeButton: true,
-  className: "!bg-transparent !text-white",
+  className: "!bg-transparent !text-foreground",
 }
 
 // Matches the palette in the Category model
@@ -259,23 +259,23 @@ export default function CategoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Categories</h1>
-          <p className="text-slate-400">Manage your post categories</p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Categories</h1>
+          <p className="text-sm text-muted-foreground">Manage your post categories</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Panel - Add Category Form */}
           <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Add Category</h2>
+            <div className="rounded-lg border bg-card p-4 sm:p-6">
+              <h2 className="text-base font-semibold text-foreground mb-4">Add Category</h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-200 mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium text-foreground-light mb-1">
                     Name
                   </label>
                   <Input
@@ -285,9 +285,9 @@ export default function CategoryPage() {
                     onChange={handleChange}
                     placeholder="Category name"
                     required
-                    className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white"
+                    className="w-full rounded-lg border"
                   />
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     The name is how it appears on your site.
                   </p>
                 </div>
@@ -295,11 +295,11 @@ export default function CategoryPage() {
                 {/* Slug */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <label htmlFor="slug" className="block text-sm font-medium text-slate-200 mb-1">
+                    <label htmlFor="slug" className="block text-sm font-medium text-foreground-light mb-1">
                       Slug
                     </label>
                     <div className="mb-1">
-                      <label className="flex items-center gap-2 text-xs text-slate-400">
+                      <label className="flex items-center gap-2 text-xs text-muted-foreground">
                         <input
                           type="checkbox"
                           checked={autoGenerateSlug}
@@ -319,24 +319,24 @@ export default function CategoryPage() {
                     required
                     disabled={autoGenerateSlug}
                     className={cn(
-                      "w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white",
+                      "w-full",
                       autoGenerateSlug && "opacity-60 cursor-not-allowed"
                     )}
                   />
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     The "slug" is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.
                   </p>
                 </div>
 
                 {/* Color */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-200 mb-1">
+                  <label className="block text-sm font-medium text-foreground-light mb-1">
                     Badge Color
                   </label>
                   <div className="flex items-center gap-3">
                     {/* Live preview swatch */}
                     <div
-                      className="h-8 w-8 shrink-0 rounded-full border-2 border-white/20"
+                      className="h-8 w-8 shrink-0 rounded-full border-2 border-border"
                       style={{ background: previewColor }}
                     />
                     {/* Palette quick-pick */}
@@ -350,7 +350,7 @@ export default function CategoryPage() {
                           className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
                           style={{
                             background: hex,
-                            borderColor: formData.color === hex ? "white" : "transparent",
+                            borderColor: formData.color === hex ? "var(--foreground)" : "transparent",
                           }}
                         />
                       ))}
@@ -361,17 +361,17 @@ export default function CategoryPage() {
                       value={formData.color}
                       onChange={handleChange}
                       placeholder="Custom hex e.g. #1e40af"
-                      className="flex-1 rounded-lg border border-slate-600 bg-slate-900/60 text-white font-mono text-xs"
+                      className="flex-1 rounded-lg border font-mono text-xs"
                     />
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Auto-assigned from name if left blank. Click a swatch or enter a custom hex to override.
                   </p>
                 </div>
 
                 {/* Parent Category */}
                 <div>
-                  <label htmlFor="parentCategory" className="block text-sm font-medium text-slate-200 mb-1">
+                  <label htmlFor="parentCategory" className="block text-sm font-medium text-foreground-light mb-1">
                     Parent Category
                   </label>
                   <select
@@ -379,7 +379,7 @@ export default function CategoryPage() {
                     name="parentCategory"
                     value={formData.parentCategory}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white"
+                    className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground"
                   >
                     <option value="">None</option>
                     {topLevelCategories.map((cat) => (
@@ -388,7 +388,7 @@ export default function CategoryPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Categories, unlike tags, can have a hierarchy. You might have a Jazz category, and under that have children categories for Bebop and Big Band. Totally optional.
                   </p>
                 </div>
@@ -396,7 +396,7 @@ export default function CategoryPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
+                  className="w-full"
                 >
                   {loading ? "Adding..." : "Add Category"}
                 </Button>
@@ -406,7 +406,7 @@ export default function CategoryPage() {
 
           {/* Right Panel - Category List */}
           <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+            <div className="rounded-lg border bg-card p-4 sm:p-6">
               {/* Search and Bulk Actions */}
               <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <div className="flex-1 flex flex-col sm:flex-row gap-2">
@@ -415,12 +415,12 @@ export default function CategoryPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search categories..."
-                    className="flex-1 bg-slate-900/60 text-white border-slate-600"
+                    className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    className="bg-slate-700 text-white border-slate-600"
+                    className=""
                   >
                     Search Categories
                   </Button>
@@ -430,7 +430,7 @@ export default function CategoryPage() {
               {/* Category Table */}
               <Table className="min-w-[640px]">
                 <TableHeader>
-                  <TableRow className="border-slate-700 hover:bg-transparent">
+                  <TableRow className="hover:bg-transparent">
                     <TableHead className="w-12">
                       <input
                         type="checkbox"
@@ -439,11 +439,11 @@ export default function CategoryPage() {
                         className="rounded"
                       />
                     </TableHead>
-                    <TableHead className="text-slate-300">Name</TableHead>
-                    <TableHead className="text-slate-300">Color</TableHead>
-                    <TableHead className="text-slate-300">Slug</TableHead>
-                    <TableHead className="text-slate-300">Parent</TableHead>
-                    <TableHead className="text-slate-300 text-center">Actions</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Name</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Color</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Slug</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Parent</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -451,26 +451,26 @@ export default function CategoryPage() {
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow
                         key={`skeleton-${index}`}
-                        className="border-slate-700 hover:bg-transparent"
+                        className="hover:bg-transparent"
                       >
                         <TableCell>
-                          <div className="h-4 w-4 bg-slate-700 rounded animate-pulse"></div>
+                          <div className="h-4 w-4 bg-muted rounded animate-pulse"></div>
                         </TableCell>
                         <TableCell>
-                          <div className="h-5 bg-slate-700 rounded animate-pulse w-3/4"></div>
+                          <div className="h-5 bg-muted rounded animate-pulse w-3/4"></div>
                         </TableCell>
                         <TableCell>
-                          <div className="h-6 w-6 bg-slate-700 rounded-full animate-pulse"></div>
+                          <div className="h-6 w-6 bg-muted rounded-full animate-pulse"></div>
                         </TableCell>
                         <TableCell>
-                          <div className="h-4 bg-slate-700 rounded animate-pulse w-1/2"></div>
+                          <div className="h-4 bg-muted rounded animate-pulse w-1/2"></div>
                         </TableCell>
                         <TableCell>
-                          <div className="h-4 bg-slate-700 rounded animate-pulse w-1/3"></div>
+                          <div className="h-4 bg-muted rounded animate-pulse w-1/3"></div>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-center">
-                            <div className="h-8 w-8 bg-slate-700 rounded animate-pulse"></div>
+                            <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -479,7 +479,7 @@ export default function CategoryPage() {
                     paginatedCategories.map((cat) => (
                       <TableRow
                         key={cat._id}
-                        className="border-slate-700 hover:bg-slate-800/30 transition-colors"
+                        className="hover:bg-muted/40 transition-colors"
                       >
                         <TableCell>
                           <input
@@ -489,7 +489,7 @@ export default function CategoryPage() {
                             className="rounded"
                           />
                         </TableCell>
-                        <TableCell className="text-slate-200 font-medium">
+                        <TableCell className="text-foreground-light font-medium">
                           <div className="cursor-pointer" onClick={() => router.push(`/dashboard/blog/category/${cat._id}`)}>
                             {cat.name}
                           </div>
@@ -497,18 +497,18 @@ export default function CategoryPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div
-                              className="h-5 w-5 rounded-full border border-white/20 shrink-0"
+                              className="h-5 w-5 rounded-full border border-border shrink-0"
                               style={{ background: cat.color || generateCategoryColor(cat.name) }}
                             />
-                            <span className="font-mono text-[10px] text-slate-400">
+                            <span className="font-mono text-[10px] text-muted-foreground">
                               {cat.color || generateCategoryColor(cat.name)}
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-slate-400 font-mono text-sm">
+                        <TableCell className="text-muted-foreground font-mono text-sm">
                           {cat.slug}
                         </TableCell>
-                        <TableCell className="text-slate-400 text-sm">
+                        <TableCell className="text-muted-foreground text-sm">
                           {getCategoryName(cat.parentCategory || null)}
                         </TableCell>
                         <TableCell className="text-right">
@@ -517,7 +517,7 @@ export default function CategoryPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(cat._id)}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-400/20 cursor-pointer"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -527,7 +527,7 @@ export default function CategoryPage() {
                     ))
                   ) : (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-400">
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         No categories found. Add your first category using the form on the left.
                       </TableCell>
                     </TableRow>
@@ -536,7 +536,7 @@ export default function CategoryPage() {
               </Table>
 
               {/* Pagination */}
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-400">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
                 <span>
                   {totalCount} {totalCount === 1 ? "item" : "items"}
                 </span>
@@ -550,7 +550,7 @@ export default function CategoryPage() {
                       size="sm"
                       onClick={() => setCurrentPage(1)}
                       disabled={currentPage === 1}
-                      className="text-slate-400 hover:text-white disabled:opacity-50"
+                      className="disabled:opacity-50"
                     >
                       ««
                     </Button>
@@ -559,7 +559,7 @@ export default function CategoryPage() {
                       size="sm"
                       onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="text-slate-400 hover:text-white disabled:opacity-50"
+                      className="disabled:opacity-50"
                     >
                       ‹
                     </Button>
@@ -568,7 +568,7 @@ export default function CategoryPage() {
                       size="sm"
                       onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages || totalPages === 0}
-                      className="text-slate-400 hover:text-white disabled:opacity-50"
+                      className="disabled:opacity-50"
                     >
                       ›
                     </Button>
@@ -577,7 +577,7 @@ export default function CategoryPage() {
                       size="sm"
                       onClick={() => setCurrentPage(totalPages)}
                       disabled={currentPage === totalPages || totalPages === 0}
-                      className="text-slate-400 hover:text-white disabled:opacity-50"
+                      className="disabled:opacity-50"
                     >
                       »»
                     </Button>

@@ -206,7 +206,7 @@ export default function BlogPage() {
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -216,7 +216,7 @@ export default function BlogPage() {
     if (file.size > maxSize) {
       toast.error("Image size should be less than 10MB", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -224,7 +224,7 @@ export default function BlogPage() {
     setUploadingImage(true);
     const loadingToastId = toast.loading("Uploading image...", {
       closeButton: true,
-      className: "!bg-transparent !text-white",
+      className: "!bg-transparent !text-foreground",
     });
 
     try {
@@ -236,13 +236,13 @@ export default function BlogPage() {
       toast.dismiss(loadingToastId);
       toast.success("Image uploaded successfully!", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } catch (error: any) {
       toast.dismiss(loadingToastId);
       toast.error(error.message || "Failed to upload image", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       setUploadingImage(false);
@@ -390,26 +390,26 @@ export default function BlogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="w-full">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             Create New Post
           </h1>
-          <p className="text-slate-400">
+          <p className="text-muted-foreground">
             Fill in the details to create a new blog post
           </p>
         </div>
 
         <form className="space-y-6">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 space-y-6">
+          <div className="rounded-lg border bg-card p-4 sm:p-6 space-y-6">
             {/* Title */}
             <div className="space-y-2">
               <label
                 htmlFor="title"
-                className="block text-sm font-medium text-slate-200"
+                className="block text-sm font-medium text-foreground"
               >
-                Title <span className="text-red-400">*</span>
+                Title <span className="text-destructive">*</span>
               </label>
               <Input
                 id="title"
@@ -418,7 +418,7 @@ export default function BlogPage() {
                 onChange={handleChange}
                 placeholder="Enter post title"
                 required
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white"
+                className="w-full"
               />
             </div>
 
@@ -427,11 +427,11 @@ export default function BlogPage() {
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="slug"
-                  className="block text-sm font-medium text-slate-200"
+                  className="block text-sm font-medium text-foreground"
                 >
-                  Slug <span className="text-red-400">*</span>
+                  Slug <span className="text-destructive">*</span>
                 </label>
-                <label className="flex items-center gap-2 text-xs text-slate-400">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={autoGenerateSlug}
@@ -450,7 +450,7 @@ export default function BlogPage() {
                 required
                 disabled={autoGenerateSlug}
                 className={cn(
-                  "w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white",
+                  "w-full",
                   autoGenerateSlug && "opacity-60 cursor-not-allowed"
                 )}
               />
@@ -460,7 +460,7 @@ export default function BlogPage() {
             <div className="space-y-2">
               <label
                 htmlFor="excerpt"
-                className="block text-sm font-medium text-slate-200"
+                className="block text-sm font-medium text-foreground"
               >
                 Excerpt
               </label>
@@ -471,7 +471,7 @@ export default function BlogPage() {
                 onChange={handleChange}
                 placeholder="Brief description of the post"
                 rows={3}
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+                className="w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring resize-y"
               />
             </div>
 
@@ -479,9 +479,9 @@ export default function BlogPage() {
             <div className="space-y-2">
               <label
                 htmlFor="content"
-                className="block text-sm font-medium text-slate-200"
+                className="block text-sm font-medium text-foreground"
               >
-                Content <span className="text-red-400">*</span>
+                Content <span className="text-destructive">*</span>
               </label>
               <Editor
                 content={formData.content}
@@ -499,7 +499,7 @@ export default function BlogPage() {
             <div className="space-y-2">
               <label
                 htmlFor="featuredImage"
-                className="block text-sm font-medium text-slate-200"
+                className="block text-sm font-medium text-foreground"
               >
                 Featured Image
               </label>
@@ -509,7 +509,7 @@ export default function BlogPage() {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingImage}
                   variant="outline"
-                  className="bg-slate-800/60 !text-white border-slate-600 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   {uploadingImage ? "Uploading..." : "Upload"}
@@ -518,7 +518,7 @@ export default function BlogPage() {
                   type="button"
                   onClick={openMediaLibrary}
                   variant="outline"
-                  className="bg-slate-800/60 !text-white border-slate-600 hover:bg-slate-700 cursor-pointer"
+                  className="cursor-pointer"
                 >
                   <ImageIcon className="h-4 w-4 mr-2" />
                   Media Library
@@ -530,7 +530,7 @@ export default function BlogPage() {
                   value={formData.featuredImage}
                   onChange={handleChange}
                   placeholder="Enter image URL or upload an image"
-                  className="w-full sm:w-auto sm:flex-1 rounded-lg border border-slate-600 bg-slate-900/60 text-white"
+                  className="w-full sm:w-auto sm:flex-1"
                 />
 
                 <input
@@ -542,9 +542,9 @@ export default function BlogPage() {
                   disabled={uploadingImage}
                 />
               </div>
-              <div className="flex items-start justify-center gap-2 mt-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                <AlertTriangle className="h-3 w-3 text-yellow-400 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-yellow-300">
+              <div className="flex items-start justify-center gap-2 mt-2 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+                <AlertTriangle className="h-3 w-3 text-warning mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-warning">
                   <strong>Warning:</strong> Please ensure you have saved your data to draft before clicking Media Library or Open the Media Library in a new tab, otherwise your content may be lost.
                 </p>
               </div>
@@ -553,7 +553,7 @@ export default function BlogPage() {
                   <img
                     src={formData.featuredImage}
                     alt="Featured preview"
-                    className="max-w-full h-48 object-cover rounded-lg border border-slate-600"
+                    className="max-w-full h-48 object-cover rounded-lg border border-border"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
                     }}
@@ -564,11 +564,11 @@ export default function BlogPage() {
 
             {/* Author */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-200">
-                Author <span className="text-xs text-slate-400">(Optional - defaults to current user)</span>
+              <label className="block text-sm font-medium text-foreground">
+                Author <span className="text-xs text-muted-foreground">(Optional - defaults to current user)</span>
               </label>
               {usersLoading ? (
-                <div className="text-sm text-slate-400">Loading users...</div>
+                <div className="text-sm text-muted-foreground">Loading users...</div>
               ) : users.length > 0 ? (
                 <Select
                   value={formData.author || ""}
@@ -576,15 +576,15 @@ export default function BlogPage() {
                     setFormData((prev) => ({ ...prev, author: value }));
                   }}
                 >
-                  <SelectTrigger className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select an author (optional)" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-600 text-white">
+                  <SelectContent>
                     {users.map((user) => (
                       <SelectItem
                         key={user._id}
                         value={user._id}
-                        className="!text-white cursor-pointer hover:bg-slate-800 focus:bg-slate-800"
+                        className="cursor-pointer"
                       >
                         {user.username}
                       </SelectItem>
@@ -592,22 +592,22 @@ export default function BlogPage() {
                   </SelectContent>
                 </Select>
               ) : (
-                <div className="text-sm text-slate-400">No users available</div>
+                <div className="text-sm text-muted-foreground">No users available</div>
               )}
             </div>
 
             {/* Category */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-200">
+              <label className="block text-sm font-medium text-foreground">
                 Category
               </label>
               {categoriesLoading ? (
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-muted-foreground">
                   Loading categories...
                 </div>
               ) : categories.length > 0 ? (
                 <>
-                  <div className="bg-slate-900/60 border border-slate-600 rounded-lg p-3 max-h-48 overflow-y-auto">
+                  <div className="bg-muted/40 border border-border rounded-lg p-3 max-h-48 overflow-y-auto">
                     <div className="space-y-2">
                       {categories.map((cat) => {
                         const categoryId = cat.id || cat._id;
@@ -615,7 +615,7 @@ export default function BlogPage() {
                         return (
                           <label
                             key={categoryId}
-                            className="flex items-center gap-2 text-slate-200 cursor-pointer hover:text-white transition-colors"
+                            className="flex items-center gap-2 text-foreground cursor-pointer hover:text-foreground transition-colors"
                           >
                             <input
                               type="checkbox"
@@ -626,7 +626,7 @@ export default function BlogPage() {
                                   e.target.checked
                                 )
                               }
-                              className="rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
+                              className="rounded border-input accent-brand focus-visible:ring-ring"
                             />
                             <span className="text-sm">{cat.name}</span>
                           </label>
@@ -643,13 +643,13 @@ export default function BlogPage() {
                         return (
                           <span
                             key={categoryId}
-                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-sm border border-blue-500/30"
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-foreground-light text-sm border"
                           >
                             {category?.name || categoryId}
                             <button
                               type="button"
                               onClick={() => removeCategory(categoryId)}
-                              className="hover:text-red-400 transition-colors"
+                              className="hover:text-destructive transition-colors"
                             >
                               ×
                             </button>
@@ -660,7 +660,7 @@ export default function BlogPage() {
                   )}
                 </>
               ) : (
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-muted-foreground">
                   No categories available
                 </div>
               )}
@@ -671,7 +671,7 @@ export default function BlogPage() {
               <div className="space-y-2">
                 <label
                   htmlFor="publishedAt"
-                  className="block text-sm font-medium text-slate-200"
+                  className="block text-sm font-medium text-foreground"
                 >
                   Published Date
                 </label>
@@ -681,15 +681,15 @@ export default function BlogPage() {
                   type="datetime-local"
                   value={formData.publishedAt}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white"
+                  className="w-full"
                 />
               </div>
             )}
 
             {/* FAQ Items Section */}
-            <div className="pt-6 border-t border-slate-700">
+            <div className="pt-6 border-t border-border">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-200">
+                <h3 className="text-lg font-semibold text-foreground">
                   FAQ Items
                 </h3>
                 <Button
@@ -697,7 +697,6 @@ export default function BlogPage() {
                   onClick={addFAQItem}
                   variant="outline"
                   size="sm"
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-500"
                 >
                   + Add FAQ
                 </Button>
@@ -708,10 +707,10 @@ export default function BlogPage() {
                   {formData.faq_items.map((faq, index) => (
                     <div
                       key={index}
-                      className="bg-slate-800/30 p-4 rounded-lg border border-slate-700"
+                      className="bg-muted/40 p-4 rounded-lg border border-border"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-semibold text-slate-300">
+                        <span className="text-sm font-semibold text-foreground-light">
                           FAQ #{index + 1}
                         </span>
                         <Button
@@ -719,14 +718,14 @@ export default function BlogPage() {
                           onClick={() => removeFAQItem(index)}
                           variant="ghost"
                           size="sm"
-                          className="text-red-400 hover:text-red-300 hover:bg-red-400/20"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           Remove
                         </Button>
                       </div>
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs text-slate-400 mb-1">
+                          <label className="block text-xs text-muted-foreground mb-1">
                             Question
                           </label>
                           <Input
@@ -736,11 +735,10 @@ export default function BlogPage() {
                               updateFAQItem(index, "question", e.target.value)
                             }
                             placeholder="Enter FAQ question"
-                            className="bg-slate-900/60 text-white border-slate-600"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-slate-400 mb-1">
+                          <label className="block text-xs text-muted-foreground mb-1">
                             Answer
                           </label>
                           <textarea
@@ -750,7 +748,7 @@ export default function BlogPage() {
                             }
                             placeholder="Enter FAQ answer (HTML supported)"
                             rows={4}
-                            className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+                            className="w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring resize-y"
                           />
                         </div>
                       </div>
@@ -758,7 +756,7 @@ export default function BlogPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
                   <p className="text-sm">No FAQ items added yet</p>
                   <p className="text-xs mt-1">
                     Click "Add FAQ" to create FAQ items
@@ -773,14 +771,14 @@ export default function BlogPage() {
             />
 
             {/* Schema Section */}
-            <div className="pt-6 border-t border-slate-700">
+            <div className="pt-6 border-t border-border">
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-200">
+                    <h3 className="text-lg font-semibold text-foreground">
                       Schema (JSON-LD)
                     </h3>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                     Add multiple JSON-LD schemas. Each schema will be stored directly in the database array.
                     </p>
                   </div>
@@ -789,7 +787,6 @@ export default function BlogPage() {
                     onClick={addSchemaField}
                     variant="outline"
                     size="sm"
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-500"
                   >
                     + Add More Schema
                   </Button>
@@ -799,10 +796,10 @@ export default function BlogPage() {
                   {schemas.map((schema, index) => (
                     <div
                       key={index}
-                      className="bg-slate-800/30 p-4 rounded-lg border border-slate-700"
+                      className="bg-muted/40 p-4 rounded-lg border border-border"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-semibold text-slate-300">
+                        <span className="text-sm font-semibold text-foreground-light">
                           Schema #{index + 1}
                         </span>
                         {schemas.length > 1 && (
@@ -811,7 +808,7 @@ export default function BlogPage() {
                             onClick={() => removeSchemaField(index)}
                             variant="ghost"
                             size="sm"
-                            className="text-red-400 hover:text-red-300 hover:bg-red-400/20"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           >
                             Remove
                           </Button>
@@ -826,10 +823,10 @@ or
 {"@type": "BreadcrumbList", "itemListElement": [...]}
 or
 {"@type": "FAQPage", "mainEntity": [...]}`}
-                        className="w-full min-h-[200px] p-4 rounded-lg border border-slate-600 bg-slate-900/60 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+                        className="w-full min-h-[200px] p-4 rounded-md border border-input bg-transparent dark:bg-input/30 text-foreground font-mono text-sm focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring resize-y"
                         style={{ fontFamily: 'monospace', lineHeight: '1.5' }}
                       />
-                      <p className="text-xs text-slate-400 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         Supports any JSON-LD schema format (Article, BlogPosting, BreadcrumbList, FAQPage, etc.)
                       </p>
                     </div>
@@ -844,7 +841,6 @@ or
             <Button
               type="button"
               variant="outline"
-              className="bg-slate-800/60 text-white border-slate-600 hover:bg-slate-700"
             >
               Cancel
             </Button>
@@ -861,7 +857,7 @@ or
                   !formData.content
                 }
                 variant="outline"
-                className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                className="disabled:cursor-not-allowed"
               >
                 {loading ? "Saving..." : "Save as Draft"}
               </Button>
@@ -877,7 +873,7 @@ or
                 !formData.slug ||
                 !formData.content
               }
-              className="bg-indigo-500 hover:bg-indigo-600 text-white disabled:bg-slate-600 disabled:cursor-not-allowed"
+              className="disabled:cursor-not-allowed"
             >
               {loading ? "Publishing..." : "Publish"}
             </Button>

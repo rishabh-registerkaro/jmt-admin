@@ -48,16 +48,16 @@ import { PACKAGE_TEMPLATES } from "@/app/lib/content/package-templates";
 // ─── Shared styles (matched to the service page editor) ───────────────────────
 
 const inputCls =
-  "w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
 const textareaCls = `${inputCls} resize-y`;
 const selectCls =
-  "rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500";
-const cardWrapCls = "bg-slate-800/30 p-4 rounded-lg border border-slate-700";
+  "rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
+const cardWrapCls = "bg-muted/40 p-4 rounded-lg border border-border";
 const emptyStateCls =
-  "text-center py-6 text-slate-500 border border-dashed border-slate-700 rounded-lg";
-const labelCls = "text-sm font-medium text-slate-200";
+  "text-center py-6 text-muted-foreground border border-dashed border-border rounded-lg";
+const labelCls = "text-sm font-medium text-foreground";
 const addBtnCls =
-  "border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white";
+  "";
 
 // ─── Small building blocks ────────────────────────────────────────────────────
 
@@ -75,10 +75,10 @@ function Field({
   return (
     <div className="space-y-2">
       <label className={labelCls}>
-        {label} {required && <span className="text-red-400">*</span>}
+        {label} {required && <span className="text-destructive">*</span>}
       </label>
       {children}
-      {hint && <p className="text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -91,7 +91,7 @@ function RemoveButton({ onClick, title }: { onClick: () => void; title?: string 
       size="sm"
       onClick={onClick}
       title={title || "Remove"}
-      className="text-red-400 hover:text-red-300 hover:bg-red-400/20 shrink-0"
+      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
     >
       <Trash2 className="h-4 w-4" />
     </Button>
@@ -106,7 +106,7 @@ function DuplicateButton({ onClick, title }: { onClick: () => void; title: strin
       size="sm"
       onClick={onClick}
       title={title}
-      className="text-indigo-300 hover:text-indigo-200 hover:bg-indigo-400/20 shrink-0"
+      className="text-brand-link hover:text-brand-link hover:bg-brand/10 shrink-0"
     >
       <Copy className="h-4 w-4" />
     </Button>
@@ -141,7 +141,7 @@ function MoveButtons({
         disabled={!canUp}
         onClick={onUp}
         title="Move up"
-        className="text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30"
+        className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
       >
         <ChevronUp className="h-4 w-4" />
       </Button>
@@ -152,7 +152,7 @@ function MoveButtons({
         disabled={!canDown}
         onClick={onDown}
         title="Move down"
-        className="text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30"
+        className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
       >
         <ChevronDown className="h-4 w-4" />
       </Button>
@@ -236,15 +236,15 @@ function SectionHeader({
   open: boolean;
 }) {
   return (
-    <div className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+    <div className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-3">
-        <Icon className="h-5 w-5 text-indigo-400" />
-        <span className="text-lg font-semibold text-white">{title}</span>
+        <Icon className="h-5 w-5 text-muted-foreground" />
+        <span className="text-lg font-semibold text-foreground">{title}</span>
       </div>
       {open ? (
-        <ChevronDown className="h-5 w-5 text-slate-400" />
+        <ChevronDown className="h-5 w-5 text-muted-foreground" />
       ) : (
-        <ChevronRight className="h-5 w-5 text-slate-400" />
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
       )}
     </div>
   );
@@ -365,7 +365,7 @@ function PackageEditor({
             {pkg.itinerary.map((day, i) => (
               <div key={i} className={cardWrapCls}>
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <span className="text-xs font-semibold text-slate-400">Day row {i + 1}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Day row {i + 1}</span>
                   <div className="flex items-center gap-1">
                     <MoveButtons
                       canUp={i > 0}
@@ -904,14 +904,14 @@ export default function PackageBlockForm({
   // ── Render ────────────────────────────────────────────────────────────────
 
   const card =
-    "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden";
+    "rounded-lg border bg-card overflow-hidden";
 
   return (
     <div className="space-y-4">
       {mode === "create" && (
         <div className={`${card} p-4 flex flex-col sm:flex-row sm:items-center gap-3`}>
-          <div className="flex items-center gap-2 text-slate-200">
-            <LayoutTemplate className="h-5 w-5 text-indigo-400" />
+          <div className="flex items-center gap-2 text-foreground">
+            <LayoutTemplate className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium">Start from a template:</span>
           </div>
           <select
@@ -940,7 +940,7 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-border">
               <Field label="Block title" required hint="Internal name, also used as the default heading">
                 <Input
                   className={inputCls}
@@ -953,9 +953,9 @@ export default function PackageBlockForm({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className={labelCls}>
-                    Block slug <span className="text-red-400">*</span>
+                    Block slug <span className="text-destructive">*</span>
                   </label>
-                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={autoGenerateSlug}
@@ -965,7 +965,7 @@ export default function PackageBlockForm({
                         if (auto)
                           setFormData((p) => ({ ...p, slug: generateSlug(p.title) }));
                       }}
-                      className="accent-indigo-500"
+                      className="accent-brand"
                     />
                     Auto-generate from title
                   </label>
@@ -977,7 +977,7 @@ export default function PackageBlockForm({
                   disabled={autoGenerateSlug}
                   onChange={(e) => setFormData((p) => ({ ...p, slug: typeSlug(e.target.value) }))}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Identifies the block itself — it is not a public URL.
                 </p>
               </div>
@@ -1011,7 +1011,7 @@ export default function PackageBlockForm({
                             }
                           />
                           {slug && !pageSuggestions.includes(slug) && (
-                            <p className="text-xs text-amber-400/80 mt-1">
+                            <p className="text-xs text-warning mt-1">
                               No service page with this slug yet — the block stays hidden
                               until one is published at /{slug}
                             </p>
@@ -1045,7 +1045,7 @@ export default function PackageBlockForm({
               {/* Frontend on/off — deliberately separate from Draft/Publish so a
                   finished block can be pulled off the live pages and put back
                   without losing its published state. */}
-              <div className="rounded-lg border border-slate-700 bg-slate-800/30 p-4">
+              <div className="rounded-lg border border-border bg-muted/40 p-4">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1053,23 +1053,23 @@ export default function PackageBlockForm({
                     onChange={(e) =>
                       setFormData((p) => ({ ...p, visible: e.target.checked }))
                     }
-                    className="accent-indigo-500 mt-0.5 h-4 w-4"
+                    className="accent-brand mt-0.5 h-4 w-4"
                   />
                   <span>
-                    <span className="text-sm font-medium text-slate-200 flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
                       {formData.visible ? (
                         <>
-                          <Eye className="h-4 w-4 text-green-400" />
+                          <Eye className="h-4 w-4 text-brand-link" />
                           Showing on the website
                         </>
                       ) : (
                         <>
-                          <EyeOff className="h-4 w-4 text-amber-400" />
+                          <EyeOff className="h-4 w-4 text-warning" />
                           Hidden from the website
                         </>
                       )}
                     </span>
-                    <span className="text-xs text-slate-500 block mt-1">
+                    <span className="text-xs text-muted-foreground block mt-1">
                       {formData.visible
                         ? "Untick to pull this block off the live pages while keeping it published."
                         : "Still published and saved — visitors just won't see it until you tick this again."}
@@ -1110,7 +1110,7 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-border">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                   <Field label="Badge text">
@@ -1154,10 +1154,10 @@ export default function PackageBlockForm({
 
       {/* ── Tabs & packages ─────────────────────────────────────────────────── */}
       <div className={card}>
-        <div className="p-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10">
+        <div className="p-4 flex flex-wrap items-center justify-between gap-3 border-b border-border">
           <div className="flex items-center gap-3">
-            <Layers className="h-5 w-5 text-indigo-400" />
-            <span className="text-lg font-semibold text-white">Tabs & packages</span>
+            <Layers className="h-5 w-5 text-muted-foreground" />
+            <span className="text-lg font-semibold text-foreground">Tabs & packages</span>
           </div>
           <AddButton
             onClick={() => {
@@ -1179,19 +1179,19 @@ export default function PackageBlockForm({
                 open={openTabs[ti] ?? false}
                 onOpenChange={() => setOpenTabs((p) => ({ ...p, [ti]: !p[ti] }))}
               >
-                <div className="border border-slate-700 rounded-xl overflow-hidden bg-slate-900/30">
-                  <div className="flex items-center justify-between gap-2 p-3 bg-slate-800/40">
+                <div className="border border-border rounded-lg overflow-hidden bg-muted/40">
+                  <div className="flex items-center justify-between gap-2 p-3 bg-muted/40">
                     <Collapsible.Trigger asChild>
                       <button className="flex flex-wrap items-center gap-2 text-left flex-1 min-w-0">
                         {openTabs[ti] ? (
-                          <ChevronDown className="h-4 w-4 text-slate-400" />
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
                         ) : (
-                          <ChevronRight className="h-4 w-4 text-slate-400" />
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-sm font-semibold text-foreground">
                           {tab.label || `Tab ${ti + 1}`}
                         </span>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-muted-foreground">
                           {tab.packages.length} package{tab.packages.length === 1 ? "" : "s"}
                         </span>
                       </button>
@@ -1215,7 +1215,7 @@ export default function PackageBlockForm({
                     </div>
                   </div>
                   <Collapsible.Content>
-                    <div className="p-4 space-y-4 border-t border-slate-700">
+                    <div className="p-4 space-y-4 border-t border-border">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Field label="Tab label" required>
                           <Input
@@ -1254,15 +1254,15 @@ export default function PackageBlockForm({
                                     <Collapsible.Trigger asChild>
                                       <button className="flex flex-wrap items-center gap-2 text-left flex-1 min-w-0">
                                         {openPackages[key] ? (
-                                          <ChevronDown className="h-4 w-4 text-slate-400" />
+                                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                         ) : (
-                                          <ChevronRight className="h-4 w-4 text-slate-400" />
+                                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                         )}
-                                        <span className="text-sm font-medium text-slate-100">
+                                        <span className="text-sm font-medium text-foreground">
                                           {pkg.title || `Package ${pi + 1}`}
                                         </span>
                                         {pkg.region && (
-                                          <span className="text-xs text-slate-500">
+                                          <span className="text-xs text-muted-foreground">
                                             {pkg.region}
                                           </span>
                                         )}
@@ -1289,7 +1289,7 @@ export default function PackageBlockForm({
                                     </div>
                                   </div>
                                   <Collapsible.Content>
-                                    <div className="pt-4 mt-4 border-t border-slate-700">
+                                    <div className="pt-4 mt-4 border-t border-border">
                                       <PackageEditor
                                         pkg={pkg}
                                         onChange={(p) => setPackage(ti, pi, p)}
@@ -1330,7 +1330,7 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-4 pt-2 sm:p-6 sm:pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border">
               <Field label="Itinerary heading">
                 <Input
                   className={inputCls}
@@ -1384,8 +1384,8 @@ export default function PackageBlockForm({
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
-              <p className="text-xs text-slate-400">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-border">
+              <p className="text-xs text-muted-foreground">
                 Submissions land in Leads, tagged with the package name and region.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1467,7 +1467,6 @@ export default function PackageBlockForm({
           type="button"
           disabled={loading}
           onClick={() => handleSubmit("published")}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white"
         >
           {loading ? "Saving…" : "Publish"}
         </Button>

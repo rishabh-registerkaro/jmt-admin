@@ -170,14 +170,14 @@ export default function ForgotPasswordPage() {
         toast.success("OTP sent to your email", {
           description: "Please check your inbox for the 6-digit code",
           duration: 5000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
         setStep("otp");
         startResendTimer();
       } else {
         toast.error(response.message || "Failed to send OTP", {
           duration: 4000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
@@ -188,7 +188,7 @@ export default function ForgotPasswordPage() {
       console.error("Request OTP error:", error);
       toast.error("Something went wrong. Please try again.", {
         duration: 4000,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       if (!signal.aborted && isMountedRef.current) {
@@ -219,13 +219,13 @@ export default function ForgotPasswordPage() {
         toast.success("OTP verified successfully", {
           description: "You can now set your new password",
           duration: 3000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
         setStep("newPassword");
       } else {
         toast.error(response.message || "Invalid OTP", {
           duration: 4000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
@@ -236,7 +236,7 @@ export default function ForgotPasswordPage() {
       console.error("Verify OTP error:", error);
       toast.error("Something went wrong. Please try again.", {
         duration: 4000,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       if (!signal.aborted && isMountedRef.current) {
@@ -253,7 +253,7 @@ export default function ForgotPasswordPage() {
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match", {
         duration: 4000,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -261,7 +261,7 @@ export default function ForgotPasswordPage() {
     if (newPassword.length < 6) {
       toast.error("Password must be at least 6 characters", {
         duration: 4000,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -284,7 +284,7 @@ export default function ForgotPasswordPage() {
         toast.success("Password reset successfully!", {
           description: "Redirecting to login page...",
           duration: 3000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
 
         // Redirect to login after 2 seconds
@@ -300,7 +300,7 @@ export default function ForgotPasswordPage() {
       } else {
         toast.error(response.message || "Failed to reset password", {
           duration: 4000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
@@ -311,7 +311,7 @@ export default function ForgotPasswordPage() {
       console.error("Reset password error:", error);
       toast.error("Something went wrong. Please try again.", {
         duration: 4000,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       if (!signal.aborted && isMountedRef.current) {
@@ -341,13 +341,13 @@ export default function ForgotPasswordPage() {
       if (response.success) {
         toast.success("OTP resent to your email", {
           duration: 3000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
         startResendTimer();
       } else {
         toast.error(response.message || "Failed to resend OTP", {
           duration: 4000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
@@ -357,7 +357,7 @@ export default function ForgotPasswordPage() {
       }
       toast.error("Something went wrong. Please try again.", {
         duration: 4000,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       if (!signal.aborted && isMountedRef.current) {
@@ -386,22 +386,22 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 px-4">
-      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 p-6 sm:p-8 rounded-2xl shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md rounded-lg border bg-card p-6 sm:p-8">
         {/* Back to Login Link */}
         <button
           onClick={handleBackToLogin}
-          className="inline-flex items-center text-sm text-slate-300 hover:text-white mb-6 transition-colors"
+          className="inline-flex items-center text-sm text-foreground-light hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Login
         </button>
 
         {/* Header */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-center text-foreground mb-2">
           Reset Password
         </h1>
-        <p className="text-center text-slate-300 mb-8 text-sm">
+        <p className="text-center text-foreground-light mb-8 text-sm">
           {step === "email" && "Enter your email to receive OTP"}
           {step === "otp" && "Enter the 6-digit OTP sent to your email"}
           {step === "newPassword" && "Enter your new password"}
@@ -415,10 +415,10 @@ export default function ForgotPasswordPage() {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                   step === "email"
-                    ? "bg-indigo-500 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : step === "otp" || step === "newPassword"
-                    ? "bg-green-500 text-white"
-                    : "bg-slate-700 text-slate-400"
+                    ? "border border-brand/40 bg-brand/10 text-brand-link"
+                    : "border bg-muted text-muted-foreground"
                 }`}
               >
                 {step === "otp" || step === "newPassword" ? (
@@ -430,8 +430,8 @@ export default function ForgotPasswordPage() {
               <div
                 className={`h-1 w-12 ${
                   step === "otp" || step === "newPassword"
-                    ? "bg-green-500"
-                    : "bg-slate-700"
+                    ? "bg-brand"
+                    : "bg-border"
                 }`}
               />
             </div>
@@ -441,10 +441,10 @@ export default function ForgotPasswordPage() {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                   step === "otp"
-                    ? "bg-indigo-500 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : step === "newPassword"
-                    ? "bg-green-500 text-white"
-                    : "bg-slate-700 text-slate-400"
+                    ? "border border-brand/40 bg-brand/10 text-brand-link"
+                    : "border bg-muted text-muted-foreground"
                 }`}
               >
                 {step === "newPassword" ? (
@@ -455,7 +455,7 @@ export default function ForgotPasswordPage() {
               </div>
               <div
                 className={`h-1 w-12 ${
-                  step === "newPassword" ? "bg-green-500" : "bg-slate-700"
+                  step === "newPassword" ? "bg-brand" : "bg-border"
                 }`}
               />
             </div>
@@ -464,8 +464,8 @@ export default function ForgotPasswordPage() {
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                 step === "newPassword"
-                  ? "bg-indigo-500 text-white"
-                  : "bg-slate-700 text-slate-400"
+                  ? "bg-primary text-primary-foreground"
+                  : "border bg-muted text-muted-foreground"
               }`}
             >
               3
@@ -477,20 +477,20 @@ export default function ForgotPasswordPage() {
         {step === "email" && (
           <form onSubmit={handleRequestOTP} className="space-y-5">
             <div className="space-y-1">
-              <label className="text-sm text-slate-200">Email</label>
+              <label className="text-sm text-foreground-light">Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <button
               type="submit"
               disabled={loading || !email}
-              className="w-full mt-2 rounded-lg bg-indigo-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-600 transition disabled:bg-slate-600 disabled:cursor-not-allowed"
+              className="w-full mt-2 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Sending..." : "Send OTP"}
             </button>
@@ -501,7 +501,7 @@ export default function ForgotPasswordPage() {
         {step === "otp" && (
           <form onSubmit={handleVerifyOTP} className="space-y-5">
             <div className="space-y-1">
-              <label className="text-sm text-slate-200">OTP Code</label>
+              <label className="text-sm text-foreground-light">OTP Code</label>
               <input
                 type="text"
                 required
@@ -509,16 +509,16 @@ export default function ForgotPasswordPage() {
                 value={otp}
                 onChange={handleOtpChange}
                 placeholder="000000"
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2.5 text-center text-lg tracking-wide text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-border-strong bg-background px-3 py-2.5 text-center text-lg tracking-wide text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
               />
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Enter the 6-digit code sent to {email}
               </p>
             </div>
             <button
               type="submit"
               disabled={loading || otp.length !== 6}
-              className="w-full mt-2 rounded-lg bg-indigo-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-600 transition disabled:bg-slate-600 disabled:cursor-not-allowed"
+              className="w-full mt-2 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Verifying..." : "Verify OTP"}
             </button>
@@ -526,7 +526,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="button"
                 onClick={() => handleStepChange("email")}
-                className="text-slate-400 hover:text-slate-200 transition-colors"
+                className="text-muted-foreground hover:text-foreground-light transition-colors"
               >
                 Change Email
               </button>
@@ -534,7 +534,7 @@ export default function ForgotPasswordPage() {
                 type="button"
                 onClick={handleResendOTP}
                 disabled={otpResendTimer > 0 || loading}
-                className="text-indigo-400 hover:text-indigo-300 transition-colors disabled:text-slate-600 disabled:cursor-not-allowed"
+                className="text-brand-link hover:underline transition-colors disabled:cursor-not-allowed"
               >
                 {otpResendTimer > 0
                   ? `Resend OTP in ${otpResendTimer}s`
@@ -548,38 +548,38 @@ export default function ForgotPasswordPage() {
         {step === "newPassword" && (
           <form onSubmit={handleResetPassword} className="space-y-5">
             <div className="space-y-1 relative">
-              <label className="text-sm text-slate-200">New Password</label>
+              <label className="text-sm text-foreground-light">New Password</label>
               <input
                 type={showPassword ? "text" : "password"}
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 pr-10 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[53%] cursor-pointer text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+                className="absolute right-3 top-[53%] cursor-pointer text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
 
             <div className="space-y-1 relative">
-              <label className="text-sm text-slate-200">Confirm Password</label>
+              <label className="text-sm text-foreground-light">Confirm Password</label>
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 pr-10 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-[53%] cursor-pointer text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+                className="absolute right-3 top-[53%] cursor-pointer text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none"
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -588,7 +588,7 @@ export default function ForgotPasswordPage() {
             {newPassword &&
               confirmPassword &&
               newPassword !== confirmPassword && (
-                <p className="text-xs text-red-400">Passwords do not match</p>
+                <p className="text-xs text-destructive">Passwords do not match</p>
               )}
 
             <button
@@ -600,7 +600,7 @@ export default function ForgotPasswordPage() {
                 newPassword !== confirmPassword ||
                 newPassword.length < 6
               }
-              className="w-full mt-2 rounded-lg bg-indigo-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-600 transition disabled:bg-slate-600 disabled:cursor-not-allowed"
+              className="w-full mt-2 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Resetting..." : "Reset Password"}
             </button>
@@ -608,12 +608,12 @@ export default function ForgotPasswordPage() {
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-slate-300 mt-6">
+        <p className="text-center text-xs text-foreground-light mt-6">
           Remember your password?{" "}
           <Link
             href="/login"
             onClick={handleBackToLogin}
-            className="font-semibold text-indigo-400 hover:text-indigo-300"
+            className="font-semibold text-brand-link hover:underline"
           >
             Login
           </Link>

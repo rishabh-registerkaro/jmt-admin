@@ -31,14 +31,14 @@ import {
 // ─── Shared styles (same idiom as the About editor) ──────────────────────────
 
 const inputCls =
-  "w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
 const textareaCls = `${inputCls} resize-y`;
 const selectCls =
-  "rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500";
-const cardWrapCls = "bg-slate-800/30 p-4 rounded-lg border border-slate-700";
-const labelCls = "text-sm font-medium text-slate-200";
+  "rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
+const cardWrapCls = "bg-muted/40 p-4 rounded-lg border border-border";
+const labelCls = "text-sm font-medium text-foreground";
 const addBtnCls =
-  "border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white";
+  "";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -71,7 +71,7 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
       size="sm"
       onClick={onClick}
       title="Remove"
-      className="text-red-400 hover:text-red-300 hover:bg-red-400/20 shrink-0"
+      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
     >
       <Trash2 className="h-4 w-4" />
     </Button>
@@ -132,25 +132,25 @@ function SectionCard({
 }) {
   return (
     <Collapsible.Root open={open} onOpenChange={onToggle}>
-      <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+      <div className="rounded-lg border bg-card overflow-hidden">
         <Collapsible.Trigger asChild>
-          <button className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+          <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3 text-left">
-              <Icon className="h-5 w-5 text-indigo-400 shrink-0" />
+              <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
               <div>
-                <span className="text-lg font-semibold text-white">{title}</span>
-                {hint && <p className="text-xs text-slate-400">{hint}</p>}
+                <span className="text-lg font-semibold text-foreground">{title}</span>
+                {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
               </div>
             </div>
             {open ? (
-              <ChevronDown className="h-5 w-5 text-slate-400" />
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
             ) : (
-              <ChevronRight className="h-5 w-5 text-slate-400" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             )}
           </button>
         </Collapsible.Trigger>
         <Collapsible.Content>
-          <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 space-y-4 border-t border-white/10">{children}</div>
+          <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 space-y-4 border-t border-border">{children}</div>
         </Collapsible.Content>
       </div>
     </Collapsible.Root>
@@ -259,8 +259,8 @@ export default function ContactDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
-        <p className="text-slate-300">Loading...</p>
+      <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-center">
+        <p className="text-foreground-light">Loading...</p>
       </div>
     );
   }
@@ -268,12 +268,12 @@ export default function ContactDashboardPage() {
   const { hero, inquiry, aside, faq } = content;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-2">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Contact Page</h1>
-            <p className="text-slate-400">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Contact Page</h1>
+            <p className="text-muted-foreground">
               Every section of the live /contact page — save to publish instantly.
             </p>
           </div>
@@ -282,7 +282,7 @@ export default function ContactDashboardPage() {
               variant="outline"
               onClick={handleRevalidate}
               title="Clear frontend cache for the Contact page"
-              className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+              className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Revalidate Cache
@@ -290,7 +290,7 @@ export default function ContactDashboardPage() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white px-6"
+              className="px-6"
             >
               {saving ? "Saving..." : exists ? "Save Page" : "Create Page"}
             </Button>
@@ -382,7 +382,7 @@ export default function ContactDashboardPage() {
             <textarea rows={2} className={textareaCls} value={inquiry.privacyNote} onChange={(e) => set("inquiry", { ...inquiry, privacyNote: e.target.value })} />
           </Field>
           <div className={`${cardWrapCls} space-y-4`}>
-            <span className="text-sm font-semibold text-slate-300">Success state (after submitting)</span>
+            <span className="text-sm font-semibold text-foreground-light">Success state (after submitting)</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Heading">
                 <Input className={inputCls} value={inquiry.successHeading} onChange={(e) => set("inquiry", { ...inquiry, successHeading: e.target.value })} />
@@ -406,7 +406,7 @@ export default function ContactDashboardPage() {
           onToggle={() => toggle("aside")}
         >
           <div className={`${cardWrapCls} space-y-3`}>
-            <span className="text-sm font-semibold text-slate-300">WhatsApp card</span>
+            <span className="text-sm font-semibold text-foreground-light">WhatsApp card</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <Field label="Title">
                 <Input className={inputCls} value={aside.whatsapp.title} onChange={(e) => set("aside", { ...aside, whatsapp: { ...aside.whatsapp, title: e.target.value } })} />
@@ -420,7 +420,7 @@ export default function ContactDashboardPage() {
             </div>
           </div>
           <div className={`${cardWrapCls} space-y-3`}>
-            <span className="text-sm font-semibold text-slate-300">Call card</span>
+            <span className="text-sm font-semibold text-foreground-light">Call card</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <Field label="Title">
                 <Input className={inputCls} value={aside.call.title} onChange={(e) => set("aside", { ...aside, call: { ...aside.call, title: e.target.value } })} />
@@ -435,7 +435,7 @@ export default function ContactDashboardPage() {
           </div>
           <div className={`${cardWrapCls} space-y-3`}>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-300">Trust panel</span>
+              <span className="text-sm font-semibold text-foreground-light">Trust panel</span>
             </div>
             <Field label="Kicker">
               <Input className={inputCls} value={aside.trustKicker} onChange={(e) => set("aside", { ...aside, trustKicker: e.target.value })} />
@@ -455,7 +455,7 @@ export default function ContactDashboardPage() {
             </div>
           </div>
           <div className={`${cardWrapCls} space-y-3`}>
-            <span className="text-sm font-semibold text-slate-300">Office card</span>
+            <span className="text-sm font-semibold text-foreground-light">Office card</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Office name">
                 <Input className={inputCls} value={aside.office.name} onChange={(e) => set("aside", { ...aside, office: { ...aside.office, name: e.target.value } })} />
@@ -495,7 +495,7 @@ export default function ContactDashboardPage() {
           {faq.items.map((f, i) => (
             <div key={i} className={`${cardWrapCls} space-y-3`}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-300">FAQ {i + 1}</span>
+                <span className="text-sm font-semibold text-foreground-light">FAQ {i + 1}</span>
                 <RemoveButton onClick={() => set("faq", { ...faq, items: faq.items.filter((_, idx) => idx !== i) })} />
               </div>
               <Field label="Question">
@@ -513,7 +513,7 @@ export default function ContactDashboardPage() {
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="bg-indigo-500 hover:bg-indigo-600 text-white px-8"
+            className="px-8"
           >
             {saving ? "Saving..." : exists ? "Save Page" : "Create Page"}
           </Button>

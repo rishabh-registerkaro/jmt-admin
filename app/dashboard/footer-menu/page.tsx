@@ -103,7 +103,7 @@ export default function FooterMenuPage() {
     const showImageInfoToast = () => {
         toast.info("How to add icons:", {
             description: (
-                <div className="space-y-0.5 text-sm text-slate-800">
+                <div className="space-y-0.5 text-sm text-foreground">
                     <div>1. Go to Media Files section</div>
                     <div>2. Upload your icon/image</div>
                     <div>3. Copy the image URL</div>
@@ -476,27 +476,27 @@ export default function FooterMenuPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
-                <p className="text-slate-300">Loading...</p>
+            <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8 text-foreground flex items-center justify-center">
+                <p className="text-foreground-light">Loading...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+        <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8 text-foreground">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white">Footer Menu</h1>
-                        <p className="text-slate-400">Manage your website footer navigation menu and contact details</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Footer Menu</h1>
+                        <p className="text-muted-foreground">Manage your website footer navigation menu and contact details</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Button
                             variant="outline"
                             onClick={handleRevalidate}
                             title="Clear frontend cache for Footer Menu"
-                            className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+                            className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning"
                         >
                             <RefreshCw className="h-4 w-4 mr-2" />
                             Revalidate Cache
@@ -504,7 +504,7 @@ export default function FooterMenuPage() {
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            className="bg-indigo-500 hover:bg-indigo-600 text-white px-6"
+                            className="px-6"
                         >
                             {saving ? "Saving..." : "Save Menu"}
                         </Button>
@@ -512,13 +512,13 @@ export default function FooterMenuPage() {
                 </div>
 
                 {/* Main Menu Section */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-3 space-y-3">
+                <div className="rounded-lg border bg-card p-3 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h2 className="text-xl font-semibold text-white">Main Menu</h2>
+                        <h2 className="text-xl font-semibold text-foreground">Main Menu</h2>
                         <Button
                             onClick={addMainMenu}
                             size="sm"
-                            className="bg-indigo-500 hover:bg-indigo-600 text-white  !gap-0"
+                            className="!gap-0"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Main Menu
@@ -528,27 +528,27 @@ export default function FooterMenuPage() {
                     {mainMenu.map((mainItem, mainIndex) => (
                         <div
                             key={mainIndex}
-                            className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-5 space-y-5"
+                            className="bg-muted/40 border rounded-lg p-3 sm:p-5 space-y-5"
                         >
                             {/* Main Menu Item */}
                             <div className="space-y-3">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-300">Main Title</label>
+                                        <label className="text-sm font-medium text-foreground">Main Title</label>
                                         <Input
                                             value={mainItem.title}
                                             onChange={(e) => updateMainMenu(mainIndex, "title", e.target.value)}
                                             placeholder="Main Menu Title"
-                                            className="bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                            className="h-10"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-300">Main URL</label>
+                                        <label className="text-sm font-medium text-foreground">Main URL</label>
                                         <Input
                                             value={mainItem.url}
                                             onChange={(e) => updateMainMenu(mainIndex, "url", e.target.value)}
                                             placeholder="/main-url"
-                                            className="bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                            className="h-10"
                                         />
                                     </div>
                                 </div>
@@ -557,7 +557,7 @@ export default function FooterMenuPage() {
                                         onClick={() => toggleChildMenu(mainIndex)}
                                         size="sm"
                                         variant="outline"
-                                        className="border-slate-600 !gap-0 text-slate-300 bg-slate-700 hover:bg-slate-800 cursor-pointer hover:text-white h-9"
+                                        className="!gap-0 cursor-pointer h-9"
                                     >
                                         {mainItem.child_menu === false ? "Add Child Menu" : "Remove Child Menu"}
                                     </Button>
@@ -565,7 +565,7 @@ export default function FooterMenuPage() {
                                         onClick={() => removeMainMenu(mainIndex)}
                                         size="sm"
                                         variant="ghost"
-                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/20 h-9 w-9 p-0 cursor-pointer"
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 w-9 p-0 cursor-pointer"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -574,13 +574,13 @@ export default function FooterMenuPage() {
 
                             {/* Child Menu - Same structure as header menu */}
                             {mainItem.child_menu !== false && (
-                                <div className="ml-1 sm:ml-4 border-l-2 border-indigo-500/30 pl-3 sm:pl-5 space-y-4">
+                                <div className="ml-1 sm:ml-4 border-l-2 border-border pl-3 sm:pl-5 space-y-4">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <h3 className="text-base font-semibold text-slate-300">Child Menu</h3>
+                                        <h3 className="text-base font-semibold text-foreground-light">Child Menu</h3>
                                         <Button
                                             onClick={() => addChildMenu(mainIndex)}
                                             size="sm"
-                                            className="bg-indigo-500 hover:bg-indigo-600 text-white h-8 text-xs"
+                                            className="h-8 text-xs"
                                         >
                                             <Plus className="h-3 w-3 mr-1.5" />
                                             Add Child
@@ -590,30 +590,30 @@ export default function FooterMenuPage() {
                                     {(mainItem.child_menu as ChildMenuItem[]).map((childItem, childIndex) => (
                                         <div
                                             key={childIndex}
-                                            className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 sm:p-4 space-y-4"
+                                            className="bg-card border rounded-lg p-3 sm:p-4 space-y-4"
                                         >
                                             <div className="space-y-3">
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <label className="text-sm font-medium text-slate-300">Child Title</label>
+                                                        <label className="text-sm font-medium text-foreground">Child Title</label>
                                                         <Input
                                                             value={childItem.title}
                                                             onChange={(e) =>
                                                                 updateChildMenu(mainIndex, childIndex, "title", e.target.value)
                                                             }
                                                             placeholder="Child Menu Title"
-                                                            className="bg-slate-800/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                                            className="h-10"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-sm font-medium text-slate-300">Child URL</label>
+                                                        <label className="text-sm font-medium text-foreground">Child URL</label>
                                                         <Input
                                                             value={childItem.url}
                                                             onChange={(e) =>
                                                                 updateChildMenu(mainIndex, childIndex, "url", e.target.value)
                                                             }
                                                             placeholder="/child-url"
-                                                            className="bg-slate-800/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                                            className="h-10"
                                                         />
                                                     </div>
                                                 </div>
@@ -622,7 +622,7 @@ export default function FooterMenuPage() {
                                                         onClick={() => toggleSubChildMenu(mainIndex, childIndex)}
                                                         size="sm"
                                                         variant="outline"
-                                                        className="border-slate-600 !gap-0 text-slate-300 bg-slate-700 hover:bg-slate-800 cursor-pointer hover:text-white h-9 text-xs"
+                                                        className="!gap-0 cursor-pointer h-9 text-xs"
                                                     >
                                                         {childItem.sub_child_menu === false
                                                             ? "Add Sub Child"
@@ -632,7 +632,7 @@ export default function FooterMenuPage() {
                                                         onClick={() => removeChildMenu(mainIndex, childIndex)}
                                                         size="sm"
                                                         variant="ghost"
-                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/20 h-9 w-9 p-0 cursor-pointer"
+                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 w-9 p-0 cursor-pointer"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
@@ -640,13 +640,13 @@ export default function FooterMenuPage() {
                                             </div>
 
                                             {childItem.sub_child_menu !== false && (
-                                                <div className="ml-1 sm:ml-4 border-l-2 border-indigo-400/30 pl-3 sm:pl-4 space-y-3 mt-4">
+                                                <div className="ml-1 sm:ml-4 border-l-2 border-border pl-3 sm:pl-4 space-y-3 mt-4">
                                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                                        <h4 className="text-sm font-semibold text-slate-400">Sub Child Menu</h4>
+                                                        <h4 className="text-sm font-semibold text-muted-foreground">Sub Child Menu</h4>
                                                         <Button
                                                             onClick={() => addSubChildMenu(mainIndex, childIndex)}
                                                             size="sm"
-                                                            className="bg-indigo-500 hover:bg-indigo-600 text-white h-8 text-xs"
+                                                            className="h-8 text-xs"
                                                         >
                                                             <Plus className="h-3 w-3 mr-1.5" />
                                                             Add Sub Child
@@ -657,12 +657,12 @@ export default function FooterMenuPage() {
                                                         (subChildItem, subChildIndex) => (
                                                             <div
                                                                 key={subChildIndex}
-                                                                className="bg-slate-800/30 border border-slate-600 rounded-lg p-3 sm:p-4 space-y-3"
+                                                                className="bg-muted/40 border rounded-lg p-3 sm:p-4 space-y-3"
                                                             >
                                                                 <div className="space-y-3">
                                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                         <div className="space-y-2">
-                                                                            <label className="text-xs font-medium text-slate-400">
+                                                                            <label className="text-xs font-medium text-muted-foreground">
                                                                                 Sub Child Title
                                                                             </label>
                                                                             <Input
@@ -677,11 +677,11 @@ export default function FooterMenuPage() {
                                                                                     )
                                                                                 }
                                                                                 placeholder="Sub Child Menu Title"
-                                                                                className="bg-slate-700/60 border-slate-500 text-white placeholder-slate-400 h-9 text-sm"
+                                                                                className="h-9 text-sm"
                                                                             />
                                                                         </div>
                                                                         <div className="space-y-2">
-                                                                            <label className="text-xs font-medium text-slate-400">
+                                                                            <label className="text-xs font-medium text-muted-foreground">
                                                                                 Sub Child URL
                                                                             </label>
                                                                             <Input
@@ -696,7 +696,7 @@ export default function FooterMenuPage() {
                                                                                     )
                                                                                 }
                                                                                 placeholder="/sub-child-url"
-                                                                                className="bg-slate-700/60 border-slate-500 text-white placeholder-slate-400 h-9 text-sm"
+                                                                                className="h-9 text-sm"
                                                                             />
                                                                         </div>
                                                                     </div>
@@ -707,7 +707,7 @@ export default function FooterMenuPage() {
                                                                             }
                                                                             size="sm"
                                                                             variant="outline"
-                                                                            className="border-slate-500 text-slate-400 bg-slate-700 hover:bg-slate-800 cursor-pointer hover:text-white h-8 text-xs"
+                                                                            className="cursor-pointer h-8 text-xs"
                                                                         >
                                                                             {subChildItem.sub_sub_child_menu === false
                                                                                 ? "Add Sub Sub Child"
@@ -719,7 +719,7 @@ export default function FooterMenuPage() {
                                                                             }
                                                                             size="sm"
                                                                             variant="ghost"
-                                                                            className="text-red-400 hover:text-red-300 hover:bg-red-500/20 h-8 w-8 p-0"
+                                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
                                                                         >
                                                                             <Trash2 className="h-3.5 w-3.5" />
                                                                         </Button>
@@ -727,9 +727,9 @@ export default function FooterMenuPage() {
                                                                 </div>
 
                                                                 {subChildItem.sub_sub_child_menu !== false && (
-                                                                    <div className="ml-1 sm:ml-4 border-l-2 border-indigo-300/30 pl-3 sm:pl-4 space-y-3 mt-3">
+                                                                    <div className="ml-1 sm:ml-4 border-l-2 border-border pl-3 sm:pl-4 space-y-3 mt-3">
                                                                         <div className="flex flex-wrap items-center justify-between gap-2">
-                                                                            <h5 className="text-xs font-semibold text-slate-500">
+                                                                            <h5 className="text-xs font-semibold text-muted-foreground">
                                                                                 Sub Sub Child Menu
                                                                             </h5>
                                                                             <Button
@@ -737,7 +737,7 @@ export default function FooterMenuPage() {
                                                                                     addSubSubChildMenu(mainIndex, childIndex, subChildIndex)
                                                                                 }
                                                                                 size="sm"
-                                                                                className="bg-indigo-500 hover:bg-indigo-600 text-white h-7 text-xs px-2"
+                                                                                className="h-7 text-xs px-2"
                                                                             >
                                                                                 <Plus className="h-3 w-3 mr-1" />
                                                                                 Add Row
@@ -748,11 +748,11 @@ export default function FooterMenuPage() {
                                                                             (subSubChildItem, subSubChildIndex) => (
                                                                                 <div
                                                                                     key={subSubChildIndex}
-                                                                                    className="flex items-start gap-3 bg-slate-700/20 border border-slate-500 rounded-lg p-3"
+                                                                                    className="flex items-start gap-3 bg-card border rounded-lg p-3"
                                                                                 >
                                                                                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                                                         <div className="space-y-1.5">
-                                                                                            <label className="text-xs font-medium text-slate-500">
+                                                                                            <label className="text-xs font-medium text-muted-foreground">
                                                                                                 Sub Sub Child Title
                                                                                             </label>
                                                                                             <Input
@@ -768,11 +768,11 @@ export default function FooterMenuPage() {
                                                                                                     )
                                                                                                 }
                                                                                                 placeholder="Sub Sub Child Title"
-                                                                                                className="bg-slate-600/60 border-slate-500 text-white placeholder-slate-400 h-8 text-xs"
+                                                                                                className="h-8 text-xs"
                                                                                             />
                                                                                         </div>
                                                                                         <div className="space-y-1.5">
-                                                                                            <label className="text-xs font-medium text-slate-500">
+                                                                                            <label className="text-xs font-medium text-muted-foreground">
                                                                                                 Sub Sub Child URL
                                                                                             </label>
                                                                                             <Input
@@ -788,7 +788,7 @@ export default function FooterMenuPage() {
                                                                                                     )
                                                                                                 }
                                                                                                 placeholder="/sub-sub-child-url"
-                                                                                                className="bg-slate-600/60 border-slate-500 text-white placeholder-slate-400 h-8 text-xs"
+                                                                                                className="h-8 text-xs"
                                                                                             />
                                                                                         </div>
                                                                                     </div>
@@ -803,7 +803,7 @@ export default function FooterMenuPage() {
                                                                                         }
                                                                                         size="sm"
                                                                                         variant="ghost"
-                                                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/20 h-8 w-8 p-0 mt-6 flex-shrink-0"
+                                                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 mt-6 flex-shrink-0"
                                                                                     >
                                                                                         <Trash2 className="h-3.5 w-3.5" />
                                                                                     </Button>
@@ -826,19 +826,19 @@ export default function FooterMenuPage() {
 
                     {mainMenu.length === 0 && (
                         <div className="text-center py-12">
-                            <p className="text-slate-400">No main menu items. Click "Add Main Menu" to get started.</p>
+                            <p className="text-muted-foreground">No main menu items. Click "Add Main Menu" to get started.</p>
                         </div>
                     )}
                 </div>
 
                 {/* Contact Details Section */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-3 space-y-3">
+                <div className="rounded-lg border bg-card p-3 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h2 className="text-xl font-semibold text-white">Contact Details</h2>
+                        <h2 className="text-xl font-semibold text-foreground">Contact Details</h2>
                         <Button
                             onClick={addContactDetail}
                             size="sm"
-                            className="bg-indigo-500 hover:bg-indigo-600 text-white  !gap-0"
+                            className="!gap-0"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Contact Detail
@@ -848,45 +848,45 @@ export default function FooterMenuPage() {
                     {contactDetails.map((contactItem, index) => (
                         <div
                             key={index}
-                            className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-5 space-y-4"
+                            className="bg-muted/40 border rounded-lg p-3 sm:p-5 space-y-4"
                         >
                             <div className="space-y-3">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-300">Title</label>
+                                        <label className="text-sm font-medium text-foreground">Title</label>
                                         <Input
                                             value={contactItem.title || ""}
                                             onChange={(e) => updateContactDetail(index, "title", e.target.value)}
                                             placeholder="e.g., Email, Phone, Address, Follow Us"
-                                            className="bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                            className="h-10"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-300">Type</label>
+                                        <label className="text-sm font-medium text-foreground">Type</label>
                                         <Select
                                             value={contactItem.type || "text"}
                                             onValueChange={(value) => updateContactDetail(index, "type", value as ContactType)}
                                         >
-                                            <SelectTrigger className="bg-slate-900/60 border-slate-600 text-white h-10">
+                                            <SelectTrigger className="h-10">
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-slate-900 border-slate-600 text-white">
-                                                <SelectItem value="email" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                            <SelectContent>
+                                                <SelectItem value="email" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                     Email
                                                 </SelectItem>
-                                                <SelectItem value="phone" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                <SelectItem value="phone" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                     Phone
                                                 </SelectItem>
-                                                <SelectItem value="address" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                <SelectItem value="address" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                     Address
                                                 </SelectItem>
-                                                <SelectItem value="social" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                <SelectItem value="social" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                     Social Media
                                                 </SelectItem>
-                                                <SelectItem value="link" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                <SelectItem value="link" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                     Link
                                                 </SelectItem>
-                                                <SelectItem value="text" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                <SelectItem value="text" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                     Text
                                                 </SelectItem>
                                             </SelectContent>
@@ -896,7 +896,7 @@ export default function FooterMenuPage() {
 
                                 {/* Value field - shown for all types */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">
+                                    <label className="text-sm font-medium text-foreground">
                                         {contactItem.type === "email" && "Email Address"}
                                         {contactItem.type === "phone" && "Phone Number"}
                                         {contactItem.type === "address" && "Address"}
@@ -916,13 +916,13 @@ export default function FooterMenuPage() {
                                                             : contactItem.type === "link" ? "https://example.com or /path"
                                                                 : "Enter value"
                                         }
-                                        className="bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                        className="h-10"
                                     />
                                 </div>
 
                                 {/* URL field - auto-generated for email/phone, editable for others */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">
+                                    <label className="text-sm font-medium text-foreground">
                                         URL {contactItem.type === "email" || contactItem.type === "phone" ? "(Auto-generated)" : ""}
                                     </label>
                                     <Input
@@ -934,7 +934,7 @@ export default function FooterMenuPage() {
                                                     : "https://example.com or /path"
                                         }
                                         disabled={contactItem.type === "email" || contactItem.type === "phone"}
-                                        className="bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="h-10 disabled:opacity-50 disabled:cursor-not-allowed"
                                     />
                                 </div>
 
@@ -942,11 +942,11 @@ export default function FooterMenuPage() {
                                 {(contactItem.type === "social" || contactItem.type === "link" || !contactItem.type) && (
                                     <div className="space-y-2">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <label className="text-sm font-medium text-slate-300">Image/Icon URL (Optional)</label>
+                                            <label className="text-sm font-medium text-foreground">Image/Icon URL (Optional)</label>
                                             <button
                                                 type="button"
                                                 onClick={showImageInfoToast}
-                                                className="text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer mb-0"
+                                                className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-0"
                                                 title="Click for instructions on how to add icons"
                                             >
                                                 <Info className="h-4 w-4" />
@@ -956,7 +956,7 @@ export default function FooterMenuPage() {
                                             value={contactItem.image || ""}
                                             onChange={(e) => updateContactDetail(index, "image", e.target.value)}
                                             placeholder="https://example.com/icon.png"
-                                            className="bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                            className="h-10"
                                         />
                                     </div>
                                 )}
@@ -965,7 +965,7 @@ export default function FooterMenuPage() {
                                         onClick={() => toggleContactSubChild(index)}
                                         size="sm"
                                         variant="outline"
-                                        className="border-slate-600 !gap-0 text-slate-300 bg-slate-700 hover:bg-slate-800 cursor-pointer hover:text-white h-9"
+                                        className="!gap-0 cursor-pointer h-9"
                                     >
                                         {contactItem.sub_child === false || contactItem.sub_child === undefined
                                             ? "Add Sub Child"
@@ -975,7 +975,7 @@ export default function FooterMenuPage() {
                                         onClick={() => removeContactDetail(index)}
                                         size="sm"
                                         variant="ghost"
-                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/20 h-9 w-9 p-0 cursor-pointer"
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 w-9 p-0 cursor-pointer"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -984,13 +984,13 @@ export default function FooterMenuPage() {
 
                             {/* Contact Sub Child */}
                             {contactItem.sub_child !== false && contactItem.sub_child !== undefined && (
-                                <div className="ml-1 sm:ml-4 border-l-2 border-indigo-500/30 pl-3 sm:pl-5 space-y-4">
+                                <div className="ml-1 sm:ml-4 border-l-2 border-border pl-3 sm:pl-5 space-y-4">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <h3 className="text-base font-semibold text-slate-300">Sub Child</h3>
+                                        <h3 className="text-base font-semibold text-foreground-light">Sub Child</h3>
                                         <Button
                                             onClick={() => addContactSubChild(index)}
                                             size="sm"
-                                            className="bg-indigo-500 hover:bg-indigo-600 text-white h-8 text-xs"
+                                            className="h-8 text-xs"
                                         >
                                             <Plus className="h-3 w-3 mr-1.5" />
                                             Add Sub Child
@@ -1001,46 +1001,46 @@ export default function FooterMenuPage() {
                                         (subChildItem, subChildIndex) => (
                                             <div
                                                 key={subChildIndex}
-                                                className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 sm:p-4 space-y-3"
+                                                className="bg-card border rounded-lg p-3 sm:p-4 space-y-3"
                                             >
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <label className="text-sm font-medium text-slate-300">Title</label>
+                                                        <label className="text-sm font-medium text-foreground">Title</label>
                                                         <Input
                                                             value={subChildItem.title || ""}
                                                             onChange={(e) =>
                                                                 updateContactSubChild(index, subChildIndex, "title", e.target.value)
                                                             }
                                                             placeholder="Sub Child Title"
-                                                            className="bg-slate-800/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                                            className="h-10"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-sm font-medium text-slate-300">Type</label>
+                                                        <label className="text-sm font-medium text-foreground">Type</label>
                                                         <Select
                                                             value={subChildItem.type || "text"}
                                                             onValueChange={(value) => updateContactSubChild(index, subChildIndex, "type", value)}
                                                         >
-                                                            <SelectTrigger className="bg-slate-800/60 border-slate-600 text-white h-10">
+                                                            <SelectTrigger className="h-10">
                                                                 <SelectValue placeholder="Select type" />
                                                             </SelectTrigger>
-                                                            <SelectContent className="bg-slate-900 border-slate-600 text-white">
-                                                                <SelectItem value="email" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                            <SelectContent>
+                                                                <SelectItem value="email" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                                     Email
                                                                 </SelectItem>
-                                                                <SelectItem value="phone" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                                <SelectItem value="phone" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                                     Phone
                                                                 </SelectItem>
-                                                                <SelectItem value="address" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                                <SelectItem value="address" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                                     Address
                                                                 </SelectItem>
-                                                                <SelectItem value="social" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                                <SelectItem value="social" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                                     Social Media
                                                                 </SelectItem>
-                                                                <SelectItem value="link" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                                <SelectItem value="link" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                                     Link
                                                                 </SelectItem>
-                                                                <SelectItem value="text" className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+                                                                <SelectItem value="text" className="cursor-pointer hover:bg-muted focus:bg-accent">
                                                                     Text
                                                                 </SelectItem>
                                                             </SelectContent>
@@ -1049,7 +1049,7 @@ export default function FooterMenuPage() {
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label className="text-sm font-medium text-slate-300">
+                                                    <label className="text-sm font-medium text-foreground">
                                                         {subChildItem.type === "email" && "Email Address"}
                                                         {subChildItem.type === "phone" && "Phone Number"}
                                                         {subChildItem.type === "address" && "Address"}
@@ -1071,12 +1071,12 @@ export default function FooterMenuPage() {
                                                                             : subChildItem.type === "link" ? "https://example.com"
                                                                                 : "Enter value"
                                                         }
-                                                        className="bg-slate-800/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                                        className="h-10"
                                                     />
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label className="text-sm font-medium text-slate-300">
+                                                    <label className="text-sm font-medium text-foreground">
                                                         URL {subChildItem.type === "email" || subChildItem.type === "phone" ? "(Auto-generated)" : ""}
                                                     </label>
                                                     <Input
@@ -1090,18 +1090,18 @@ export default function FooterMenuPage() {
                                                                     : "https://example.com"
                                                         }
                                                         disabled={subChildItem.type === "email" || subChildItem.type === "phone"}
-                                                        className="bg-slate-800/60 border-slate-600 text-white placeholder-slate-400 h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="h-10 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     />
                                                 </div>
 
                                                 {(subChildItem.type === "social" || subChildItem.type === "link" || !subChildItem.type) && (
                                                     <div className="space-y-2">
                                                         <div className="flex flex-wrap items-center gap-2">
-                                                            <label className="text-sm font-medium text-slate-300">Image/Icon URL (Optional)</label>
+                                                            <label className="text-sm font-medium text-foreground">Image/Icon URL (Optional)</label>
                                                             <button
                                                                 type="button"
                                                                 onClick={showImageInfoToast}
-                                                                className="text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer mb-0"
+                                                                className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-0"
                                                                 title="Click for instructions on how to add icons"
                                                             >
                                                                 <Info className="h-4 w-4" />
@@ -1113,7 +1113,7 @@ export default function FooterMenuPage() {
                                                                 updateContactSubChild(index, subChildIndex, "image", e.target.value)
                                                             }
                                                             placeholder="https://example.com/icon.png"
-                                                            className="bg-slate-800/60 border-slate-600 text-white placeholder-slate-400 h-10"
+                                                            className="h-10"
                                                         />
                                                     </div>
                                                 )}
@@ -1122,7 +1122,7 @@ export default function FooterMenuPage() {
                                                         onClick={() => removeContactSubChild(index, subChildIndex)}
                                                         size="sm"
                                                         variant="ghost"
-                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/20 h-9 w-9 p-0 cursor-pointer"
+                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 w-9 p-0 cursor-pointer"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
@@ -1137,7 +1137,7 @@ export default function FooterMenuPage() {
 
                     {contactDetails.length === 0 && (
                         <div className="text-center py-12">
-                            <p className="text-slate-400">No contact details. Click "Add Contact Detail" to get started.</p>
+                            <p className="text-muted-foreground">No contact details. Click "Add Contact Detail" to get started.</p>
                         </div>
                     )}
                 </div>

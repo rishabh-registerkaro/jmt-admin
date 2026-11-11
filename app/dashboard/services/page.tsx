@@ -99,7 +99,7 @@ export default function ServicesPage() {
     toast.warning("Are you sure you want to delete this service?", {
       description: "This action cannot be undone.",
       duration: 6000,
-      className: "!bg-transparent !text-white !border-gray-200",
+      className: "!bg-transparent !text-foreground !border-border",
       closeButton: true,
       action: {
         label: "Delete",
@@ -115,13 +115,13 @@ export default function ServicesPage() {
             if (res.ok) {
               toast.success("Service deleted successfully!", {
                 duration: 3000,
-                className: "!bg-transparent !text-white !border-gray-200",
+                className: "!bg-transparent !text-foreground !border-border",
               });
               fetchServices(pagination.currentPage);
             } else {
               toast.error(data.message || "Failed to delete service", {
                 duration: 3000,
-                className: "!bg-transparent !text-white !border-gray-200",
+                className: "!bg-transparent !text-foreground !border-border",
               });
             }
           } catch (error) {
@@ -162,15 +162,15 @@ export default function ServicesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Services</h1>
-          <p className="text-slate-400">Manage your service pages</p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Services</h1>
+          <p className="text-sm text-muted-foreground">Manage your service pages</p>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 mb-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -178,13 +178,13 @@ export default function ServicesPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search services..."
-                className="w-full bg-slate-900/60 text-white border-slate-600"
+                className="w-full"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-white text-sm"
+              className="px-4 py-2 rounded-lg border border-border-strong bg-background text-foreground text-sm"
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
@@ -194,7 +194,7 @@ export default function ServicesPage() {
               onClick={() => {
                 window.location.href = "/dashboard/services/create-service";
               }}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer whitespace-nowrap"
+              className="cursor-pointer whitespace-nowrap"
             >
               Add New Service
             </Button>
@@ -202,15 +202,15 @@ export default function ServicesPage() {
         </div>
 
         {/* Services Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
           <Table className="min-w-[720px]">
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-transparent">
-                <TableHead className="text-slate-300">Title / Slug</TableHead>
-                <TableHead className="text-slate-300">Author</TableHead>
-                <TableHead className="text-slate-300">Status</TableHead>
-                <TableHead className="text-slate-300">Last Modified</TableHead>
-                <TableHead className="text-slate-300 text-center">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">Title / Slug</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Author</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Last Modified</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -219,24 +219,24 @@ export default function ServicesPage() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow
                     key={`skeleton-${index}`}
-                    className="border-slate-700 hover:bg-transparent"
+                    className="hover:bg-transparent"
                   >
-                    <TableCell className="text-slate-200">
-                      <div className="h-5 bg-slate-700 rounded animate-pulse w-3/4"></div>
+                    <TableCell className="text-foreground-light">
+                      <div className="h-5 bg-muted rounded animate-pulse w-3/4"></div>
                     </TableCell>
-                    <TableCell className="text-slate-300">
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-20"></div>
+                    <TableCell className="text-foreground-light">
+                      <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-6 bg-slate-700 rounded-full animate-pulse w-24"></div>
+                      <div className="h-6 bg-muted rounded-full animate-pulse w-24"></div>
                     </TableCell>
-                    <TableCell className="text-slate-400">
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-32"></div>
+                    <TableCell className="text-muted-foreground">
+                      <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-center gap-2">
-                        <div className="h-8 w-8 bg-slate-700 rounded animate-pulse"></div>
-                        <div className="h-8 w-8 bg-slate-700 rounded animate-pulse"></div>
+                        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -245,32 +245,32 @@ export default function ServicesPage() {
                 filteredServices.map((service) => (
                   <TableRow
                     key={service._id}
-                    className="border-slate-700 hover:bg-slate-800/30 transition-colors"
+                    className="hover:bg-muted/40 transition-colors"
                   >
-                    <TableCell className="text-slate-200 font-medium">
+                    <TableCell className="text-foreground-light font-medium">
                       <div>
                         {serviceTitle(service) || "(no title)"}
                         {service.status === "draft" && (
-                          <span className="ml-2 text-xs text-slate-400">- Draft</span>
+                          <span className="ml-2 text-xs text-muted-foreground">- Draft</span>
                         )}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">/{service.slug}</div>
+                      <div className="text-xs text-muted-foreground mt-1">/{service.slug}</div>
                     </TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-foreground-light">
                       {service.author?.username || "Unknown"}
                     </TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           service.status === "published"
-                            ? "bg-green-500/20 text-green-300"
-                            : "bg-yellow-500/20 text-yellow-300"
+                            ? "border border-brand/30 bg-brand/10 text-brand-link"
+                            : "border border-warning/30 bg-warning/10 text-warning"
                         }`}
                       >
                         {service.status === "published" ? "Published" : "Draft"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-slate-400 text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {service.updatedAt
                         ? formatDate(service.updatedAt)
                         : service.createdAt
@@ -285,7 +285,7 @@ export default function ServicesPage() {
                           onClick={() => {
                             window.location.href = `/dashboard/services/update-service?slug=${service.slug}`;
                           }}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/20 cursor-pointer"
+                          className="text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                         >
                           <FilePenLine className="w-4 h-4" />
                         </Button>
@@ -295,7 +295,7 @@ export default function ServicesPage() {
                             size="sm"
                             onClick={() => handleRevalidate(service.slug)}
                             title="Clear frontend cache for this service"
-                            className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/20 cursor-pointer"
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                           >
                             <RefreshCw className="w-4 h-4" />
                           </Button>
@@ -304,7 +304,7 @@ export default function ServicesPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(service.slug)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-400/20 cursor-pointer"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -314,7 +314,7 @@ export default function ServicesPage() {
                 ))
               ) : (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={5} className="text-center py-8 text-slate-400">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     No services found. Create your first service using the "Add New Service" button.
                   </TableCell>
                 </TableRow>
@@ -324,8 +324,8 @@ export default function ServicesPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-700">
-              <span className="text-sm text-slate-400">
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-border">
+              <span className="text-sm text-muted-foreground">
                 Page {pagination.currentPage} of {pagination.totalPages} •{" "}
                 {pagination.totalCount} services
               </span>
@@ -335,7 +335,7 @@ export default function ServicesPage() {
                   size="sm"
                   disabled={!pagination.hasPrevPage || loading}
                   onClick={() => fetchServices(pagination.currentPage - 1)}
-                  className="border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white disabled:opacity-40"
+                  className="disabled:opacity-40"
                 >
                   Previous
                 </Button>
@@ -344,7 +344,7 @@ export default function ServicesPage() {
                   size="sm"
                   disabled={!pagination.hasNextPage || loading}
                   onClick={() => fetchServices(pagination.currentPage + 1)}
-                  className="border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white disabled:opacity-40"
+                  className="disabled:opacity-40"
                 >
                   Next
                 </Button>

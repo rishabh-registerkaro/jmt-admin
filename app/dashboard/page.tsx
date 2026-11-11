@@ -6,12 +6,22 @@ import {
   Users,
   Plus,
   ArrowRight,
-  BarChart3,
   Layers,
   Info,
   LayoutList,
+  UserCog,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Link from "next/link";
 
 interface DashboardStats {
@@ -75,10 +85,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full p-4 sm:p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-400 mx-auto" />
-          <p className="text-slate-300">Loading dashboard...</p>
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Loading dashboard…
         </div>
       </div>
     );
@@ -86,8 +96,10 @@ export default function Dashboard() {
 
   if (!stats) {
     return (
-      <div className="min-h-screen w-full p-4 sm:p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
-        <p className="text-slate-300">Failed to load dashboard data</p>
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">
+          Failed to load dashboard data
+        </p>
       </div>
     );
   }
@@ -95,270 +107,244 @@ export default function Dashboard() {
   const servicesMax = Math.max(stats.services.published, stats.services.draft, 1);
   const postsMax = Math.max(stats.posts.published, stats.posts.draft, 1);
 
-  return (
-    <div className="min-h-screen w-full p-4 sm:p-6 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <div className="max-w-7xl mx-auto space-y-6">
+  const statCards = [
+    {
+      label: "Total services",
+      value: stats.services.total,
+      icon: Layers,
+      meta: (
+        <>
+          <Dot className="bg-brand" /> {stats.services.published} published
+          <span className="mx-1.5 text-border">|</span>
+          <Dot className="bg-muted-foreground/40" /> {stats.services.draft} draft
+        </>
+      ),
+    },
+    {
+      label: "Blog posts",
+      value: stats.posts.total,
+      icon: FileText,
+      meta: (
+        <>
+          <Dot className="bg-brand" /> {stats.posts.published} published
+          <span className="mx-1.5 text-border">|</span>
+          <Dot className="bg-muted-foreground/40" /> {stats.posts.draft} draft
+        </>
+      ),
+    },
+    {
+      label: "Total leads",
+      value: stats.leads.total,
+      icon: Users,
+      meta: (
+        <Badge variant="default" className="px-1.5">
+          {stats.leads.new} new
+        </Badge>
+      ),
+    },
+    {
+      label: "CMS users",
+      value: stats.users.total,
+      icon: UserCog,
+      meta: <>Team members</>,
+    },
+  ];
 
+  const statusCards = [
+    {
+      title: "Services status",
+      description: "Published vs. draft service pages",
+      published: stats.services.published,
+      draft: stats.services.draft,
+      max: servicesMax,
+    },
+    {
+      title: "Blog posts status",
+      description: "Published vs. draft articles",
+      published: stats.posts.published,
+      draft: stats.posts.draft,
+      max: postsMax,
+    },
+  ];
+
+  const quickActions = [
+    { href: "/dashboard/services/create-service", label: "Add service", icon: Plus, primary: true },
+    { href: "/dashboard/services", label: "Services", icon: Layers },
+    { href: "/dashboard/blog/create-blog", label: "New post", icon: FileText },
+    { href: "/dashboard/leads", label: "Leads", icon: Users },
+    { href: "/dashboard/about", label: "About page", icon: Info },
+    { href: "/dashboard/footer-menu", label: "Footer menu", icon: LayoutList },
+  ];
+
+  return (
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-white">Welcome back, {userName || "User"}</h1>
-          <p className="text-sm text-slate-400">Here's an overview of your content.</p>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            Welcome back, {userName || "User"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Here&apos;s an overview of your content.
+          </p>
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Services */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-5 hover:border-indigo-500/50 transition-colors">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-slate-300">Total Services</h3>
-              <div className="p-2 bg-indigo-500/20 rounded-md">
-                <Layers className="h-4 w-4 text-indigo-400" />
-              </div>
-            </div>
-            <div className="text-2xl font-semibold text-white mb-3">{stats.services.total}</div>
-            <div className="flex items-center gap-3 text-xs text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                {stats.services.published} published
-              </span>
-              <span className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                {stats.services.draft} draft
-              </span>
-            </div>
-          </div>
-
-          {/* Posts */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-5 hover:border-slate-600 transition-colors">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-slate-300">Blog Posts</h3>
-              <div className="p-2 bg-slate-700/50 rounded-md">
-                <FileText className="h-4 w-4 text-slate-300" />
-              </div>
-            </div>
-            <div className="text-2xl font-semibold text-white mb-3">{stats.posts.total}</div>
-            <div className="flex items-center gap-3 text-xs text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                {stats.posts.published} published
-              </span>
-              <span className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-                {stats.posts.draft} draft
-              </span>
-            </div>
-          </div>
-
-          {/* Leads */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-5 hover:border-slate-600 transition-colors">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-slate-300">Total Leads</h3>
-              <div className="p-2 bg-slate-700/50 rounded-md">
-                <Users className="h-4 w-4 text-slate-300" />
-              </div>
-            </div>
-            <div className="text-2xl font-semibold text-white mb-3">{stats.leads.total}</div>
-            <span className="px-2 py-0.5 bg-slate-700/50 text-slate-300 rounded text-xs">
-              {stats.leads.new} new
-            </span>
-          </div>
-
-          {/* Users */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-5 hover:border-slate-600 transition-colors">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-slate-300">CMS Users</h3>
-              <div className="p-2 bg-slate-700/50 rounded-md">
-                <Users className="h-4 w-4 text-slate-300" />
-              </div>
-            </div>
-            <div className="text-2xl font-semibold text-white mb-3">{stats.users.total}</div>
-            <p className="text-xs text-slate-400">Team members</p>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {statCards.map(({ label, value, icon: Icon, meta }) => (
+            <Card key={label} className="gap-3">
+              <CardHeader>
+                <CardDescription className="font-medium">{label}</CardDescription>
+                <CardAction>
+                  <Icon className="size-4 text-muted-foreground" />
+                </CardAction>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="text-[28px] leading-none font-semibold tracking-tight tabular-nums">
+                  {value}
+                </div>
+                <div className="flex items-center text-xs text-muted-foreground tabular-nums">
+                  {meta}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Services Status */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <BarChart3 className="h-4 w-4 text-indigo-400" />
-              <h2 className="text-base font-semibold text-white">Services Status</h2>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                    <span className="text-sm text-slate-300">Published</span>
-                  </div>
-                  <span className="text-sm font-medium text-white">{stats.services.published}</span>
-                </div>
-                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 rounded-full transition-all duration-500"
-                    style={{ width: `${getBarWidth(stats.services.published, servicesMax)}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-slate-500" />
-                    <span className="text-sm text-slate-300">Draft</span>
-                  </div>
-                  <span className="text-sm font-medium text-white">{stats.services.draft}</span>
-                </div>
-                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-slate-500 rounded-full transition-all duration-500"
-                    style={{ width: `${getBarWidth(stats.services.draft, servicesMax)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Blog Posts Status */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <BarChart3 className="h-4 w-4 text-slate-400" />
-              <h2 className="text-base font-semibold text-white">Blog Posts Status</h2>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-slate-400" />
-                    <span className="text-sm text-slate-300">Published</span>
-                  </div>
-                  <span className="text-sm font-medium text-white">{stats.posts.published}</span>
-                </div>
-                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-slate-400 rounded-full transition-all duration-500"
-                    style={{ width: `${getBarWidth(stats.posts.published, postsMax)}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-slate-600" />
-                    <span className="text-sm text-slate-300">Draft</span>
-                  </div>
-                  <span className="text-sm font-medium text-white">{stats.posts.draft}</span>
-                </div>
-                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-slate-600 rounded-full transition-all duration-500"
-                    style={{ width: `${getBarWidth(stats.posts.draft, postsMax)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Status */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {statusCards.map((c) => (
+            <Card key={c.title}>
+              <CardHeader>
+                <CardTitle>{c.title}</CardTitle>
+                <CardDescription>{c.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <StatusBar
+                  label="Published"
+                  value={c.published}
+                  width={getBarWidth(c.published, c.max)}
+                  barClass="bg-brand"
+                />
+                <StatusBar
+                  label="Draft"
+                  value={c.draft}
+                  width={getBarWidth(c.draft, c.max)}
+                  barClass="bg-muted-foreground/40"
+                />
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Recent Services */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div>
-              <h2 className="text-base font-semibold text-white mb-1">Recent Services</h2>
-              <p className="text-xs text-slate-400">Your latest service pages</p>
-            </div>
-            <Link href="/dashboard/services">
-              <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white h-8">
-                View All <ArrowRight className="h-3 w-3 ml-1.5" />
+        <Card className="gap-0 pb-0">
+          <CardHeader className="border-b">
+            <CardTitle>Recent services</CardTitle>
+            <CardDescription>Your latest service pages</CardDescription>
+            <CardAction>
+              <Button variant="ghost" size="sm" asChild className="h-8 text-muted-foreground">
+                <Link href="/dashboard/services">
+                  View all <ArrowRight className="ml-1 size-3.5" />
+                </Link>
               </Button>
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {stats.recentServices.length > 0 ? (
-              stats.recentServices.map((svc) => (
-                <Link
-                  key={svc._id}
-                  href={`/dashboard/services/update-service?slug=${svc.slug}`}
-                  className="block p-3 rounded-md bg-slate-900/50 border border-slate-700 hover:bg-slate-900/70 hover:border-slate-600 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Layers className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-                        <h4 className="text-sm font-medium text-white truncate">
-                          {svc.content?.badge || svc.slug}
-                        </h4>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-400 ml-5">
-                        <span>Updated {formatDate(svc.updatedAt)}</span>
-                        {svc.author && <span>• {svc.author.username}</span>}
-                      </div>
+            </CardAction>
+          </CardHeader>
+          {stats.recentServices.length > 0 ? (
+            <ul className="divide-y">
+              {stats.recentServices.map((svc) => (
+                <li key={svc._id}>
+                  <Link
+                    href={`/dashboard/services/update-service?slug=${svc.slug}`}
+                    className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-hidden"
+                  >
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background">
+                      <Layers className="size-4 text-muted-foreground" />
                     </div>
-                    <span
-                      className={`ml-3 shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
-                        svc.status === "published"
-                          ? "bg-green-500/15 text-green-400"
-                          : "bg-slate-700/50 text-slate-400"
-                      }`}
-                    >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {svc.content?.badge || svc.slug}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        Updated {formatDate(svc.updatedAt)}
+                        {svc.author && <> · {svc.author.username}</>}
+                      </p>
+                    </div>
+                    <Badge variant={svc.status === "published" ? "success" : "secondary"}>
                       {svc.status === "published" ? "Published" : "Draft"}
-                    </span>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <div className="text-center py-8 text-slate-400">
-                <Layers className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No services yet</p>
+                    </Badge>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="px-5 py-10 text-center">
+              <Layers className="mx-auto mb-2 size-6 text-muted-foreground/60" />
+              <p className="text-sm text-muted-foreground">No services yet</p>
+              <Button size="sm" className="mt-3" asChild>
                 <Link href="/dashboard/services/create-service">
-                  <Button className="mt-3 bg-slate-700 hover:bg-slate-600 text-white" size="sm">
-                    <Plus className="h-4 w-4 mr-2" /> Create Your First Service
-                  </Button>
+                  <Plus className="mr-1.5 size-4" /> Create your first service
                 </Link>
-              </div>
-            )}
-          </div>
-        </div>
+              </Button>
+            </div>
+          )}
+        </Card>
 
         {/* Quick Actions */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 sm:p-6">
-          <div className="mb-5">
-            <h2 className="text-base font-semibold text-white mb-1">Quick Actions</h2>
-            <p className="text-xs text-slate-400">Common tasks and shortcuts</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <Link href="/dashboard/services/create-service">
-              <Button className="w-full justify-start bg-indigo-600 hover:bg-indigo-700 text-white border-0" variant="default">
-                <Plus className="h-4 w-4 mr-2" /> Add Service
-              </Button>
-            </Link>
-            <Link href="/dashboard/services">
-              <Button className="w-full justify-start bg-slate-700 hover:bg-slate-600 text-white border-0" variant="default">
-                <Layers className="h-4 w-4 mr-2" /> Services
-              </Button>
-            </Link>
-            <Link href="/dashboard/blog/create-blog">
-              <Button className="w-full justify-start bg-slate-700 hover:bg-slate-600 text-white border-0" variant="default">
-                <FileText className="h-4 w-4 mr-2" /> New Post
-              </Button>
-            </Link>
-            <Link href="/dashboard/leads">
-              <Button className="w-full justify-start bg-slate-700 hover:bg-slate-600 text-white border-0" variant="default">
-                <Users className="h-4 w-4 mr-2" /> Leads
-              </Button>
-            </Link>
-            <Link href="/dashboard/about">
-              <Button className="w-full justify-start bg-slate-700 hover:bg-slate-600 text-white border-0" variant="default">
-                <Info className="h-4 w-4 mr-2" /> About Page
-              </Button>
-            </Link>
-            <Link href="/dashboard/footer-menu">
-              <Button className="w-full justify-start bg-slate-700 hover:bg-slate-600 text-white border-0" variant="default">
-                <LayoutList className="h-4 w-4 mr-2" /> Footer Menu
-              </Button>
-            </Link>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick actions</CardTitle>
+            <CardDescription>Common tasks and shortcuts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
+              {quickActions.map(({ href, label, icon: Icon, primary }) => (
+                <Button
+                  key={href}
+                  asChild
+                  variant={primary ? "default" : "outline"}
+                  className="w-full justify-start"
+                >
+                  <Link href={href}>
+                    <Icon className={`mr-1.5 size-4 ${primary ? "" : "text-muted-foreground"}`} />
+                    {label}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
 
+function Dot({ className }: { className: string }) {
+  return <span className={`mr-1.5 inline-block size-1.5 rounded-full ${className}`} />;
+}
+
+function StatusBar({
+  label,
+  value,
+  width,
+  barClass,
+}: {
+  label: string;
+  value: number;
+  width: number;
+  barClass: string;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium tabular-nums">{value}</span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${barClass}`}
+          style={{ width: `${width}%` }}
+        />
       </div>
     </div>
   );

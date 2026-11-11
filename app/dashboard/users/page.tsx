@@ -121,14 +121,14 @@ export default function UsersPage() {
       } else {
         toast.error(data.message || "Failed to fetch users", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       setLoading(false);
@@ -149,14 +149,14 @@ export default function UsersPage() {
       } else {
         toast.error(data.message || "Failed to fetch user details", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
       console.error("Error fetching user details:", error);
       toast.error("Failed to load user details", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       setLoadingUser(false);
@@ -183,14 +183,14 @@ export default function UsersPage() {
       setCreateLoading(true);
       const res = await axios.post("/api/users", createForm, { withCredentials: true });
       if (res.data.success) {
-        toast.success("User created successfully", { closeButton: true, className: "!bg-transparent !text-white" });
+        toast.success("User created successfully", { closeButton: true, className: "!bg-transparent !text-foreground" });
         setCreateDialogOpen(false);
         setCreateForm({ username: "", email: "", password: "", role: "" });
         fetchUsers(1);
       }
     } catch (error: any) {
       const msg = error.response?.data?.message || "Failed to create user";
-      toast.error(msg, { closeButton: true, className: "!bg-transparent !text-white" });
+      toast.error(msg, { closeButton: true, className: "!bg-transparent !text-foreground" });
     } finally {
       setCreateLoading(false);
     }
@@ -232,15 +232,15 @@ export default function UsersPage() {
   const getRoleBadgeColor = (role: string) => {
     switch (role?.toLowerCase()) {
       case "superadmin":
-        return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+        return "bg-brand/10 text-brand-link border-brand/30";
       case "admin":
-        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
+        return "bg-secondary text-foreground border-border-strong";
       case "editor":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
+        return "bg-brand/10 text-brand-link border-brand/30";
       case "contributor":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+        return "bg-warning/10 text-warning border-warning/30";
       default:
-        return "bg-slate-500/20 text-slate-400 border-slate-500/30";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -258,18 +258,18 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Users</h1>
-            <p className="text-slate-400">Manage all system users</p>
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Users</h1>
+            <p className="text-sm text-muted-foreground">Manage all system users</p>
           </div>
           {(currentUserRole === "superadmin" || currentUserRole === "admin") && (
             <Button
               onClick={() => setCreateDialogOpen(true)}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer"
             >
               <UserPlus className="h-4 w-4" />
               Create User
@@ -278,34 +278,34 @@ export default function UsersPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyPress={handleSearchKeyPress}
                 placeholder="Search users by username or email... (Press Enter)"
-                className="pl-10 w-full bg-slate-900/60 text-white border-slate-600 placeholder-slate-400"
+                className="pl-10 w-full"
               />
             </div>
 
             {/* Sort By Dropdown */}
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-[180px] bg-slate-900/60 text-white border-slate-600">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 text-white border-slate-600">
-                <SelectItem value="createdAt" className="!text-white focus:bg-slate-700 cursor-pointer">
+              <SelectContent className="">
+                <SelectItem value="createdAt" className="cursor-pointer">
                   Created Date
                 </SelectItem>
-                <SelectItem value="username" className="!text-white focus:bg-slate-700 cursor-pointer">
+                <SelectItem value="username" className="cursor-pointer">
                   Username
                 </SelectItem>
-                <SelectItem value="email" className="!text-white focus:bg-slate-700 cursor-pointer">
+                <SelectItem value="email" className="cursor-pointer">
                   Email
                 </SelectItem>
               </SelectContent>
@@ -316,14 +316,14 @@ export default function UsersPage() {
               value={sortOrder}
               onValueChange={(value) => setSortOrder(value as "asc" | "desc")}
             >
-              <SelectTrigger className="w-full sm:w-[150px] bg-slate-900/60 text-white border-slate-600">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Order" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 text-white border-slate-600">
-                <SelectItem value="desc" className="!text-white focus:bg-slate-700 cursor-pointer">
+              <SelectContent className="">
+                <SelectItem value="desc" className="cursor-pointer">
                   Descending
                 </SelectItem>
-                <SelectItem value="asc" className="!text-white focus:bg-slate-700 cursor-pointer">
+                <SelectItem value="asc" className="cursor-pointer">
                   Ascending
                 </SelectItem>
               </SelectContent>
@@ -332,7 +332,7 @@ export default function UsersPage() {
             {/* Apply Search Button */}
             <Button
               onClick={() => fetchUsers(1)}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer whitespace-nowrap"
+              className="cursor-pointer whitespace-nowrap"
             >
               Apply Filters
             </Button>
@@ -340,30 +340,30 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-transparent">
-                <TableHead className="text-slate-300">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSortChange("username")}>
                     Username
                     <ArrowUpDown className="h-4 w-4" />
                   </div>
                 </TableHead>
-                <TableHead className="text-slate-300">
+                <TableHead className="text-xs font-medium text-muted-foreground">
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSortChange("email")}>
                     Email
                     <ArrowUpDown className="h-4 w-4" />
                   </div>
                 </TableHead>
-                <TableHead className="text-slate-300">
+                <TableHead className="text-xs font-medium text-muted-foreground">
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSortChange("createdAt")}>
                     Created At
                     <ArrowUpDown className="h-4 w-4" />
                   </div>
                 </TableHead>
-                <TableHead className="text-slate-300">Updated At</TableHead>
-                <TableHead className="text-slate-300">Role</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Updated At</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Role</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -372,22 +372,22 @@ export default function UsersPage() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow
                     key={`skeleton-${index}`}
-                    className="border-slate-700 hover:bg-transparent"
+                    className="hover:bg-transparent"
                   >
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-32"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-48"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-48"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-40"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-40"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-slate-700 rounded animate-pulse w-40"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-40"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-8 w-8 bg-slate-700 rounded animate-pulse mx-auto"></div>
+                      <div className="h-8 w-8 bg-muted rounded animate-pulse mx-auto"></div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -396,22 +396,22 @@ export default function UsersPage() {
                   <>
                     <TableRow
                       key={user.id}
-                      className="border-slate-700 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                      className="hover:bg-muted/40 transition-colors cursor-pointer"
                       onClick={() => handleViewUser(user.id)}
                     >
-                      <TableCell className="text-slate-200 font-medium">
+                      <TableCell className="text-foreground-light font-medium">
                         {user.username}
                       </TableCell>
-                      <TableCell className="text-slate-300">
+                      <TableCell className="text-foreground-light">
                         {user.email}
                       </TableCell>
-                      <TableCell className="text-slate-400 text-sm">
+                      <TableCell className="text-muted-foreground text-sm">
                         {formatDate(user.createdAt)}
                       </TableCell>
-                      <TableCell className="text-slate-400 text-sm">
+                      <TableCell className="text-muted-foreground text-sm">
                         {formatDate(user.updatedAt)}
                       </TableCell>
-                      <TableCell className="text-slate-300">
+                      <TableCell className="text-foreground-light">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(user.role || "")}`}>
                           {formatRole(user.role || "")}
                         </span>
@@ -420,10 +420,10 @@ export default function UsersPage() {
                   </>
                 ))
               ) : (
-                <TableRow className="border-slate-700 hover:bg-transparent">
+                <TableRow className="hover:bg-transparent">
                   <TableCell
                     colSpan={5}
-                    className="text-center py-8 text-slate-400"
+                    className="text-center py-8 text-muted-foreground"
                   >
                     {search
                       ? "No users found matching your search"
@@ -436,8 +436,8 @@ export default function UsersPage() {
 
           {/* Pagination */}
           {!loading && pagination.totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-700">
-              <div className="text-sm text-slate-400">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-border">
+              <div className="text-sm text-muted-foreground">
                 Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
                 {Math.min(pagination.currentPage * pagination.limit, pagination.totalCount)} of{" "}
                 {pagination.totalCount} users
@@ -448,7 +448,7 @@ export default function UsersPage() {
                   size="sm"
                   onClick={() => fetchUsers(1)}
                   disabled={!pagination.hasPrevPage}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+                  className="disabled:opacity-50"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   First
@@ -458,7 +458,7 @@ export default function UsersPage() {
                   size="sm"
                   onClick={() => fetchUsers(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+                  className="disabled:opacity-50"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
@@ -483,8 +483,8 @@ export default function UsersPage() {
                         onClick={() => fetchUsers(pageNum)}
                         className={
                           pagination.currentPage === pageNum
-                            ? "bg-indigo-500 hover:bg-indigo-600 text-white"
-                            : "border-slate-600 text-slate-300 hover:bg-slate-800"
+                            ? ""
+                            : ""
                         }
                       >
                         {pageNum}
@@ -497,7 +497,7 @@ export default function UsersPage() {
                   size="sm"
                   onClick={() => fetchUsers(pagination.currentPage + 1)}
                   disabled={!pagination.hasNextPage}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+                  className="disabled:opacity-50"
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -507,7 +507,7 @@ export default function UsersPage() {
                   size="sm"
                   onClick={() => fetchUsers(pagination.totalPages)}
                   disabled={!pagination.hasNextPage}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+                  className="disabled:opacity-50"
                 >
                   Last
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -518,7 +518,7 @@ export default function UsersPage() {
 
           {/* Summary */}
           {!loading && users.length > 0 && (
-            <div className="mt-4 text-sm text-slate-400">
+            <div className="mt-4 text-sm text-muted-foreground">
               Showing {users.length} of {pagination.totalCount} users
               {search && " (filtered by search)"}
             </div>
@@ -529,22 +529,22 @@ export default function UsersPage() {
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent
             side="right"
-            className="bg-slate-900 !max-w-[700px] !w-full text-white overflow-y-auto"
+            className="!max-w-[700px] !w-full overflow-y-auto"
           >
             {viewUser && (
               <>
                 <SheetHeader>
-                  <SheetTitle className="text-white text-2xl">
+                  <SheetTitle className="text-2xl">
                     User Details
                   </SheetTitle>
-                  <SheetDescription className="text-slate-400">
+                  <SheetDescription className="">
                     Complete user information
                   </SheetDescription>
                 </SheetHeader>
 
                 {loadingUser ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="text-slate-400">Loading user details...</div>
+                    <div className="text-muted-foreground">Loading user details...</div>
                   </div>
                 ) : (
                   <ViewUser user={viewUser} onRoleUpdate={() => fetchUsers(pagination.currentPage)} />
@@ -559,27 +559,27 @@ export default function UsersPage() {
           setCreateDialogOpen(open);
           if (!open) setCreateForm({ username: "", email: "", password: "", role: "" });
         }}>
-          <DialogContent className="bg-slate-900 border border-white/10 text-white sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="border sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-white text-xl">Create New User</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogTitle className="text-xl">Create New User</DialogTitle>
+              <DialogDescription className="">
                 Fill in the details to create a new user account.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateUser} className="space-y-4 mt-2">
               <div className="space-y-1">
-                <Label htmlFor="create-username" className="text-slate-300 text-sm">Username</Label>
+                <Label htmlFor="create-username" className="text-sm">Username</Label>
                 <Input
                   id="create-username"
                   value={createForm.username}
                   onChange={(e) => setCreateForm((p) => ({ ...p, username: e.target.value }))}
                   placeholder="username"
                   required
-                  className="bg-slate-800 border-slate-600 text-white placeholder-slate-500"
+                  className=""
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="create-email" className="text-slate-300 text-sm">Email</Label>
+                <Label htmlFor="create-email" className="text-sm">Email</Label>
                 <Input
                   id="create-email"
                   type="email"
@@ -587,11 +587,11 @@ export default function UsersPage() {
                   onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))}
                   placeholder="user@example.com"
                   required
-                  className="bg-slate-800 border-slate-600 text-white placeholder-slate-500"
+                  className=""
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="create-password" className="text-slate-300 text-sm">Password</Label>
+                <Label htmlFor="create-password" className="text-sm">Password</Label>
                 <div className="relative">
                   <Input
                     id="create-password"
@@ -600,33 +600,33 @@ export default function UsersPage() {
                     onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))}
                     placeholder="Min 6 characters"
                     required
-                    className="bg-slate-800 border-slate-600 text-white placeholder-slate-500 pr-10"
+                    className="pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="create-role" className="text-slate-300 text-sm">Role</Label>
+                <Label htmlFor="create-role" className="text-sm">Role</Label>
                 <Select
                   value={createForm.role}
                   onValueChange={(val) => setCreateForm((p) => ({ ...p, role: val }))}
                   required
                 >
-                  <SelectTrigger id="create-role" className="bg-slate-800 border-slate-600 text-white">
+                  <SelectTrigger id="create-role" className="">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 text-white border-slate-600">
+                  <SelectContent className="">
                     {currentUserRole === "superadmin" && (
-                      <SelectItem value="admin" className="text-white! focus:bg-slate-700 cursor-pointer">Admin</SelectItem>
+                      <SelectItem value="admin" className="text-foreground! cursor-pointer">Admin</SelectItem>
                     )}
-                    <SelectItem value="editor" className="text-white! focus:bg-slate-700 cursor-pointer">Editor</SelectItem>
-                    <SelectItem value="contributor" className="text-white! focus:bg-slate-700 cursor-pointer">Contributor</SelectItem>
+                    <SelectItem value="editor" className="text-foreground! cursor-pointer">Editor</SelectItem>
+                    <SelectItem value="contributor" className="text-foreground! cursor-pointer">Contributor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -635,14 +635,14 @@ export default function UsersPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setCreateDialogOpen(false)}
-                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800 cursor-pointer"
+                  className="flex-1 cursor-pointer"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={createLoading}
-                  className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer disabled:opacity-50"
+                  className="flex-1 cursor-pointer disabled:opacity-50"
                 >
                   {createLoading ? "Creating..." : "Create User"}
                 </Button>

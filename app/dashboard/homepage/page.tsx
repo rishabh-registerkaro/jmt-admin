@@ -30,6 +30,7 @@ import {
   normalizeHomeContent,
   type HomePageContent,
   type HomeSectionKey,
+  type TranslatedLanguage,
 } from "@/app/lib/content/home-content";
 import { SectionCard, TextField } from "@/components/homepage-editor/fields";
 import type { SectionEditorProps } from "@/components/homepage-editor/types";
@@ -44,6 +45,7 @@ import BannerEditor from "@/components/homepage-editor/BannerEditor";
 import FaqEditor from "@/components/homepage-editor/FaqEditor";
 import ContactEditor from "@/components/homepage-editor/ContactEditor";
 import SiteEditor from "@/components/homepage-editor/SiteEditor";
+import TranslationEditor from "@/components/homepage-editor/TranslationEditor";
 // Must match HOMEPAGE_CHANNEL in jmt-frontend/components/homepage/LiveRefresh.tsx.
 // BroadcastChannel is same-origin only, so it reaches homepage tabs only when the
 // frontend is served from the same origin as this admin; otherwise open tabs
@@ -55,7 +57,16 @@ const FRONTEND_URL = (process.env.NEXT_PUBLIC_JMT_FRONTEND_URL || "http://localh
 
 type AnyEditor = ComponentType<SectionEditorProps<HomeSectionKey>>;
 
-/** Cards in the same order as the sections appear on the page. */
+type EditLanguage = "en" | TranslatedLanguage;
+
+/** Which language's text the form edits. The website serves them at /, /bn and /hi. */
+const EDIT_LANGUAGES: { code: EditLanguage; label: string; path: string }[] = [
+  { code: "en", label: "English", path: "" },
+  { code: "bn", label: "বাংলা", path: "/bn" },
+  { code: "hi", label: "हिन्दी", path: "/hi" },
+];
+
+/** One card per section; shown in the order chosen for the page (content.sectionOrder). */
 const SECTIONS: { key: HomeSectionKey; title: string; hint: string; icon: React.ElementType; Editor: AnyEditor }[] = [
   { key: "hero", title: "Hero", hint: "Headline, buttons, trust points and background photo", icon: Sparkles, Editor: HeroEditor as AnyEditor },
   { key: "services", title: "Services", hint: "Heading and up to four service cards", icon: Wrench, Editor: ServicesEditor as AnyEditor },
@@ -88,9 +99,9 @@ export default function HomepageDashboardPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ hero: true });
-  const [showPreview, setShowPreview] = useState(false);
-  // Bumped after each save to reload the (cross-origin) preview iframe.
-  const [previewKey, setPreviewKey] = useState(0);
+  const [editLang, setEditLang] = useState<EditLanguage>("en");
+  // Opened in a new tab by Preview / View live (the page in the language being edited).
+  const previewUrl = `${FRONTEND_URL}${EDIT_LANGUAGES.find((l) => l.code === editLang)?.path ?? ""}`;
 
   const dirty = !loading && snapshot(state) !== saved;
 
@@ -163,9 +174,7 @@ export default function HomepageDashboardPage() {
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
       applyServerDoc(data.homePage);
       setExists(true);
-      // The save already expired the frontend's cache, so a reload shows it.
-      setPreviewKey((k) => k + 1);
-      // Open homepage tabs (and the preview below) re-render with the new content.
+      // Open homepage tabs (incl. ones opened via Preview) re-render with the new content.
       try {
         const channel = new BroadcastChannel(HOMEPAGE_CHANNEL);
         channel.postMessage({ type: "saved", at: Date.now() });
@@ -188,8 +197,8 @@ export default function HomepageDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
-        <p className="text-slate-300">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-6">
+        <p className="text-foreground-light">Loading...</p>
       </div>
     );
   }
@@ -197,17 +206,17 @@ export default function HomepageDashboardPage() {
   const { content } = state;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="mx-auto max-w-5xl space-y-4">
         {/* Header — sticky so Save is always reachable on this long form */}
-        <div className="sticky top-14 md:top-0 z-20 -mx-4 sm:-mx-6 mb-2 flex flex-col gap-3 border-b border-white/10 bg-slate-950/90 px-4 sm:px-6 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky top-14 md:top-0 z-20 -mx-4 sm:-mx-6 mb-2 flex flex-col gap-3 border-b border-border bg-background/90 px-4 sm:px-6 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-              <LayoutTemplate className="h-6 w-6 text-indigo-400" /> Homepage
+            <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <LayoutTemplate className="h-6 w-6 text-muted-foreground" /> Homepage
             </h1>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               {dirty ? (
-                <span className="text-amber-400">Unsaved changes</span>
+                <span className="text-warning">Unsaved changes</span>
               ) : (
                 "Every section of the public homepage. Save to publish."
               )}
@@ -217,19 +226,17 @@ export default function HomepageDashboardPage() {
             <Button
               variant="ghost"
               onClick={() => setAll(!allOpen)}
-              className="text-slate-300 hover:bg-white/10 hover:text-white"
+              className="text-foreground-light hover:bg-muted/50 hover:text-foreground"
             >
               {allOpen ? "Collapse all" : "Expand all"}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowPreview((v) => !v)}
-              className="border-slate-600 bg-transparent text-slate-200 hover:bg-slate-800 hover:text-white"
-            >
-              <Eye className="mr-2 h-4 w-4" /> {showPreview ? "Hide preview" : "Preview"}
+            <Button asChild variant="outline">
+              <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                <Eye className="mr-2 h-4 w-4" /> Preview
+              </a>
             </Button>
-            <Button asChild variant="outline" className="border-slate-600 bg-transparent text-slate-200 hover:bg-slate-800 hover:text-white">
-              <a href={FRONTEND_URL} target="_blank" rel="noopener noreferrer">
+            <Button asChild variant="outline">
+              <a href={previewUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" /> View live
               </a>
             </Button>
@@ -237,7 +244,6 @@ export default function HomepageDashboardPage() {
               <Button
                 variant="outline"
                 onClick={handleReset}
-                className="border-slate-600 bg-transparent text-slate-200 hover:bg-slate-800 hover:text-white"
               >
                 Discard
               </Button>
@@ -245,7 +251,7 @@ export default function HomepageDashboardPage() {
             <Button
               onClick={handleSave}
               disabled={saving || Boolean(loadError) || (!dirty && exists)}
-              className="bg-indigo-500 px-6 text-white hover:bg-indigo-600"
+              className="px-6"
             >
               {saving ? "Saving..." : exists ? "Save changes" : "Publish homepage"}
             </Button>
@@ -253,14 +259,14 @@ export default function HomepageDashboardPage() {
         </div>
 
         {loadError && (
-          <div className="flex flex-col gap-3 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
             <p>
               <strong>Could not load the saved homepage, so saving is disabled.</strong> {loadError}
             </p>
             <Button
               variant="outline"
               onClick={() => window.location.reload()}
-              className="shrink-0 border-red-400/40 bg-transparent text-red-200 hover:bg-red-500/20 hover:text-white"
+              className="shrink-0 border-destructive/40 bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
               Retry
             </Button>
@@ -268,49 +274,73 @@ export default function HomepageDashboardPage() {
         )}
 
         {!exists && !loadError && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+          <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
             The homepage has not been saved from the CMS yet, so it shows the built-in design content. The
             form below is pre-filled with that content — edit it and click <strong>Publish homepage</strong>.
           </div>
         )}
 
-        {showPreview && (
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl">
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-white/10 px-4 py-2 text-xs text-slate-400">
-              <span>Live website — updates automatically after each save</span>
-              {dirty && <span className="text-amber-400">Save to see your latest edits here</span>}
-            </div>
-            <iframe key={previewKey} src={FRONTEND_URL} title="Homepage preview" className="h-[70vh] w-full bg-white" />
-          </div>
-        )}
+        <div role="tablist" aria-label="Language to edit" className="inline-flex rounded-lg border border-border bg-card p-1">
+          {EDIT_LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              role="tab"
+              aria-selected={editLang === l.code}
+              onClick={() => setEditLang(l.code)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                editLang === l.code
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
 
-        <h2 className="px-1 pt-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+        {editLang !== "en" ? (
+          <TranslationEditor
+            lang={editLang}
+            content={content}
+            metaTitle={state.metaTitle}
+            metaDescription={state.metaDescription}
+            onChange={(entries) => setSection("translations", { ...content.translations, [editLang]: entries })}
+          />
+        ) : (
+          <>
+        <h2 className="px-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Page sections — same order as the website, top to bottom
         </h2>
 
-        {SECTIONS.map(({ key, title, hint, icon, Editor }) => (
-          <SectionCard
-            key={key}
-            icon={icon}
-            title={title}
-            hint={hint}
-            open={!!open[key]}
-            onToggle={() => toggle(key)}
-            enabled={content[key].enabled}
-            onEnabledChange={(enabled) => setEnabled(key, enabled)}
-          >
-            <Editor value={content[key]} onChange={(value) => setSection(key, value)} />
-          </SectionCard>
-        ))}
+        {content.sectionOrder.map((sectionKey) => {
+          const section = SECTIONS.find((s) => s.key === sectionKey);
+          if (!section) return null;
+          const { key, title, hint, icon, Editor } = section;
+          return (
+            <SectionCard
+              key={key}
+              icon={icon}
+              title={title}
+              hint={hint}
+              open={!!open[key]}
+              onToggle={() => toggle(key)}
+              enabled={content[key].enabled}
+              onEnabledChange={(enabled) => setEnabled(key, enabled)}
+            >
+              <Editor value={content[key]} onChange={(value) => setSection(key, value)} />
+            </SectionCard>
+          );
+        })}
 
-        <h2 className="px-1 pt-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <h2 className="px-1 pt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Site-wide settings
         </h2>
 
         <SectionCard
           icon={Settings2}
           title="Navbar, footer & contact details"
-          hint="Phone, WhatsApp, email, menu links and footer — shown on every part of the page"
+          hint="Logos, phone, WhatsApp, email, button labels, language switcher, menu links and footer"
           open={!!open.site}
           onToggle={() => toggle("site")}
         >
@@ -324,7 +354,7 @@ export default function HomepageDashboardPage() {
           open={!!open.seo}
           onToggle={() => toggle("seo")}
         >
-          <p className="text-xs text-amber-300/80">
+          <p className="text-xs text-warning/80">
             These texts do not appear on the website itself. To change the text under the main headline,
             edit <strong>Hero → Subtitle</strong>.
           </p>
@@ -342,12 +372,14 @@ export default function HomepageDashboardPage() {
             onChange={(metaDescription) => setState((prev) => ({ ...prev, metaDescription }))}
           />
         </SectionCard>
+          </>
+        )}
 
         <div className="flex justify-end pb-10">
           <Button
             onClick={handleSave}
             disabled={saving || Boolean(loadError) || (!dirty && exists)}
-            className="bg-indigo-500 px-8 text-white hover:bg-indigo-600"
+            className="px-8"
           >
             {saving ? "Saving..." : exists ? "Save changes" : "Publish homepage"}
           </Button>

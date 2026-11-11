@@ -72,7 +72,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
     content: content || '',
     editorProps: {
       attributes: {
-        class: 'tiptap-editor prose prose-invert max-w-none focus:outline-none p-4',
+        class: 'tiptap-editor prose dark:prose-invert max-w-none text-foreground focus:outline-none p-4',
         placeholder: placeholder,
       },
       // Pasting a bare image URL inserts the image itself instead of a link
@@ -289,17 +289,17 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
 
   return (
     <div className="max-w-6xl mx-auto p-0 sm:p-4 relative">
-      <div className="rounded-xl overflow-hidden border border-gray-800 shadow-xl bg-black">
+      <div className="rounded-lg overflow-hidden border bg-card">
         {/* Toolbar */}
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-2 flex items-center justify-center gap-2 flex-wrap border-b border-gray-700">
+        <div className="bg-muted/40 p-2 flex items-center justify-center gap-1 flex-wrap border-b">
           {/* Heading Buttons — NOW FIXED: Turn off when not in heading */}
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className={`px-2 py-1.5 rounded-md font-medium transition-all flex items-center gap-1 ${
               isHeadingActive(1)
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
             }`}
           >
             <Heading1 size={16} />
@@ -309,8 +309,8 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={`px-2 py-1.5 rounded-md font-medium transition-all flex items-center gap-1 ${
               isHeadingActive(2)
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
             }`}
           >
             <Heading2 size={16} /> 
@@ -320,8 +320,8 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className={`px-2 py-1.5 rounded-md font-medium transition-all flex items-center gap-1 ${
               isHeadingActive(3)
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
             }`}
           >
             <Heading3 size={16} />
@@ -333,14 +333,14 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
             onClick={setParagraph}
             className={`px-2 py-1.5 rounded-md text-sm font-medium transition-all ${
               !editor.isActive('heading')
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
             }`}
           >
             Text
           </button>
 
-          <div className="w-px h-6 bg-gray-600 mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
           {/* Formatting Buttons - Multiple can be active simultaneously */}
           {/* Each button independently checks its active state and highlights when active */}
@@ -377,15 +377,15 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
               title={btn.label}
               className={`p-1.5 rounded-md transition-all ${
                 btn.active 
-                  ? 'bg-purple-600 text-white shadow-lg' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                  ? 'bg-accent text-foreground' 
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
             >
               <btn.icon size={16} />
             </button>
           ))}
 
-          <div className="w-px h-6 bg-gray-600 mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
           {/* Lists & Blocks */}
           {[
@@ -405,7 +405,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
               type="button"
               onClick={btn.cmd}
               className={`p-1.5 rounded-md transition-all ${
-                btn.active ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                btn.active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
             >
               <btn.icon size={16} />
@@ -415,12 +415,12 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
 
         {/* Editor */}
         <div className="relative">
-          <EditorContent editor={editor} className="bg-black min-h-[300px] sm:min-h-[400px] max-h-[600px] overflow-y-auto" />
+          <EditorContent editor={editor} className="bg-card min-h-[300px] sm:min-h-[400px] max-h-[600px] overflow-y-auto" />
           
           {/* Link Input Modal - Overlay */}
           {showLinkInput && (
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 max-w-lg w-full shadow-2xl">
+            <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-popover text-popover-foreground border rounded-lg p-4 max-w-lg w-full shadow-2xl">
                 <div className="flex items-center gap-2">
                   <input
                     ref={linkInputRef}
@@ -429,12 +429,12 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                     onChange={(e) => setLinkUrl(e.target.value)}
                     onKeyDown={handleLinkInputKeyDown}
                     placeholder="Enter URL or search..."
-                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-input bg-transparent dark:bg-input/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/60 focus:ring-2 focus:ring-ring"
                   />
                   <button
                     type="button"
                     onClick={handleLinkSubmit}
-                    className="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+                    className="p-2 rounded-md border border-primary-border bg-primary hover:bg-primary/85 text-primary-foreground transition-colors"
                     title="Apply"
                   >
                     <Link2 size={18} />
@@ -444,7 +444,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                       <button
                         type="button"
                         onClick={handleOpenLink}
-                        className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                        className="p-2 rounded-md border border-border-strong bg-card hover:bg-accent text-foreground transition-colors"
                         title="Open link"
                       >
                         <ExternalLink size={18} />
@@ -452,7 +452,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                       <button
                         type="button"
                         onClick={handleRemoveLink}
-                        className="p-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-400 transition-colors"
+                        className="p-2 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
                         title="Remove link"
                       >
                         <Trash2 size={18} />
@@ -462,7 +462,7 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                   <button
                     type="button"
                     onClick={closeLinkInput}
-                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                    className="p-2 rounded-md border border-border-strong bg-card hover:bg-accent text-foreground transition-colors"
                     title="Cancel"
                   >
                     <X size={18} />
@@ -474,15 +474,15 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
 
           {/* Image Upload Section - Overlay */}
           {showImageUpload && (
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6 max-w-md w-full max-h-full overflow-y-auto shadow-2xl">
+            <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-popover text-popover-foreground border rounded-lg p-4 sm:p-6 max-w-md w-full max-h-full overflow-y-auto shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Upload Image</h3>
+                  <h3 className="text-base font-semibold text-foreground">Upload Image</h3>
                   <button
                     type="button"
                     onClick={closeImageUpload}
                     disabled={uploading}
-                    className="text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <X size={20} />
                   </button>
@@ -494,8 +494,8 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                     onClick={() => !uploading && fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
                       uploading
-                        ? 'border-gray-600 bg-gray-800/50 cursor-not-allowed'
-                        : 'border-purple-500 bg-gray-800/30 hover:border-purple-400 hover:bg-gray-800/50'
+                        ? 'border-border bg-muted/50 cursor-not-allowed'
+                        : 'border-border-strong bg-muted/30 hover:border-brand/60 hover:bg-muted/50'
                     }`}
                   >
                     <input
@@ -509,17 +509,17 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                     
                     {uploading ? (
                       <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="animate-spin text-purple-500" size={32} />
-                        <p className="text-gray-300">Uploading image...</p>
+                        <Loader2 className="animate-spin text-brand" size={32} />
+                        <p className="text-foreground-light">Uploading image...</p>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-3">
-                        <div className="bg-purple-600/20 p-4 rounded-full">
-                          <Upload className="text-purple-400" size={32} />
+                        <div className="bg-brand/10 p-4 rounded-full">
+                          <Upload className="text-brand-link" size={32} />
                         </div>
                         <div>
-                          <p className="text-white font-medium mb-1">Click to upload or drag and drop</p>
-                          <p className="text-sm text-gray-400">PNG, JPG, GIF up to 10MB</p>
+                          <p className="text-foreground font-medium mb-1">Click to upload or drag and drop</p>
+                          <p className="text-sm text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
                         </div>
                       </div>
                     )}
@@ -527,11 +527,11 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
 
                   {/* Divider */}
                   <div className="flex items-center gap-3">
-                    <div className="h-px flex-1 bg-gray-700" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       or paste an image URL
                     </span>
-                    <div className="h-px flex-1 bg-gray-700" />
+                    <div className="h-px flex-1 bg-border" />
                   </div>
 
                   {/* URL option — for images already uploaded to the Media Library */}
@@ -548,25 +548,25 @@ const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: Ed
                       }}
                       placeholder="https://…/media/your-image.jpg"
                       disabled={uploading}
-                      className="flex-1 min-w-0 rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
+                      className="flex-1 min-w-0 rounded-lg border border-input bg-transparent dark:bg-input/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-brand/60 focus:ring-2 focus:ring-ring disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={insertImageFromUrl}
                       disabled={uploading || !imageUrl.trim()}
-                      className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-md border border-primary-border bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Insert
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Tip: copy the URL from the Media Library and paste it here — the image renders in the post instead of showing as a link.
                   </p>
 
                   {/* Error Message */}
                   {uploadError && (
-                    <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3">
-                      <p className="text-sm text-red-400">{uploadError}</p>
+                    <div className="bg-destructive/10 border border-destructive/30 rounded-md p-3">
+                      <p className="text-sm text-destructive">{uploadError}</p>
                     </div>
                   )}
                 </div>

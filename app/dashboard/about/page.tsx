@@ -35,14 +35,14 @@ import {
 // ─── Shared styles (same idiom as the services editor) ───────────────────────
 
 const inputCls =
-  "w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
 const textareaCls = `${inputCls} resize-y`;
 const selectCls =
-  "rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500";
-const cardWrapCls = "bg-slate-800/30 p-4 rounded-lg border border-slate-700";
-const labelCls = "text-sm font-medium text-slate-200";
+  "rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
+const cardWrapCls = "bg-muted/40 p-4 rounded-lg border border-border";
+const labelCls = "text-sm font-medium text-foreground";
 const addBtnCls =
-  "border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white";
+  "";
 
 function Field({
   label,
@@ -91,7 +91,7 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
       size="sm"
       onClick={onClick}
       title="Remove"
-      className="text-red-400 hover:text-red-300 hover:bg-red-400/20 shrink-0"
+      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
     >
       <Trash2 className="h-4 w-4" />
     </Button>
@@ -154,25 +154,25 @@ function SectionCard({
 }) {
   return (
     <Collapsible.Root open={open} onOpenChange={onToggle}>
-      <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+      <div className="rounded-lg border bg-card overflow-hidden">
         <Collapsible.Trigger asChild>
-          <button className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+          <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3 text-left">
-              <Icon className="h-5 w-5 text-indigo-400 shrink-0" />
+              <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
               <div>
-                <span className="text-lg font-semibold text-white">{title}</span>
-                {hint && <p className="text-xs text-slate-400">{hint}</p>}
+                <span className="text-lg font-semibold text-foreground">{title}</span>
+                {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
               </div>
             </div>
             {open ? (
-              <ChevronDown className="h-5 w-5 text-slate-400" />
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
             ) : (
-              <ChevronRight className="h-5 w-5 text-slate-400" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             )}
           </button>
         </Collapsible.Trigger>
         <Collapsible.Content>
-          <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 space-y-4 border-t border-white/10">{children}</div>
+          <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 space-y-4 border-t border-border">{children}</div>
         </Collapsible.Content>
       </div>
     </Collapsible.Root>
@@ -276,8 +276,8 @@ export default function AboutDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
-        <p className="text-slate-300">Loading...</p>
+      <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-center">
+        <p className="text-foreground-light">Loading...</p>
       </div>
     );
   }
@@ -285,12 +285,12 @@ export default function AboutDashboardPage() {
   const { hero, metrics, pillars, accreditations, story, team, founder } = content;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-2">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">About Us Page</h1>
-            <p className="text-slate-400">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">About Us Page</h1>
+            <p className="text-muted-foreground">
               Every section of the live /about page — save to publish instantly.
             </p>
           </div>
@@ -299,7 +299,7 @@ export default function AboutDashboardPage() {
               variant="outline"
               onClick={handleRevalidate}
               title="Clear frontend cache for the About page"
-              className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+              className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Revalidate Cache
@@ -307,7 +307,7 @@ export default function AboutDashboardPage() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white px-6"
+              className="px-6"
             >
               {saving ? "Saving..." : "Save Page"}
             </Button>
@@ -388,7 +388,7 @@ export default function AboutDashboardPage() {
             </div>
           </Field>
           <div className={`${cardWrapCls} space-y-4`}>
-            <span className="text-sm font-semibold text-slate-300">Quote form card</span>
+            <span className="text-sm font-semibold text-foreground-light">Quote form card</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Kicker">
                 <Input className={inputCls} value={hero.form.kicker} onChange={(e) => set("hero", { ...hero, form: { ...hero.form, kicker: e.target.value } })} />
@@ -457,7 +457,7 @@ export default function AboutDashboardPage() {
           {pillars.items.map((item, i) => (
             <div key={i} className={`${cardWrapCls} space-y-3`}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-300">Pillar {i + 1}</span>
+                <span className="text-sm font-semibold text-foreground-light">Pillar {i + 1}</span>
                 <RemoveButton onClick={() => set("pillars", { ...pillars, items: pillars.items.filter((_, idx) => idx !== i) })} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -544,14 +544,14 @@ export default function AboutDashboardPage() {
           {story.timeline.map((t, i) => (
             <div key={i} className={`${cardWrapCls} space-y-3`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-slate-300">Milestone {i + 1}</span>
+                <span className="text-sm font-semibold text-foreground-light">Milestone {i + 1}</span>
                 <div className="flex items-center gap-3 ml-auto">
-                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!t.dark}
                       onChange={(e) => set("story", { ...story, timeline: story.timeline.map((x, idx) => (idx === i ? { ...x, dark: e.target.checked } : x)) })}
-                      className="accent-indigo-500"
+                      className="accent-brand"
                     />
                     Dark style (latest milestone)
                   </label>
@@ -602,7 +602,7 @@ export default function AboutDashboardPage() {
           {team.members.map((m, i) => (
             <div key={i} className={`${cardWrapCls} space-y-3`}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-300">Member {i + 1}</span>
+                <span className="text-sm font-semibold text-foreground-light">Member {i + 1}</span>
                 <RemoveButton onClick={() => set("team", { ...team, members: team.members.filter((_, idx) => idx !== i) })} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -630,7 +630,7 @@ export default function AboutDashboardPage() {
                   <Input className={inputCls} value={m.instagram ?? ""} placeholder="https://instagram.com/…" onChange={(e) => set("team", { ...team, members: team.members.map((x, idx) => (idx === i ? { ...x, instagram: e.target.value } : x)) })} />
                 </Field>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 The icons on the website only appear for links you fill in — leave a field empty to hide its icon.
               </p>
             </div>
@@ -675,7 +675,7 @@ export default function AboutDashboardPage() {
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="bg-indigo-500 hover:bg-indigo-600 text-white px-8"
+            className="px-8"
           >
             {saving ? "Saving..." : "Save Page"}
           </Button>

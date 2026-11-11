@@ -39,7 +39,7 @@ export default function LoginPage() {
     setLoading(true);
 
     const loadingToastId = toast.loading("Logging in...", {
-      className: "!bg-transparent !text-white",
+      className: "!bg-transparent !text-foreground",
     });
 
     try {
@@ -57,7 +57,7 @@ export default function LoginPage() {
         toast.success("Login Successful", {
           closeButton: true,
           duration: 2000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
 
         setTimeout(() => {
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
         toast.error(data.message || "Login failed", {
           duration: 4000,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error) {
@@ -79,7 +79,7 @@ export default function LoginPage() {
       
       toast.error("Something went wrong. Please try again.", {
         duration: 4000,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       setLoading(false);
@@ -87,20 +87,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 px-4">
-      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 p-6 sm:p-8 rounded-2xl shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md rounded-lg border bg-card p-6 sm:p-8">
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-center text-foreground mb-2">
           Welcome Back
         </h1>
-        <p className="text-center text-slate-300 mb-8 text-sm">
+        <p className="text-center text-foreground-light mb-8 text-sm">
           Login to access your dashboard.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email or Username */}
           <div className="space-y-1">
-            <label className="text-sm text-slate-200">Email</label>
+            <label className="text-sm text-foreground-light">Email</label>
             <input
               type="text"
               name="email"
@@ -108,24 +108,24 @@ export default function LoginPage() {
               value={form.email || ""}
               onChange={handleChange}
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-slate-200">Username (optional)</label>
+            <label className="text-sm text-foreground-light">Username (optional)</label>
             <input
               type="text"
               name="username"
               value={form.username || ""}
               onChange={handleChange}
               placeholder="Optional if email entered"
-              className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Password */}
           <div className="space-y-1 relative">
-            <label className="text-sm text-slate-200">Password</label>
+            <label className="text-sm text-foreground-light">Password</label>
             <input
               type={showPassword ? "text" : "password"}
               name="password"
@@ -133,9 +133,9 @@ export default function LoginPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
             />
-            <button type="button" className="absolute right-3 top-[53%] cursor-pointer  text-slate-400 hover:text-slate-200 transition-colors focus:outline-none" onClick={togglePasswordVisibility}>
+            <button type="button" className="absolute right-3 top-[53%] cursor-pointer text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none" onClick={togglePasswordVisibility}>
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -143,7 +143,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-end">
             <Link
               href="/forgot-password"
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs text-brand-link hover:underline transition-colors"
             >
               Forgot Password?
             </Link>
@@ -152,15 +152,15 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 rounded-lg bg-indigo-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-600 transition disabled:bg-slate-600 disabled:cursor-not-allowed"
+            className="w-full mt-2 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        {/* <p className="text-center text-xs text-slate-300 mt-6">
+        {/* <p className="text-center text-xs text-foreground-light mt-6">
           Don't have an account?{" "}
-          <a href="/signup" className="font-semibold text-indigo-400 hover:text-indigo-300">
+          <a href="/signup" className="font-semibold text-brand-link hover:underline">
             Sign Up
           </a>
         </p> */}

@@ -19,7 +19,7 @@ export default function ProcessEditor({ value, onChange }: SectionEditorProps<"p
       <TextField label="Intro" multiline rows={2} value={value.intro} onChange={(intro) => patch({ intro })} />
 
       <SubHeading>Steps</SubHeading>
-      <p className="text-xs text-slate-500">Numbered automatically in this order.</p>
+      <p className="text-xs text-muted-foreground">Numbered automatically in this order.</p>
       <ListEditor
         items={value.steps}
         onChange={(steps) => patch({ steps })}

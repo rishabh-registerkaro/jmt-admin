@@ -341,9 +341,9 @@ const AdditionalFieldsBlog = ({
 
   return (
     <div>
-      <div className="pt-6 border-t border-slate-700">
+      <div className="pt-6 border-t border-border">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-200">
+          <h3 className="text-lg font-semibold text-foreground">
             Additional Fields
           </h3>
 
@@ -351,7 +351,6 @@ const AdditionalFieldsBlog = ({
             type="button"
             onClick={() => setShowAddFieldForm(!showAddFieldForm)}
             variant="outline"
-            className="bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-500"
           >
             + Add Field
           </Button>
@@ -359,13 +358,13 @@ const AdditionalFieldsBlog = ({
 
         {/* Add Field Form */}
         {showAddFieldForm && (
-          <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700 space-y-4 mb-4">
-            <h4 className="text-sm font-semibold text-slate-200">
+          <div className="bg-muted/40 p-4 rounded-lg border border-border space-y-4 mb-4">
+            <h4 className="text-sm font-semibold text-foreground">
               Add New Field
             </h4>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Field Label *
               </label>
               <Input
@@ -374,13 +373,12 @@ const AdditionalFieldsBlog = ({
                 value={newField.label}
                 onChange={handleNewFieldChange}
                 placeholder="e.g., Hero Section, SEO Title"
-                className="bg-slate-900/60 text-white border-slate-600"
               />
 
               {newField.label && (
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Field name:{" "}
-                  <span className="font-mono text-slate-400">
+                  <span className="font-mono text-muted-foreground">
                     {generateFieldName(newField.label)}
                   </span>
                 </p>
@@ -388,14 +386,14 @@ const AdditionalFieldsBlog = ({
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Input Type *
               </label>
               <select
                 name="type"
                 value={newField.type}
                 onChange={handleNewFieldChange}
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {FIELD_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -416,10 +414,10 @@ const AdditionalFieldsBlog = ({
                     setNewField((prev) => ({ ...prev, value: e.target.value }))
                   }
                   placeholder="Enter text"
-                  className="w-full bg-slate-900/60 text-white border-slate-600"
+                  className="w-full"
                 />
               ) : newField.type === "editor" ? (
-                <div className="bg-slate-900/60 rounded-lg border border-slate-600 p-2">
+                <div className="bg-muted/40 rounded-lg border border-border p-2">
                   <Editor
                     content={
                       typeof newField.value === "string" ? newField.value : ""
@@ -439,22 +437,22 @@ const AdditionalFieldsBlog = ({
                       const file = e.target.files?.[0] || null;
                       setNewField((prev) => ({ ...prev, value: file }));
                     }}
-                    className="text-slate-300 max-w-full"
+                    className="text-foreground-light max-w-full"
                   />
                   {newField.value instanceof File && (
-                    <div className="mt-2 p-2 bg-slate-900/60 rounded border border-slate-600">
-                      <p className="text-xs text-slate-300">
+                    <div className="mt-2 p-2 bg-muted/40 rounded border border-border">
+                      <p className="text-xs text-foreground-light">
                         📎 Selected:{" "}
                         <span className="font-semibold">
                           {newField.value.name}
                         </span>
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Size: {(newField.value.size / 1024).toFixed(2)} KB
                       </p>
                     </div>
                   )}
-                  <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
+                  <p className="text-xs text-warning mt-2 flex items-center gap-1">
                     <span>⚡</span>
                     File will be uploaded when you click "Add
                     Field"
@@ -468,7 +466,7 @@ const AdditionalFieldsBlog = ({
                 type="button"
                 onClick={addCustomField}
                 disabled={uploadingFields.size > 0}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {uploadingFields.size > 0 ? "Uploading..." : "Add Field"}
               </Button>
@@ -480,7 +478,6 @@ const AdditionalFieldsBlog = ({
                   setNewField({ label: "", type: "text", value: "" });
                 }}
                 variant="outline"
-                className="bg-slate-700 text-white border-slate-600"
                 disabled={uploadingFields.size > 0}
               >
                 Cancel
@@ -499,17 +496,17 @@ const AdditionalFieldsBlog = ({
               return (
                 <div
                   key={fieldName}
-                  className="bg-slate-800/40 p-4 rounded-lg border border-slate-700"
+                  className="bg-muted/40 p-4 rounded-lg border border-border"
                 >
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-200">
+                      <h4 className="text-sm font-semibold text-foreground">
                         {fieldData.label}
                       </h4>
-                      <p className="text-xs text-slate-500 font-mono mt-1 break-all">
+                      <p className="text-xs text-muted-foreground font-mono mt-1 break-all">
                         {fieldName}
                       </p>
-                      <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs bg-brand/10 text-brand-link border border-brand/30">
                         {fieldData.type.toUpperCase()}
                       </span>
                     </div>
@@ -519,7 +516,7 @@ const AdditionalFieldsBlog = ({
                       onClick={() => removeCustomField(fieldName)}
                       variant="ghost"
                       size="sm"
-                      className="text-red-400 hover:text-red-300 hover:bg-red-400/20"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       Remove
                     </Button>
@@ -532,14 +529,14 @@ const AdditionalFieldsBlog = ({
                       onChange={(e) =>
                         updateFieldValue(fieldName, e.target.value)
                       }
-                      className="bg-slate-900 border-slate-700 text-white"
+                      className="bg-muted/40 border-border text-foreground"
                       placeholder="Enter text value"
                     />
                   )}
 
                   {/* EDITOR FIELD */}
                   {fieldData.type === "editor" && (
-                    <div className="bg-slate-900/60 rounded-lg border border-slate-600 p-2">
+                    <div className="bg-muted/40 rounded-lg border border-border p-2">
                       <Editor
                         content={fieldData.value || ""}
                         onChange={(html) => updateFieldValue(fieldName, html)}
@@ -552,21 +549,21 @@ const AdditionalFieldsBlog = ({
                   {fieldData.type === "image" && (
                     <div className="space-y-2">
                       {isUploading ? (
-                        <div className="flex items-center gap-2 text-slate-400 text-sm">
-                          <div className="animate-spin h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full"></div>
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                          <div className="animate-spin h-4 w-4 border-2 border-muted-foreground border-t-transparent rounded-full"></div>
                           <span>Uploading...</span>
                         </div>
                       ) : fieldData.value ? (
                         <>
                           <img
                             src={fieldData.value}
-                            className="h-32 w-32 object-cover rounded-md border border-slate-600"
+                            className="h-32 w-32 object-cover rounded-md border border-border"
                             alt={fieldData.label}
                           />
 
                           <button
                             type="button"
-                            className="text-blue-400 text-xs underline"
+                            className="text-brand-link text-xs underline"
                             onClick={() =>
                               document
                                 .getElementById(`file-${fieldName}`)
@@ -596,9 +593,9 @@ const AdditionalFieldsBlog = ({
                               e.target.files &&
                               handleFileUpload(fieldName, e.target.files[0])
                             }
-                            className="text-slate-300 max-w-full"
+                            className="text-foreground-light max-w-full"
                           />
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Max size: {MAX_FILE_SIZE / 1024 / 1024}MB |
                             Formats: JPEG, PNG, WebP, GIF
                           </p>
@@ -611,28 +608,28 @@ const AdditionalFieldsBlog = ({
                   {fieldData.type === "file" && (
                     <div className="space-y-2">
                       {isUploading ? (
-                        <div className="flex items-center gap-2 text-slate-400 text-sm">
-                          <div className="animate-spin h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full"></div>
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                          <div className="animate-spin h-4 w-4 border-2 border-muted-foreground border-t-transparent rounded-full"></div>
                           <span>Uploading...</span>
                         </div>
                       ) : fieldData.value ? (
                         <>
                           <div className="space-y-1">
-                            <p className="text-xs text-emerald-400">
+                            <p className="text-xs text-brand-link">
                               ✓ Uploaded
                             </p>
                             <a
                               href={fieldData.value}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-blue-400 hover:text-blue-300 underline break-all block font-mono"
+                              className="text-xs text-brand-link hover:underline underline break-all block font-mono"
                             >
                               {fieldData.value}
                             </a>
                           </div>
                           <button
                             type="button"
-                            className="text-blue-400 text-xs underline hover:text-blue-300"
+                            className="text-brand-link text-xs underline"
                             onClick={() =>
                               document
                                 .getElementById(`file-${fieldName}`)
@@ -660,9 +657,9 @@ const AdditionalFieldsBlog = ({
                               e.target.files &&
                               handleFileUpload(fieldName, e.target.files[0])
                             }
-                            className="text-slate-300 max-w-full"
+                            className="text-foreground-light max-w-full"
                           />
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Max size: {MAX_FILE_SIZE / 1024 / 1024}MB |
                             Formats: PDF, DOC, DOCX, XLS, XLSX, Images
                           </p>
@@ -678,7 +675,7 @@ const AdditionalFieldsBlog = ({
 
         {/* Empty State */}
         {Object.keys(additionalFields).length === 0 && !showAddFieldForm && (
-          <div className="text-center py-8 text-slate-500 border border-dashed border-slate-700 rounded-lg">
+          <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
             <p className="text-sm">No additional fields added yet</p>
             <p className="text-xs mt-1">
               Click "Add Field" to create custom fields

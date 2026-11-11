@@ -16,6 +16,8 @@
 // upload if there is one, otherwise the bundled photo in /public/homepage.
 
 import {
+  BRAND_LOGOS,
+  CONTACT_LABELS,
   FALLBACK_CHROME,
   FALLBACK_CONTACT,
   FALLBACK_HERO,
@@ -23,17 +25,23 @@ import {
   FALLBACK_SERVICES,
   FAQ_GROUPS,
   FOUNDER,
+  LEAD_FORM_COPY,
   PROCESS_STEPS,
   REASONS,
   SITE_TYPES,
   TRADES,
 } from "@/data/homepageFallback";
-import type {
-  FaqAudience,
-  HeroTrustIcon,
-  ImageFocus,
-  ProcessIcon,
-  TradeIcon,
+import { SEED_TRANSLATIONS } from "@/data/homepageTranslations";
+import {
+  LEAD_FIELDS,
+  SWITCHER_LANGUAGES,
+  type FaqAudience,
+  type HeroTrustIcon,
+  type ImageFocus,
+  type LeadField,
+  type ProcessIcon,
+  type SwitcherLanguage,
+  type TradeIcon,
 } from "@/types/homepage";
 
 // ── Enums (exported for the editor's selects) ────────────────────────────────
@@ -98,7 +106,30 @@ export interface HomeFaqGroupValue {
   items: { question: string; answer: string }[];
 }
 
+export interface HomeLanguageValue {
+  /** Fixed: one entry per language the translator supports. */
+  code: (typeof SWITCHER_LANGUAGES)[number];
+  label: string;
+  name: string;
+  /** Hidden languages are left out of the switcher (English always shows). */
+  enabled: boolean;
+}
+
+export interface HomeLeadFormValue {
+  labels: Record<LeadField, string>;
+  optionalHint: string;
+  submit: string;
+  submitting: string;
+  successTitle: string;
+  successText: string;
+  resetLabel: string;
+  invalidText: string;
+  errorText: string;
+}
+
 export interface HomePageContent {
+  /** Every section key once, top to bottom. */
+  sectionOrder: HomeSectionKey[];
   hero: {
     enabled: boolean;
     eyebrow: string;
@@ -123,7 +154,7 @@ export interface HomePageContent {
   sites: {
     enabled: boolean;
     title: string;
-    cards: { title: string; description: string; image: HomeImageValue }[];
+    cards: { title: string; description: string; href: string; image: HomeImageValue }[];
   };
   why: {
     enabled: boolean;
@@ -182,12 +213,29 @@ export interface HomePageContent {
     title: string;
     cardTitle: string;
     cardText: string;
+    labels: { call: string; whatsapp: string; whatsappValue: string; reply: string };
     formTitle: string;
     formText: string;
+    form: HomeLeadFormValue;
     image: HomeImageValue;
   };
   /** Site-wide details for this homepage: navbar, footer and contact channels. */
   site: {
+    brand: {
+      /** Read out by screen readers on the logo links. */
+      name: string;
+      /** Empty src = the bundled logo. */
+      headerLogo: HomeImageValue;
+      footerLogo: HomeImageValue;
+    };
+    labels: {
+      callButton: string;
+      whatsappButton: string;
+      /** Footer text for the WhatsApp link; blank shows the number. */
+      whatsappDisplay: string;
+      footerContactTitle: string;
+    };
+    languages: { enabled: boolean; items: HomeLanguageValue[] };
     /** Blank = keep using the Header Menu care number. */
     phone: string;
     /** Blank = keep using the Header Menu WhatsApp number. */
@@ -201,6 +249,12 @@ export interface HomePageContent {
     footerColumns: { title: string; links: HomeLinkValue[] }[];
     copyright: string;
   };
+  /**
+   * Bengali and Hindi text, edited at Homepage → বাংলা / हिन्दी. Missing or
+   * outdated entries fall back to the built-in translation, then to English
+   * (see localizeHomeContent below).
+   */
+  translations: HomeTranslations;
 }
 
 export const HOME_META_DEFAULTS = {
@@ -236,6 +290,7 @@ const faqGroup = (audience: FaqAudience): HomeFaqGroupValue => {
 
 export function defaultHomeContent(): HomePageContent {
   return {
+    sectionOrder: [...HOME_SECTION_KEYS],
     hero: {
       enabled: true,
       eyebrow: FALLBACK_HERO.eyebrow,
@@ -270,6 +325,7 @@ export function defaultHomeContent(): HomePageContent {
       cards: SITE_TYPES.map((s) => ({
         title: s.title,
         description: s.description,
+        href: "#contact",
         image: s.image ? bundledImage(s.image) : { src: "", alt: "", focus: "center" },
       })),
     },
@@ -337,11 +393,27 @@ export function defaultHomeContent(): HomePageContent {
       title: "Need a crew next week? Let's plan it today.",
       cardTitle: "Ready to build your crew?",
       cardText: "Send the site details. The owner calls you back.",
+      labels: { ...CONTACT_LABELS },
       formTitle: "Send us your requirement",
       formText: "Fill in the details and we will get back to you within 24 hours.",
+      form: { ...LEAD_FORM_COPY, labels: { ...LEAD_FORM_COPY.labels } },
       image: slotImage("contact"),
     },
     site: {
+      brand: {
+        name: FALLBACK_CHROME.brand.name,
+        // Empty = the bundled logo, so a later logo redesign still shows.
+        headerLogo: { src: "", alt: BRAND_LOGOS.header.alt, focus: "center" },
+        footerLogo: { src: "", alt: BRAND_LOGOS.footer.alt, focus: "center" },
+      },
+      labels: {
+        ...FALLBACK_CHROME.labels,
+        whatsappDisplay: FALLBACK_CONTACT.whatsappDisplay,
+      },
+      languages: {
+        enabled: true,
+        items: FALLBACK_CHROME.languages.map((l) => ({ ...l, enabled: true })),
+      },
       phone: "",
       whatsapp: "",
       email: "",
@@ -359,6 +431,7 @@ export function defaultHomeContent(): HomePageContent {
       })),
       copyright: FALLBACK_CHROME.copyright ?? "",
     },
+    translations: { bn: {}, hi: {} },
   };
 }
 
@@ -425,6 +498,39 @@ function linkValue(value: unknown, fallback: HomeLinkValue): HomeLinkValue {
 }
 
 const EMPTY_IMAGE: HomeImageValue = { src: "", alt: "", focus: "center" };
+
+/** Known section keys in the stored order, without repeats; missing ones are appended. */
+function sectionOrder(value: unknown, fallback: HomeSectionKey[]): HomeSectionKey[] {
+  if (!Array.isArray(value)) return fallback;
+  const known = new Set<string>(HOME_SECTION_KEYS);
+  const order: HomeSectionKey[] = [];
+  for (const key of value) {
+    if (typeof key === "string" && known.has(key) && !order.includes(key as HomeSectionKey)) {
+      order.push(key as HomeSectionKey);
+    }
+  }
+  for (const key of HOME_SECTION_KEYS) if (!order.includes(key)) order.push(key);
+  return order;
+}
+
+/** One entry per supported language, in the stored order; unknown codes are dropped. */
+function languageItems(value: unknown, fallback: HomeLanguageValue[]): HomeLanguageValue[] {
+  if (!Array.isArray(value)) return fallback;
+  const items: HomeLanguageValue[] = [];
+  for (const raw of value) {
+    const i = isRecord(raw) ? raw : {};
+    const base = fallback.find((f) => f.code === i.code);
+    if (!base || items.some((item) => item.code === base.code)) continue;
+    items.push({
+      code: base.code,
+      label: str(i.label, base.label) || base.label,
+      name: str(i.name, base.name) || base.name,
+      enabled: bool(i.enabled, true),
+    });
+  }
+  for (const base of fallback) if (!items.some((item) => item.code === base.code)) items.push(base);
+  return items;
+}
 const EMPTY_LINK: HomeLinkValue = { label: "", href: "" };
 
 /** Deep-merges stored JSON over the defaults and drops anything unknown or unsafe. */
@@ -456,7 +562,16 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
     };
   };
 
+  const contactLabels = isRecord(contact.labels) ? contact.labels : {};
+  const form = isRecord(contact.form) ? contact.form : {};
+  const formLabels = isRecord(form.labels) ? form.labels : {};
+  const brand = isRecord(site.brand) ? site.brand : {};
+  const siteLabels = isRecord(site.labels) ? site.labels : {};
+  const languages = isRecord(site.languages) ? site.languages : {};
+  const translations = isRecord(c.translations) ? c.translations : {};
+
   return {
+    sectionOrder: sectionOrder(c.sectionOrder, d.sectionOrder),
     hero: {
       enabled: bool(hero.enabled, d.hero.enabled),
       eyebrow: str(hero.eyebrow, d.hero.eyebrow),
@@ -498,6 +613,8 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
         return {
           title: str(i.title, ""),
           description: str(i.description, ""),
+          // Cards saved before links existed keep pointing at the form.
+          href: href(i.href, "#contact"),
           image: image(i.image, EMPTY_IMAGE),
         };
       }),
@@ -578,11 +695,45 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
       title: str(contact.title, d.contact.title),
       cardTitle: str(contact.cardTitle, d.contact.cardTitle),
       cardText: str(contact.cardText, d.contact.cardText),
+      labels: {
+        call: str(contactLabels.call, d.contact.labels.call),
+        whatsapp: str(contactLabels.whatsapp, d.contact.labels.whatsapp),
+        whatsappValue: str(contactLabels.whatsappValue, d.contact.labels.whatsappValue),
+        reply: str(contactLabels.reply, d.contact.labels.reply),
+      },
       formTitle: str(contact.formTitle, d.contact.formTitle),
       formText: str(contact.formText, d.contact.formText),
+      form: {
+        labels: Object.fromEntries(
+          LEAD_FIELDS.map((field) => [field, str(formLabels[field], d.contact.form.labels[field])]),
+        ) as Record<LeadField, string>,
+        optionalHint: str(form.optionalHint, d.contact.form.optionalHint),
+        submit: str(form.submit, d.contact.form.submit),
+        submitting: str(form.submitting, d.contact.form.submitting),
+        successTitle: str(form.successTitle, d.contact.form.successTitle),
+        successText: str(form.successText, d.contact.form.successText),
+        resetLabel: str(form.resetLabel, d.contact.form.resetLabel),
+        invalidText: str(form.invalidText, d.contact.form.invalidText),
+        errorText: str(form.errorText, d.contact.form.errorText),
+      },
       image: image(contact.image, d.contact.image),
     },
     site: {
+      brand: {
+        name: str(brand.name, d.site.brand.name),
+        headerLogo: image(brand.headerLogo, d.site.brand.headerLogo),
+        footerLogo: image(brand.footerLogo, d.site.brand.footerLogo),
+      },
+      labels: {
+        callButton: str(siteLabels.callButton, d.site.labels.callButton),
+        whatsappButton: str(siteLabels.whatsappButton, d.site.labels.whatsappButton),
+        whatsappDisplay: str(siteLabels.whatsappDisplay, d.site.labels.whatsappDisplay),
+        footerContactTitle: str(siteLabels.footerContactTitle, d.site.labels.footerContactTitle),
+      },
+      languages: {
+        enabled: bool(languages.enabled, d.site.languages.enabled),
+        items: languageItems(languages.items, d.site.languages.items),
+      },
       phone: str(site.phone, d.site.phone),
       whatsapp: str(site.whatsapp, d.site.whatsapp),
       email: str(site.email, d.site.email),
@@ -605,8 +756,166 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
       }),
       copyright: str(site.copyright, d.site.copyright),
     },
+    translations: {
+      bn: translationEntries(translations.bn),
+      hi: translationEntries(translations.hi),
+    },
   };
 }
 
 /** Fallback preview/alt for the five slot photos (editor previews + public fallback). */
 export const HOME_SLOT_DEFAULTS = FALLBACK_IMAGES;
+
+// ── Translations (Bengali / Hindi) ───────────────────────────────────────────
+//
+// The page is written in English; each other language is a flat map from a
+// field's path ("hero.titleLead", "faq.companies.items.0.question", plus
+// "meta.title" / "meta.description") to its translation. Each entry also keeps
+// the English it was translated from, and is only used while that English is
+// unchanged — after an edit, or when list items move, the field falls back to
+// a still-matching built-in translation or to English, never to text that
+// belongs to another field.
+
+/** Languages the page content can be translated into (English is the source). */
+export const TRANSLATED_LANGUAGES = ["bn", "hi"] as const;
+export type TranslatedLanguage = (typeof TRANSLATED_LANGUAGES)[number];
+
+export interface HomeTranslation {
+  /** The English text this was translated from. */
+  source: string;
+  text: string;
+}
+
+export type HomeTranslations = Record<TranslatedLanguage, Record<string, HomeTranslation>>;
+
+export const META_TRANSLATION_PATHS = { title: "meta.title", description: "meta.description" } as const;
+
+/** Keys that hold links, images, switches or codes — never visible copy. */
+const NON_TEXT_KEYS = new Set([
+  "href",
+  "src",
+  "focus",
+  "icon",
+  "enabled",
+  "initials",
+  "code",
+  "sectionOrder",
+  "translations",
+]);
+
+/** Fields that stay as written in every language: names, numbers, switcher labels. */
+const NON_TEXT_PATHS = new Set([
+  "founder.name",
+  "site.brand.name",
+  "site.languages",
+  "site.phone",
+  "site.whatsapp",
+  "site.email",
+  "site.labels.whatsappDisplay",
+]);
+
+const TRANSLATION_PATH = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z0-9]+){1,6}$/;
+const MAX_TRANSLATIONS = 1500;
+
+function isTranslatablePath(path: string): boolean {
+  if (path === META_TRANSLATION_PATHS.title || path === META_TRANSLATION_PATHS.description) return true;
+  if (!TRANSLATION_PATH.test(path)) return false;
+  const parts = path.split(".");
+  return !parts.some(
+    (part, i) => NON_TEXT_KEYS.has(part) || NON_TEXT_PATHS.has(parts.slice(0, i + 1).join(".")),
+  );
+}
+
+function translationEntries(value: unknown): Record<string, HomeTranslation> {
+  const out: Record<string, HomeTranslation> = {};
+  if (!isRecord(value)) return out;
+  let count = 0;
+  for (const [path, raw] of Object.entries(value)) {
+    if (count >= MAX_TRANSLATIONS) break;
+    if (!isTranslatablePath(path) || !isRecord(raw)) continue;
+    const source = str(raw.source, "");
+    const text = str(raw.text, "");
+    if (!source || !text) continue;
+    out[path] = { source, text };
+    count += 1;
+  }
+  return out;
+}
+
+/** Every non-empty visible text field of the page as [path, English], top to bottom. */
+export function translatableEntries(content: HomePageContent): [path: string, english: string][] {
+  const out: [string, string][] = [];
+  const walk = (value: unknown, path: string) => {
+    if (typeof value === "string") {
+      if (value) out.push([path, value]);
+    } else if (Array.isArray(value)) {
+      value.forEach((item, index) => walk(item, `${path}.${index}`));
+    } else if (isRecord(value)) {
+      for (const [key, child] of Object.entries(value)) {
+        const childPath = path ? `${path}.${key}` : key;
+        if (!NON_TEXT_KEYS.has(key) && !NON_TEXT_PATHS.has(childPath)) walk(child, childPath);
+      }
+    }
+  };
+  walk(content, "");
+  return out;
+}
+
+/** The built-in translation of an English string, if there is one. */
+export function seedTranslation(lang: TranslatedLanguage, english: string): string | undefined {
+  return SEED_TRANSLATIONS[lang][english];
+}
+
+/**
+ * One field in `lang`: the CMS translation while it still matches the
+ * English, else the built-in translation, else the English itself.
+ */
+export function getLocalizedField(lang: SwitcherLanguage, english: string, saved?: HomeTranslation): string {
+  if (lang === "en" || !english) return english;
+  if (saved && saved.source === english && saved.text) return saved.text;
+  return seedTranslation(lang, english) ?? english;
+}
+
+function setAtPath(target: unknown, path: string, value: string): void {
+  const parts = path.split(".");
+  let node: unknown = target;
+  for (const part of parts.slice(0, -1)) {
+    if (typeof node !== "object" || node === null) return;
+    node = (node as Record<string, unknown>)[part];
+  }
+  if (typeof node === "object" && node !== null) {
+    (node as Record<string, unknown>)[parts[parts.length - 1]] = value;
+  }
+}
+
+/**
+ * The page content with every visible text field in `lang`. Structure (order,
+ * switches, links, images, list lengths) always stays the English page's.
+ */
+export function localizeHomeContent(content: HomePageContent, lang: SwitcherLanguage): HomePageContent {
+  if (lang === "en") return content;
+  const saved = content.translations[lang];
+  const out = structuredClone(content);
+  for (const [path, english] of translatableEntries(content)) {
+    setAtPath(out, path, getLocalizedField(lang, english, saved[path]));
+  }
+  return out;
+}
+
+/** Meta title/description in `lang`; blank English falls back to HOME_META_DEFAULTS. */
+export function localizeMeta(
+  content: HomePageContent,
+  lang: SwitcherLanguage,
+  meta: { title: string | null; description: string | null },
+): { title: string | null; description: string | null } {
+  if (lang === "en") return meta;
+  const saved = content.translations[lang];
+  return {
+    title: getLocalizedField(lang, meta.title ?? HOME_META_DEFAULTS.metaTitle, saved[META_TRANSLATION_PATHS.title]),
+    description: getLocalizedField(
+      lang,
+      meta.description ?? HOME_META_DEFAULTS.metaDescription,
+      saved[META_TRANSLATION_PATHS.description],
+    ),
+  };
+}

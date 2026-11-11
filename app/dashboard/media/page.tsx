@@ -113,13 +113,13 @@ export default function MediaLibrary() {
         return (
           <iframe
             src={asset.secure_url}
-            className="w-full h-full bg-slate-800 rounded-lg"
+            className="w-full h-full bg-muted rounded-lg"
           ></iframe>
         );
 
       case "doc":
         return (
-          <div className="text-center text-blue-400 text-xl">
+          <div className="text-center text-brand-link text-xl">
             <span className="text-5xl block mb-2">📄</span>
             <a href={asset.secure_url} target="_blank" className="underline">
               Open Document
@@ -129,7 +129,7 @@ export default function MediaLibrary() {
 
       default:
         return (
-          <div className="text-center text-slate-300 text-xl">
+          <div className="text-center text-foreground-light text-xl">
             <span className="text-5xl block mb-2">📁</span>
             <a href={asset.secure_url} target="_blank" className="underline">
               Download File
@@ -148,20 +148,20 @@ export default function MediaLibrary() {
 
 
   return (
-    <div className="flex bg-slate-900 min-h-screen text-white">
-      <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
-        <h1 className="text-2xl sm:text-3xl font-semibold">Media Library</h1>
-        <p className="text-slate-400 mb-6">
+    <div className="flex min-h-screen w-full bg-background text-foreground">
+      <div className="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-8">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Media Library</h1>
+        <p className="text-sm text-muted-foreground mb-6">
           Manage your uploaded images, videos, and documents.
         </p>
 
         {/* UPLOAD */}
-        <div className="bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-xl text-center mb-8">
-          <p className="text-slate-400 mb-4">
+        <div className="rounded-lg border border-dashed border-border-strong bg-card p-6 sm:p-8 text-center mb-8">
+          <p className="text-muted-foreground mb-4">
             Drag & drop files or click to upload
           </p>
 
-          <label className="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-md cursor-pointer inline-block">
+          <label className="inline-flex h-8 cursor-pointer items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             Upload File
             <input type="file" className="hidden" onChange={handleUpload} />
           </label>
@@ -173,7 +173,7 @@ export default function MediaLibrary() {
             [...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="w-full h-32 bg-slate-700 animate-pulse rounded-lg"
+                className="w-full h-32 bg-muted animate-pulse rounded-lg"
               />
             ))}
 
@@ -193,7 +193,7 @@ export default function MediaLibrary() {
               return (
                 <div
                   key={asset.asset_id}
-                  className="group relative rounded-lg bg-slate-800 border border-slate-700 overflow-hidden hover:bg-slate-700 cursor-pointer transition"
+                  className="group relative rounded-lg border bg-card overflow-hidden hover:border-border-strong cursor-pointer transition"
                   onClick={() => {
                     setSelectedAsset(asset);
                     setIsModalOpen(true);
@@ -209,14 +209,14 @@ export default function MediaLibrary() {
                       />
                       <button
                         onClick={handleCopyUrl}
-                        className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-black/80 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 cursor-pointer"
+                        className="absolute top-2 right-2 p-2 border bg-background/90 text-foreground hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 cursor-pointer"
                         title="Copy URL"
                       >
-                        <Copy className="h-4 w-4 text-white" />
+                        <Copy className="h-4 w-4 text-foreground" />
                       </button>
                     </>
                   ) : (
-                    <div className="w-full h-32 bg-slate-700 flex items-center justify-center text-white font-medium">
+                    <div className="w-full h-32 bg-muted/50 flex items-center justify-center text-muted-foreground text-sm font-medium">
                       {asset.format.toUpperCase()}
                     </div>
                   )}
@@ -228,7 +228,7 @@ export default function MediaLibrary() {
         {/* PAGINATION */}
         {pagination.totalPages > 1 && (
           <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-muted-foreground">
               Page {pagination.currentPage} of {pagination.totalPages} •{" "}
               {pagination.totalCount} files
             </span>
@@ -237,7 +237,7 @@ export default function MediaLibrary() {
                 type="button"
                 disabled={!pagination.hasPrevPage || loading}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-4 py-2 rounded-md bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="h-8 px-3 text-sm rounded-md border border-border-strong bg-background text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Previous
               </button>
@@ -245,7 +245,7 @@ export default function MediaLibrary() {
                 type="button"
                 disabled={!pagination.hasNextPage || loading}
                 onClick={() => setPage((p) => p + 1)}
-                className="px-4 py-2 rounded-md bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="h-8 px-3 text-sm rounded-md border border-border-strong bg-background text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Next
               </button>
@@ -255,48 +255,48 @@ export default function MediaLibrary() {
 
         {/* MODAL */}
         {isModalOpen && selectedAsset && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto md:overflow-visible md:h-[520px] flex flex-col md:flex-row">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-card border rounded-lg w-full max-w-[900px] max-h-[90vh] overflow-y-auto md:overflow-visible md:h-[520px] flex flex-col md:flex-row">
               {/* LEFT: Preview */}
-              <div className="w-full md:w-1/2 h-56 md:h-auto shrink-0 p-4 flex items-center justify-center bg-slate-800">
+              <div className="w-full md:w-1/2 h-56 md:h-auto shrink-0 p-4 flex items-center justify-center bg-muted/50">
                 {renderPreview(selectedAsset)}
               </div>
 
               {/* RIGHT: Details */}
               <div className="w-full md:w-1/2 p-4 sm:p-6 md:overflow-y-auto space-y-4">
                 <div className="flex justify-between items-center gap-3">
-                  <h2 className="text-xl font-semibold min-w-0 break-words">
+                  <h2 className="text-base font-semibold text-foreground min-w-0 break-words">
                     {selectedAsset.filename}
                   </h2>
                   <button
-                    className="shrink-0 text-slate-400 hover:text-white"
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
                     onClick={() => setIsModalOpen(false)}
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="text-sm text-slate-400 space-y-1 break-words">
+                <div className="text-sm text-muted-foreground space-y-1 break-words">
                   <p>
-                    <span className="text-slate-300">Public ID:</span>{" "}
+                    <span className="text-foreground-light">Public ID:</span>{" "}
                     {selectedAsset.public_id}
                   </p>
                   <p>
-                    <span className="text-slate-300">Format:</span>{" "}
+                    <span className="text-foreground-light">Format:</span>{" "}
                     {selectedAsset.format}
                   </p>
                   <p>
-                    <span className="text-slate-300">Size:</span>{" "}
+                    <span className="text-foreground-light">Size:</span>{" "}
                     {(selectedAsset.bytes / 1024).toFixed(1)} KB
                   </p>
                   <p>
-                    <span className="text-slate-300">Created:</span>{" "}
+                    <span className="text-foreground-light">Created:</span>{" "}
                     {new Date(selectedAsset.created_at).toLocaleString()}
                   </p>
                 </div>
 
                 <button
-                  className="w-full bg-slate-700 hover:bg-slate-600 py-2 rounded-md cursor-pointer"
+                  className="w-full h-8 rounded-md border border-border-strong bg-background text-sm font-medium text-foreground hover:bg-muted cursor-pointer"
                   onClick={() =>
                     navigator.clipboard.writeText(selectedAsset.secure_url)
                   }
@@ -305,7 +305,7 @@ export default function MediaLibrary() {
                 </button>
 
                 <button
-                  className="w-full bg-red-600 hover:bg-red-500 py-2 rounded-md cursor-pointer"
+                  className="w-full h-8 rounded-md bg-destructive text-sm font-medium text-white hover:bg-destructive/90 cursor-pointer"
                   onClick={() => handleDelete(selectedAsset.public_id, selectedAsset.resource_type)}
                 >
                   Delete File

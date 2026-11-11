@@ -51,12 +51,12 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 px-4">
-      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md rounded-lg border bg-card p-6 sm:p-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-center text-foreground mb-2">
           Create an account
         </h1>
-        <p className="text-center text-slate-300 mb-8 text-sm">
+        <p className="text-center text-foreground-light mb-8 text-sm">
           Sign up to continue to your dashboard.
         </p>
 
@@ -65,7 +65,7 @@ export default function SignupPage() {
           <div className="space-y-1">
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-slate-200"
+              className="block text-sm font-medium text-foreground-light"
             >
               Email
             </label>
@@ -77,7 +77,7 @@ export default function SignupPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring focus:border-ring"
             />
           </div>
 
@@ -85,7 +85,7 @@ export default function SignupPage() {
           <div className="space-y-1">
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-slate-200"
+              className="block text-sm font-medium text-foreground-light"
             >
               Username
             </label>
@@ -97,7 +97,7 @@ export default function SignupPage() {
               value={form.username}
               onChange={handleChange}
               placeholder="your_username"
-              className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring focus:border-ring"
             />
           </div>
 
@@ -105,7 +105,7 @@ export default function SignupPage() {
           <div className="space-y-1">
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-slate-200"
+              className="block text-sm font-medium text-foreground-light"
             >
               Password
             </label>
@@ -117,24 +117,24 @@ export default function SignupPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring focus:border-ring"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full rounded-lg bg-indigo-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-600 disabled:bg-slate-600 disabled:cursor-not-allowed"
+            className="mt-2 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-300">
+        <p className="mt-6 text-center text-xs text-foreground-light">
           Already have an account?{" "}
           <a
             href="/login"
-            className="font-semibold text-indigo-400 hover:text-indigo-300"
+            className="font-semibold text-brand-link hover:underline"
           >
             Log in
           </a>

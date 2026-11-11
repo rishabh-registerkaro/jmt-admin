@@ -20,7 +20,7 @@ export default function WhyEditor({ value, onChange }: SectionEditorProps<"why">
       <TextField label="Intro" multiline value={value.intro} onChange={(intro) => patch({ intro })} />
 
       <SubHeading>Reasons</SubHeading>
-      <p className="text-xs text-slate-500">Numbered automatically (01, 02, …) in this order.</p>
+      <p className="text-xs text-muted-foreground">Numbered automatically (01, 02, …) in this order.</p>
       <ListEditor
         items={value.reasons}
         onChange={(reasons) => patch({ reasons })}

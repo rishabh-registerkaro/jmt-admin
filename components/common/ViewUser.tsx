@@ -31,15 +31,15 @@ interface ViewUserProps {
 const getRoleBadgeColor = (role: string) => {
   switch (role?.toLowerCase()) {
     case "superadmin":
-      return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      return "bg-brand/15 text-brand-link border-brand/40";
     case "admin":
-      return "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
+      return "bg-brand/10 text-brand-link border-brand/30";
     case "editor":
-      return "bg-green-500/20 text-green-400 border-green-500/30";
+      return "bg-secondary text-foreground border-border-strong";
     case "contributor":
-      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      return "bg-warning/10 text-warning border-warning/30";
     default:
-      return "bg-slate-500/20 text-slate-400 border-slate-500/30";
+      return "bg-muted text-muted-foreground border-border";
   }
 };
 
@@ -122,7 +122,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
     if (selectedRole === displayedUser.role) {
       toast.info("Role is already set to this value", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -130,7 +130,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
     setIsUpdating(true);
     const loadingToastId = toast.loading("Updating user role...", {
       closeButton: true,
-      className: "!bg-transparent !text-white",
+      className: "!bg-transparent !text-foreground",
     });
 
     try {
@@ -142,7 +142,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
       if (response.success && response.user) {
         toast.success("User role updated successfully!", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
 
         // Update local displayed user immediately
@@ -160,7 +160,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
       } else {
         toast.error(response.message || "Failed to update user role", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
         setSelectedRole(displayedUser.role);
       }
@@ -169,7 +169,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
       const errorMessage = error.message || "Failed to update user role";
       toast.error(errorMessage, {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       setSelectedRole(displayedUser.role);
     } finally {
@@ -197,7 +197,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
     if (!passwordData.newPassword) {
       toast.error("New password is required", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -205,7 +205,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
     if (passwordData.newPassword.length < 6) {
       toast.error("New password must be at least 6 characters long", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -213,7 +213,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("New password and confirm password do not match", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -224,7 +224,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
     if (isUpdatingOwnPassword && !passwordData.currentPassword) {
       toast.error("Current password is required when changing your own password", {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
       return;
     }
@@ -232,7 +232,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
     setIsChangingPassword(true);
     const loadingToastId = toast.loading("Updating password...", {
       closeButton: true,
-      className: "!bg-transparent !text-white",
+      className: "!bg-transparent !text-foreground",
     });
 
     try {
@@ -252,7 +252,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
       if (response.success) {
         toast.success("Password updated successfully!", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
 
         // Reset form
@@ -265,7 +265,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
       } else {
         toast.error(response.message || "Failed to update password", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
@@ -273,7 +273,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
       const errorMessage = error.message || "Failed to update password";
       toast.error(errorMessage, {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       setIsChangingPassword(false);
@@ -325,10 +325,10 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
   return (
     <div className="space-y-6 p-4 mt-4">
       {/* User Profile Section */}
-      <div className="flex flex-col items-center text-center space-y-4 pb-6 border-b border-slate-700">
+      <div className="flex flex-col items-center text-center space-y-4 pb-6 border-b border-border">
         <Avatar className="h-24 w-24">
           <AvatarImage src="/dummy-user.png" />
-          <AvatarFallback className="bg-indigo-500 text-white text-2xl font-semibold">
+          <AvatarFallback className="bg-brand/15 text-brand-link text-2xl font-semibold">
             {displayedUser.username
               .split(" ")
               .map((n) => n[0])
@@ -339,8 +339,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
         </Avatar>
 
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-white break-words">{displayedUser.username}</h2>
-          <p className="text-sm text-slate-400 break-all">{displayedUser.email}</p>
+          <h2 className="text-2xl font-bold text-foreground break-words">{displayedUser.username}</h2>
+          <p className="text-sm text-muted-foreground break-all">{displayedUser.email}</p>
           <div className="flex justify-center mt-3">
             <span
               className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${getRoleBadgeColor(displayedUser.role)}`}
@@ -353,7 +353,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
       {/* User Information Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-white mb-4">User Information</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">User Information</h3>
         
         <div className="space-y-4">
           <Item label="Username" value={displayedUser.username} />
@@ -375,17 +375,17 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
       {/* Role Management Section - Only for Admin/SuperAdmin */}
       {canUpdateRole && (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 sm:p-5 space-y-4">
+        <div className="rounded-lg border bg-card p-4 sm:p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-indigo-400" />
-              <h3 className="text-lg font-semibold text-white">Role Management</h3>
+              <Shield className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-lg font-semibold text-foreground">Role Management</h3>
             </div>
             <Button
               onClick={() => setShowRoleForm(!showRoleForm)}
               variant="outline"
               size="sm"
-              className="border-indigo-500/50 text-indigo-400 hover:!bg-indigo-500/10 hover:text-indigo-300 !bg-transparent cursor-pointer"
+              className="cursor-pointer"
             >
               {showRoleForm ? (
                 <>
@@ -402,30 +402,29 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
           </div>
 
           {showRoleForm && (
-            <div className="space-y-4 pt-4 border-t border-slate-700">
-              <p className="text-xs text-slate-400">
+            <div className="space-y-4 pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground">
                 Select a new role for this user. Changes will take effect immediately.
               </p>
 
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm font-medium">
-                    Select New Role <span className="text-red-400">*</span>
+                  <Label className="text-foreground text-sm font-medium">
+                    Select New Role <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={selectedRole}
                     onValueChange={setSelectedRole}
                     disabled={isRoleChangeDisabled}
                   >
-                    <SelectTrigger className="w-full h-10 bg-slate-900/60 border-slate-600 text-white">
+                    <SelectTrigger className="w-full h-10">
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
-                    <SelectContent className="!bg-slate-800 border-slate-600 text-white">
+                    <SelectContent>
                       {currentUserRole === "superadmin" && (
                         <SelectItem
                           value="admin"
                           disabled={isRoleDisabled("admin")}
-                          className="!text-white focus:bg-slate-700"
                         >
                           Admin
                         </SelectItem>
@@ -433,14 +432,12 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                       <SelectItem
                         value="editor"
                         disabled={isRoleDisabled("editor")}
-                        className="!text-white focus:bg-slate-700"
                       >
                         Editor
                       </SelectItem>
                       <SelectItem
                         value="contributor"
                         disabled={isRoleDisabled("contributor")}
-                        className="!text-white focus:bg-slate-700"
                       >
                         Contributor
                       </SelectItem>
@@ -450,36 +447,36 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
                 {/* Error Messages */}
                 {isAdminChangingSuperadmin && (
-                  <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-red-400  flex-shrink-0" />
-                    <p className="text-xs text-red-400">
+                  <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                    <p className="text-xs text-destructive">
                       You cannot change Super Admin's role. Only Super Admin can modify Super Admin roles.
                     </p>
                   </div>
                 )}
 
                 {isAdminAssigningSuperadmin && (
-                  <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
-                    <p className="text-xs text-red-400">
+                  <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                    <p className="text-xs text-destructive">
                       You cannot assign Super Admin role. Only Super Admin can create Super Admin accounts.
                     </p>
                   </div>
                 )}
 
                 {isAdminAssigningAdmin && (
-                  <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
-                    <p className="text-xs text-red-400">
+                  <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                    <p className="text-xs text-destructive">
                       You cannot assign Admin role. Only Super Admin can promote users to Admin.
                     </p>
                   </div>
                 )}
 
                 {isUpdatingOwnRole && (
-                  <div className="flex items-start gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-yellow-400">
+                  <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-warning">
                       You cannot change your own role. Please ask another administrator to update your role.
                     </p>
                   </div>
@@ -494,7 +491,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                       setSelectedRole(displayedUser.role);
                     }}
                     disabled={isUpdating}
-                    className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50 !bg-transparent hover:text-slate-300 cursor-pointer"
+                    className="disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </Button>
@@ -506,11 +503,11 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                       isUpdating ||
                       isUpdatingOwnRole
                     }
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] cursor-pointer"
+                    className="disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] cursor-pointer"
                   >
                     {isUpdating ? (
                       <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                         Updating...
                       </span>
                     ) : (
@@ -526,17 +523,17 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
       {/* Password Management Section - Only for Admin/SuperAdmin */}
       {canChangePassword && (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 sm:p-5 space-y-4">
+        <div className="rounded-lg border bg-card p-4 sm:p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-indigo-400" />
-              <h3 className="text-lg font-semibold text-white">Password Management</h3>
+              <Lock className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-lg font-semibold text-foreground">Password Management</h3>
             </div>
             <Button
               onClick={() => setShowPasswordForm(!showPasswordForm)}
               variant="outline"
               size="sm"
-              className="border-indigo-500/50 text-indigo-400 hover:!bg-indigo-500/10 hover:text-indigo-300 !bg-transparent cursor-pointer"
+              className="cursor-pointer"
             >
               {showPasswordForm ? (
                 <>
@@ -553,8 +550,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
           </div>
 
           {showPasswordForm && (
-            <div className="space-y-4 pt-4 border-t border-slate-700">
-              <p className="text-xs text-slate-400">
+            <div className="space-y-4 pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground">
                 {isUpdatingOwnPassword
                   ? "Change your password. You'll need to provide your current password."
                   : "Set a new password for this user. The user will need to use this password to login."}
@@ -562,9 +559,9 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
               {/* Error Messages */}
               {isAdminChangingSuperadminPassword && (
-                <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
-                  <p className="text-xs text-red-400">
+                <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                  <p className="text-xs text-destructive">
                     You cannot change Super Admin's password. Only Super Admin can modify Super Admin passwords.
                   </p>
                 </div>
@@ -574,8 +571,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                 {/* Current Password - Only required when changing own password */}
                 {isUpdatingOwnPassword && (
                   <div className="space-y-2">
-                    <Label className="text-slate-300 text-sm font-medium">
-                      Current Password <span className="text-red-400">*</span>
+                    <Label className="text-foreground text-sm font-medium">
+                      Current Password <span className="text-destructive">*</span>
                     </Label>
                     <div className="relative">
                       <Input
@@ -584,12 +581,12 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                         value={passwordData.currentPassword}
                         onChange={handlePasswordChange}
                         placeholder="Enter current password"
-                        className="w-full bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 pr-10"
+                        className="w-full pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => togglePasswordVisibility("current")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       >
                         {showPasswords.current ? (
                           <EyeOff className="h-4 w-4" />
@@ -603,8 +600,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
                 {/* New Password */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm font-medium">
-                    New Password <span className="text-red-400">*</span>
+                  <Label className="text-foreground text-sm font-medium">
+                    New Password <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -613,12 +610,12 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
                       placeholder="Enter new password (min. 6 characters)"
-                      className="w-full bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 pr-10"
+                      className="w-full pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => togglePasswordVisibility("new")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       {showPasswords.new ? (
                         <EyeOff className="h-4 w-4" />
@@ -628,7 +625,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                     </button>
                   </div>
                   {passwordData.newPassword && passwordData.newPassword.length < 6 && (
-                    <p className="text-xs text-red-400">
+                    <p className="text-xs text-destructive">
                       Password must be at least 6 characters long
                     </p>
                   )}
@@ -636,8 +633,8 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm font-medium">
-                    Confirm New Password <span className="text-red-400">*</span>
+                  <Label className="text-foreground text-sm font-medium">
+                    Confirm New Password <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -646,12 +643,12 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                       value={passwordData.confirmPassword}
                       onChange={handlePasswordChange}
                       placeholder="Confirm new password"
-                      className="w-full bg-slate-900/60 border-slate-600 text-white placeholder-slate-400 pr-10"
+                      className="w-full pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => togglePasswordVisibility("confirm")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       {showPasswords.confirm ? (
                         <EyeOff className="h-4 w-4" />
@@ -662,7 +659,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                   </div>
                   {passwordData.confirmPassword && 
                    passwordData.newPassword !== passwordData.confirmPassword && (
-                    <p className="text-xs text-red-400">
+                    <p className="text-xs text-destructive">
                       Passwords do not match
                     </p>
                   )}
@@ -681,7 +678,7 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                       });
                     }}
                     disabled={isChangingPassword}
-                    className="border-slate-600 text-slate-300 hover:bg-slate-800 disabled:opacity-50 !bg-transparent hover:text-slate-300 cursor-pointer"
+                    className="disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </Button>
@@ -696,11 +693,11 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
                       (isUpdatingOwnPassword && !passwordData.currentPassword) ||
                       isAdminChangingSuperadminPassword
                     }
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] cursor-pointer"
+                    className="disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] cursor-pointer"
                   >
                     {isChangingPassword ? (
                       <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                         Updating...
                       </span>
                     ) : (
@@ -727,12 +724,12 @@ function Item({
   className?: string;
 }) {
   return (
-    <div className="flex justify-between items-center border-b border-slate-700 py-3">
-      <span className={`text-slate-400 font-medium ${className || "text-sm"}`}>
+    <div className="flex justify-between items-center border-b border-border py-3">
+      <span className={`text-muted-foreground font-medium ${className || "text-sm"}`}>
         {label}
       </span>
       <span
-        className={`text-white font-medium text-right max-w-[60%] break-words ${className || "text-sm"}`}
+        className={`text-foreground font-medium text-right max-w-[60%] break-words ${className || "text-sm"}`}
       >
         {value}
       </span>

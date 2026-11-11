@@ -9,6 +9,7 @@
 // structural types, so Prisma rows (admin) and `null`/`[]` (fallback) both fit.
 
 import {
+  BRAND_LOGOS,
   FALLBACK_CONTACT,
   FALLBACK_IMAGES,
   SERVICE_IMAGES,
@@ -16,6 +17,9 @@ import {
   type HomeMediaSlot,
 } from "@/data/homepageFallback";
 import {
+  getLocalizedField,
+  localizeHomeContent,
+  localizeMeta,
   normalizeHomeContent,
   type HomeImageValue,
   type HomeLinkValue,
@@ -27,9 +31,10 @@ import type {
   Href,
   HomeImage,
   HomepageData,
-  InsightCard,
+  LanguageOption,
   NavChildLink,
   SiteChrome,
+  SwitcherLanguage,
 } from "@/types/homepage";
 
 /** Cache tags — each matches a tag the admin API revalidates on save. */
@@ -37,15 +42,12 @@ export const HOMEPAGE_TAGS = {
   headerMenu: "header-menu",
   footerMenu: "footer-menu",
   services: "service-list",
-  posts: "post-list",
   media: "homepage-media",
   homePage: "homepage",
 } as const;
 
 /** Seconds before cached CMS reads are refreshed even without a tag hit. */
 export const HOMEPAGE_REVALIDATE_SECONDS = 600;
-
-export const MAX_INSIGHTS = 3;
 
 export const MEDIA_SLOTS = Object.keys(FALLBACK_IMAGES) as HomeMediaSlot[];
 export const MEDIA_PREFIX = "home-";
@@ -55,18 +57,6 @@ export const MEDIA_PREFIX = "home-";
 export interface MenuInput {
   mainMenu: unknown;
   contactDetails: unknown;
-}
-
-/** A post row with dates already serialised to ISO strings. */
-export interface PostInput {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  featuredImage: string | null;
-  publishedAt: string | null;
-  createdAt: string;
-  categories: { name: string }[];
 }
 
 export interface MediaInput {
@@ -170,32 +160,6 @@ function parseContact(header: MenuInput | null, footer: MenuInput | null): Conta
   return contact;
 }
 
-function plainText(html: string, maxLength: number): string {
-  const stripped = html
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (stripped.length <= maxLength) return stripped;
-  return `${stripped.slice(0, maxLength).replace(/\s+\S*$/, "")}…`;
-}
-
-function mapPost(row: PostInput): InsightCard {
-  const imageUrl = text(row.featuredImage);
-  const image: HomeImage | null = /^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("/")
-    ? { src: imageUrl, alt: row.title, width: 1200, height: 675 }
-    : null;
-  return {
-    id: row.id,
-    title: row.title,
-    excerpt: plainText(row.excerpt ?? "", 160),
-    category: row.categories[0]?.name ?? null,
-    publishedAt: row.publishedAt ?? row.createdAt,
-    href: resolveHref(`/blog/${row.slug}`),
-    image,
-  };
-}
-
 /** Admin can replace any section photo by uploading e.g. "home-hero.jpg" to Media. */
 function applyMediaOverrides(rows: MediaInput[]): Record<HomeMediaSlot, HomeImage> {
   const images: Record<HomeMediaSlot, HomeImage> = { ...FALLBACK_IMAGES };
@@ -261,27 +225,43 @@ function cardImage(value: HomeImageValue, fallbackAlt: string): HomeImage | null
   return { src: value.src, alt: value.alt || fallbackAlt, width: 1200, height: 800, focus: value.focus };
 }
 
+/** A logo: the CMS upload if set, otherwise the bundled SVG. */
+function logoImage(value: HomeImageValue, fallback: HomeImage): HomeImage {
+  return { ...fallback, src: value.src || fallback.src, alt: value.alt || fallback.alt };
+}
+
+/**
+ * `content` is the page in the visitor's language; `english` is the same page
+ * untranslated. Ids (FAQ anchors, list keys) come from the English titles so
+ * links like #what-s-the-minimum-crew-size-0 work in every language.
+ * Localising never changes list lengths or blanks a field, so both line up.
+ */
 function toHomepageData(
   content: HomePageContent,
   meta: HomepageData["meta"],
   images: Record<HomeMediaSlot, HomeImage>,
-  insights: InsightCard[],
+  english: HomePageContent = content,
 ): HomepageData {
   const { hero, services, sites, why, trades, process, founder, banner, faq, contact } = content;
 
   const faqs: FaqGroup[] = (["companies", "workers"] as const)
-    .map((audience) => ({
-      audience,
-      label: faq[audience].label,
-      items: faq[audience].items
-        .filter((item) => item.question)
-        .map((item, index) => ({ id: slugId(item.question, index), ...item })),
-    }))
+    .map((audience) => {
+      const englishItems = english.faq[audience].items.filter((item) => item.question);
+      return {
+        audience,
+        label: faq[audience].label,
+        items: faq[audience].items
+          .filter((item) => item.question)
+          .map((item, index) => ({ id: slugId(englishItems[index]?.question ?? item.question, index), ...item })),
+      };
+    })
     .filter((group) => group.items.length > 0);
 
   const serviceCards = services.cards.filter((card) => card.title);
   const siteCards = sites.cards.filter((card) => card.title);
   const tradeCards = trades.cards.filter((card) => card.title);
+  const englishTitle = (cards: { title: string }[], index: number, fallback: string) =>
+    cards.filter((card) => card.title)[index]?.title ?? fallback;
   const steps = process.steps.filter((step) => step.title);
 
   return {
@@ -298,6 +278,7 @@ function toHomepageData(
       faq: faq.enabled && faqs.length > 0,
       contact: contact.enabled,
     },
+    order: content.sectionOrder,
     meta,
     hero: {
       eyebrow: hero.eyebrow,
@@ -314,7 +295,7 @@ function toHomepageData(
       image: slotImage(hero.image, "hero", images),
     },
     services: serviceCards.map((card, index) => ({
-      id: slugId(card.title, index),
+      id: slugId(englishTitle(english.services.cards, index, card.title), index),
       title: card.title,
       eyebrow: card.eyebrow || null,
       badge: card.badge || null,
@@ -327,9 +308,10 @@ function toHomepageData(
       cta: cta(services.cta, "#contact"),
     },
     siteTypes: siteCards.map((card, index) => ({
-      id: slugId(card.title, index),
+      id: slugId(englishTitle(english.sites.cards, index, card.title), index),
       title: card.title,
       description: card.description,
+      href: localHref(card.href),
       image: cardImage(card.image, card.title),
     })),
     sitesCopy: { title: sites.title },
@@ -343,7 +325,7 @@ function toHomepageData(
       badge: why.badge,
     },
     trades: tradeCards.map((card, index) => ({
-      id: slugId(card.title, index),
+      id: slugId(englishTitle(english.trades.cards, index, card.title), index),
       title: card.title,
       icon: card.icon,
       image: cardImage(card.image, card.title) ?? TRADES[index % TRADES.length].image,
@@ -380,14 +362,15 @@ function toHomepageData(
       moreText: faq.moreText,
       moreLink: cta(faq.moreLink, "#contact"),
     },
-    insights,
     contactImage: slotImage(contact.image, "contact", images),
     contactCopy: {
       title: contact.title,
       cardTitle: contact.cardTitle,
       cardText: contact.cardText,
+      labels: { ...contact.labels },
       formTitle: contact.formTitle,
       formText: contact.formText,
+      form: { ...contact.form, labels: { ...contact.form.labels } },
     },
   };
 }
@@ -406,9 +389,10 @@ export function buildSiteChrome(
   header: MenuInput | null,
   footer: MenuInput | null,
   row: HomePageInput | null,
+  lang: SwitcherLanguage = "en",
 ): SiteChrome {
   // With no saved document this is the Figma navbar/footer.
-  const { site } = normalizeHomeContent(row?.content);
+  const { site } = localizeHomeContent(normalizeHomeContent(row?.content), lang);
 
   // Contact: the shared Header/Footer Menu values first (legacy source), then
   // this homepage's own details on top. A blank field keeps the legacy value.
@@ -417,8 +401,32 @@ export function buildSiteChrome(
     applyContactChannels(contact, site);
     if (site.replyTime) contact.replyTime = site.replyTime;
   }
+  // Hours/reply time may still be the legacy (English) values from the menus.
+  contact.hours = getLocalizedField(lang, contact.hours);
+  contact.replyTime = getLocalizedField(lang, contact.replyTime);
+  // Footer text for the WhatsApp link; blank shows the number itself.
+  const whatsappNumber = site.whatsapp || (header && isRecord(header.contactDetails) ? text(header.contactDetails.whatsappNumber) : "");
+  contact.whatsappDisplay = site.labels.whatsappDisplay || whatsappNumber || FALLBACK_CONTACT.whatsappDisplay;
+
+  // English is the page's own language, so it always stays selectable.
+  const languages: LanguageOption[] = site.languages.enabled
+    ? site.languages.items
+        .filter((item) => item.enabled || item.code === "en")
+        .map(({ code, label, name }) => ({ code, label, name }))
+    : [];
 
   return {
+    brand: {
+      name: site.brand.name,
+      headerLogo: logoImage(site.brand.headerLogo, BRAND_LOGOS.header),
+      footerLogo: logoImage(site.brand.footerLogo, BRAND_LOGOS.footer),
+    },
+    labels: {
+      callButton: site.labels.callButton,
+      whatsappButton: site.labels.whatsappButton,
+      footerContactTitle: site.labels.footerContactTitle,
+    },
+    languages,
     nav: site.nav
       .filter((item) => item.label)
       .map((item) => ({ label: item.label, href: localHref(item.href), children: toLinks(item.children) })),
@@ -437,13 +445,15 @@ export function buildSiteChrome(
  */
 export function buildHomepageData(
   row: HomePageInput | null,
-  posts: PostInput[],
   media: MediaInput[],
+  lang: SwitcherLanguage = "en",
 ): HomepageData {
+  const english = normalizeHomeContent(row?.content);
+  const meta = { title: row?.metaTitle || null, description: row?.metaDescription || null };
   return toHomepageData(
-    normalizeHomeContent(row?.content),
-    { title: row?.metaTitle || null, description: row?.metaDescription || null },
+    localizeHomeContent(english, lang),
+    localizeMeta(english, lang, meta),
     applyMediaOverrides(media),
-    posts.map(mapPost),
+    english,
   );
 }

@@ -185,7 +185,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full p-6 sm:p-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen w-full p-6 sm:p-10 bg-background text-foreground flex items-center justify-center">
         <div className="text-xl">Loading profile...</div>
       </div>
     );
@@ -193,30 +193,30 @@ export default function Profile() {
 
   if (!userData) {
     return (
-      <div className="min-h-screen w-full p-6 sm:p-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center">
-        <div className="text-xl text-red-400">Failed to load profile data</div>
+      <div className="min-h-screen w-full p-6 sm:p-10 bg-background text-foreground flex items-center justify-center">
+        <div className="text-xl text-destructive">Failed to load profile data</div>
       </div>
     );
   }
 
 
   return (
-    <div className="min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
-          <p className="text-slate-400">Manage your account settings and preferences</p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Settings</h1>
+          <p className="text-sm text-muted-foreground">Manage your account settings and preferences</p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-b border-slate-700">
+        <div className="flex gap-2 border-b border-border">
           <button
             onClick={() => setActiveTab("profile")}
             className={cn(
               "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 cursor-pointer",
               activeTab === "profile"
-                ? "border-indigo-500 text-indigo-400 bg-indigo-500/10"
-                : "border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600"
+                ? "border-brand text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border-strong"
             )}
           >
             <User className="h-4 w-4" />
@@ -227,8 +227,8 @@ export default function Profile() {
             className={cn(
               "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 cursor-pointer",
               activeTab === "security"
-                ? "border-indigo-500 text-indigo-400 bg-indigo-500/10"
-                : "border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600"
+                ? "border-brand text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border-strong"
             )}
           >
             <Shield className="h-4 w-4" />
@@ -309,15 +309,15 @@ function ProfileTab({
   const getRoleInputColor = (role: string) => {
     switch (role?.toLowerCase()) {
       case "superadmin":
-        return "bg-gradient-to-r from-purple-600/30 to-purple-500/20 text-purple-200 border-purple-500/50  shadow-purple-500/20";
+        return "bg-brand/10 text-brand-link border-brand/30";
       case "admin":
-        return "bg-gradient-to-r from-indigo-600/30 to-indigo-500/20 text-indigo-200 border-indigo-500/50  shadow-indigo-500/20";
+        return "bg-secondary text-foreground border-border-strong";
       case "editor":
-        return "bg-gradient-to-r from-green-600/30 to-green-500/20 text-green-200 border-green-500/50  shadow-green-500/20";
+        return "bg-brand/10 text-brand-link border-brand/30";
       case "contributor":
-        return "bg-gradient-to-r from-yellow-600/30 to-yellow-500/20 text-yellow-200 border-yellow-500/50  shadow-yellow-500/20";
+        return "bg-warning/10 text-warning border-warning/30";
       default:
-        return "bg-gradient-to-r from-slate-600/30 to-slate-500/20 text-slate-200 border-slate-500/50  shadow-slate-500/20";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -329,12 +329,12 @@ function ProfileTab({
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-2 mb-0">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Row 1: Email and Username */}
             <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-slate-200">
-                Email <span className="text-red-400">*</span>
+              <label htmlFor="email" className="block text-sm font-medium text-foreground-light">
+                Email <span className="text-destructive">*</span>
               </label>
               <Input
                 id="email"
@@ -345,14 +345,14 @@ function ProfileTab({
                 placeholder="your.email@example.com"
                 required
                 disabled={!isEditing}
-                className={`w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white ${!isEditing ? "opacity-60 cursor-not-allowed" : ""
+                className={`w-full ${!isEditing ? "opacity-60 cursor-not-allowed" : ""
                   }`}
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="username" className="block text-sm font-medium text-slate-200">
-                Username <span className="text-red-400">*</span>
+              <label htmlFor="username" className="block text-sm font-medium text-foreground-light">
+                Username <span className="text-destructive">*</span>
               </label>
               <Input
                 id="username"
@@ -363,20 +363,20 @@ function ProfileTab({
                 placeholder="Enter your username"
                 required
                 disabled={!isEditing}
-                className={`w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white ${!isEditing ? "opacity-60 cursor-not-allowed" : ""
+                className={`w-full ${!isEditing ? "opacity-60 cursor-not-allowed" : ""
                   }`}
               />
             </div>
 
             {/* Row 2: Role and Account Created */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-200">
+              <label className="block text-sm font-medium text-foreground-light">
                 Role
               </label>
               {/* <Input
                 value={formatRole(userData?.role || "N/A")}
                 disabled
-                className={`w-full rounded-lg border font-semibold backdrop-blur-sm cursor-not-allowed ${getRoleInputColor(userData?.role || "")}`}
+                className={`w-full rounded-lg border font-semibold cursor-not-allowed ${getRoleInputColor(userData?.role || "")}`}
               /> */}
               <div className={`inline-flex w-full items-center px-3 py-2 rounded-lg text-sm font-medium border ${getRoleInputColor(userData?.role || "")}`}>
                 {formatRole(userData?.role || "N/A")}
@@ -384,25 +384,25 @@ function ProfileTab({
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-200">
+              <label className="block text-sm font-medium text-foreground-light">
                 Account Created
               </label>
               <Input
                 value={userData?.createdAt ? new Date(userData.createdAt).toLocaleString() : "N/A"}
                 disabled
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white opacity-60 cursor-not-allowed selection:bg-indigo-500 selection:text-white"
+                className="w-full rounded-lg border opacity-60 cursor-not-allowed"
               />
             </div>
 
             {/* Row 3: Last Updated */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-200">
+              <label className="block text-sm font-medium text-foreground-light">
                 Last Updated
               </label>
               <Input
                 value={userData?.updatedAt ? new Date(userData.updatedAt).toLocaleString() : "N/A"}
                 disabled
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white opacity-60 cursor-not-allowed selection:bg-indigo-500 selection:text-white"
+                className="w-full rounded-lg border opacity-60 cursor-not-allowed"
               />
             </div>
           </div>
@@ -417,14 +417,14 @@ function ProfileTab({
                 variant="outline"
                 onClick={handleCancel}
                 disabled={updating}
-                className="bg-slate-800/60 text-white border-slate-600 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={updating || !formData.email || !formData.username}
-                className="bg-indigo-500 hover:bg-indigo-600 text-white disabled:bg-slate-600 disabled:cursor-not-allowed"
+                className="disabled:cursor-not-allowed"
               >
                 {updating ? "Updating..." : "Save Changes"}
               </Button>
@@ -433,7 +433,7 @@ function ProfileTab({
             <Button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white"
+              className=""
             >
               Edit
             </Button>
@@ -444,40 +444,37 @@ function ProfileTab({
       {/* Published Posts Section */}
       <div className="">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-white mb-2">Published Posts</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Published Posts</h2>
         </div>
 
         {contentLoading ? (
-          <div className="text-center py-8 text-slate-400">Loading posts...</div>
+          <div className="text-center py-8 text-muted-foreground">Loading posts...</div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-8 text-slate-400">No published posts found</div>
+          <div className="text-center py-8 text-muted-foreground">No published posts found</div>
         ) : (
           <>
-            <div className="rounded-lg border border-slate-700 overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-slate-800/50">
-                    <TableHead className="text-slate-200">Title</TableHead>
+                  <TableRow className="hover:bg-muted/40">
+                    <TableHead className="text-xs font-medium text-muted-foreground">Title</TableHead>
 
-                    <TableHead className="text-slate-200">Status</TableHead>
-                    <TableHead className="text-slate-200">Published At</TableHead>
-                    <TableHead className="text-slate-200">Created At</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Published At</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Created At</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {posts.map((post) => (
-                    <TableRow key={post._id} className="hover:bg-slate-800/50">
-                      <TableCell className="text-white font-medium">{post.title}</TableCell>
+                    <TableRow key={post._id} className="hover:bg-muted/40">
+                      <TableCell className="text-foreground font-medium">{post.title}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${post.status === 'published'
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-yellow-500/20 text-yellow-400'
-                          }`}>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${post.status === 'published' ? 'border border-brand/30 bg-brand/10 text-brand-link' : 'border border-warning/30 bg-warning/10 text-warning' }`}>
                           {post.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-slate-300">{formatDate(post.publishedAt)}</TableCell>
-                      <TableCell className="text-slate-300">{formatDate(post.createdAt)}</TableCell>
+                      <TableCell className="text-foreground-light">{formatDate(post.publishedAt)}</TableCell>
+                      <TableCell className="text-foreground-light">{formatDate(post.createdAt)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -487,7 +484,7 @@ function ProfileTab({
             {/* Posts Pagination */}
             {pagination?.posts && pagination.posts.totalPages > 1 && (
               <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-muted-foreground">
                   Page {pagination.posts.currentPage} of {pagination.posts.totalPages} ({pagination.posts.totalItems} total)
                 </div>
                 <div className="flex gap-2">
@@ -497,7 +494,7 @@ function ProfileTab({
                     size="sm"
                     onClick={() => fetchUserPublishedContent(pagination.posts.currentPage - 1, pagination.pages?.currentPage || 1)}
                     disabled={!pagination.posts.hasPrevPage}
-                    className="bg-slate-800/60 text-white border-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                    className="disabled:opacity-50"
                   >
                     Previous
                   </Button>
@@ -507,7 +504,7 @@ function ProfileTab({
                     size="sm"
                     onClick={() => fetchUserPublishedContent(pagination.posts.currentPage + 1, pagination.pages?.currentPage || 1)}
                     disabled={!pagination.posts.hasNextPage}
-                    className="bg-slate-800/60 text-white border-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                    className="disabled:opacity-50"
                   >
                     Next
                   </Button>
@@ -521,40 +518,36 @@ function ProfileTab({
       {/* Services Section */}
       <div className="">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-white mb-2">Products</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Products</h2>
         </div>
 
         {contentLoading ? (
-          <div className="text-center py-8 text-slate-400">Loading services...</div>
+          <div className="text-center py-8 text-muted-foreground">Loading services...</div>
         ) : pages.length === 0 ? (
-          <div className="text-center py-8 text-slate-400">No services found</div>
+          <div className="text-center py-8 text-muted-foreground">No services found</div>
         ) : (
           <>
-            <div className="rounded-lg border border-slate-700 overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-slate-800/50">
-                    <TableHead className="text-slate-200">Service Title</TableHead>
-                    <TableHead className="text-slate-200">Slug</TableHead>
-                    <TableHead className="text-slate-200">Status</TableHead>
-                    <TableHead className="text-slate-200">Updated At</TableHead>
+                  <TableRow className="hover:bg-muted/40">
+                    <TableHead className="text-xs font-medium text-muted-foreground">Service Title</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Slug</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Updated At</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {pages.map((page) => (
-                    <TableRow key={page._id} className="hover:bg-slate-800/50">
-                      <TableCell className="text-white font-medium">{page.pageTitle}</TableCell>
-                      <TableCell className="text-slate-400 text-sm">{page.pageSlug}</TableCell>
+                    <TableRow key={page._id} className="hover:bg-muted/40">
+                      <TableCell className="text-foreground font-medium">{page.pageTitle}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{page.pageSlug}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          page.status === 'published'
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-yellow-500/20 text-yellow-400'
-                        }`}>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${ page.status === 'published' ? 'border border-brand/30 bg-brand/10 text-brand-link' : 'border border-warning/30 bg-warning/10 text-warning' }`}>
                           {page.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-slate-300">{formatDate(page.updatedAt)}</TableCell>
+                      <TableCell className="text-foreground-light">{formatDate(page.updatedAt)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -564,7 +557,7 @@ function ProfileTab({
             {/* Services Pagination */}
             {pagination?.pages && pagination.pages.totalPages > 1 && (
               <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-muted-foreground">
                   Page {pagination.pages.currentPage} of {pagination.pages.totalPages} ({pagination.pages.totalItems} total)
                 </div>
                 <div className="flex gap-2">
@@ -574,7 +567,7 @@ function ProfileTab({
                     size="sm"
                     onClick={() => fetchUserPublishedContent(pagination.posts?.currentPage || 1, pagination.pages.currentPage - 1)}
                     disabled={!pagination.pages.hasPrevPage}
-                    className="bg-slate-800/60 text-white border-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                    className="disabled:opacity-50"
                   >
                     Previous
                   </Button>
@@ -584,7 +577,7 @@ function ProfileTab({
                     size="sm"
                     onClick={() => fetchUserPublishedContent(pagination.posts?.currentPage || 1, pagination.pages.currentPage + 1)}
                     disabled={!pagination.pages.hasNextPage}
-                    className="bg-slate-800/60 text-white border-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                    className="disabled:opacity-50"
                   >
                     Next
                   </Button>
@@ -632,17 +625,17 @@ interface SecurityTabProps {
 
 //   return (
 //     <div className="space-y-6">
-//       <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
-//         <h2 className="text-xl font-semibold text-white mb-2">Change Password</h2>
-//         <p className="text-slate-400 mb-4">
+//       <div className="rounded-lg border bg-card p-6">
+//         <h2 className="text-base font-semibold text-foreground mb-2">Change Password</h2>
+//         <p className="text-sm text-muted-foreground mb-4">
 //           Update your account password to keep your account secure.
 //         </p>
 
 //         <div className="space-y-4">
 //           {/* Current Password */}
 //           <div className="space-y-2">
-//             <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-200">
-//               Current Password <span className="text-red-400">*</span>
+//             <label htmlFor="currentPassword" className="block text-sm font-medium text-foreground-light">
+//               Current Password <span className="text-destructive">*</span>
 //             </label>
 //             <div className="relative">
 //               <Input
@@ -653,12 +646,12 @@ interface SecurityTabProps {
 //                 onChange={handlePasswordChange}
 //                 placeholder="Enter current password"
 //                 required
-//                 className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white pr-10"
+//                 className="w-full rounded-lg border pr-10"
 //               />
 //               <button
 //                 type="button"
 //                 onClick={() => togglePasswordVisibility("current")}
-//                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+//                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
 //               >
 //                 {showPasswords.current ? (
 //                   <EyeOff className="h-4 w-4" />
@@ -672,8 +665,8 @@ interface SecurityTabProps {
 //           <div className="flex sm:flex-row flex-col items-center justify-between gap-4 w-full">
 //             {/* New Password */}
 //             <div className="space-y-2 w-full">
-//               <label htmlFor="newPassword" className="block text-sm font-medium text-slate-200">
-//                 New Password <span className="text-red-400">*</span>
+//               <label htmlFor="newPassword" className="block text-sm font-medium text-foreground-light">
+//                 New Password <span className="text-destructive">*</span>
 //               </label>
 //               <div className="relative">
 //                 <Input
@@ -684,12 +677,12 @@ interface SecurityTabProps {
 //                   onChange={handlePasswordChange}
 //                   placeholder="Enter new password"
 //                   required
-//                   className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white pr-10"
+//                   className="w-full rounded-lg border pr-10"
 //                 />
 //                 <button
 //                   type="button"
 //                   onClick={() => togglePasswordVisibility("new")}
-//                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+//                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
 //                 >
 //                   {showPasswords.new ? (
 //                     <EyeOff className="h-4 w-4" />
@@ -702,8 +695,8 @@ interface SecurityTabProps {
 
 //             {/* Confirm Password */}
 //             <div className="space-y-2 w-full">
-//               <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-200">
-//                 Confirm New Password <span className="text-red-400">*</span>
+//               <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground-light">
+//                 Confirm New Password <span className="text-destructive">*</span>
 //               </label>
 //               <div className="relative">
 //                 <Input
@@ -714,12 +707,12 @@ interface SecurityTabProps {
 //                   onChange={handlePasswordChange}
 //                   placeholder="Confirm new password"
 //                   required
-//                   className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white pr-10"
+//                   className="w-full rounded-lg border pr-10"
 //                 />
 //                 <button
 //                   type="button"
 //                   onClick={() => togglePasswordVisibility("confirm")}
-//                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+//                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
 //                 >
 //                   {showPasswords.confirm ? (
 //                     <EyeOff className="h-4 w-4" />
@@ -824,17 +817,17 @@ function SecurityTab({ userData }: SecurityTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6">
-        <h2 className="text-xl font-semibold text-white mb-2">Change Password</h2>
-        <p className="text-slate-400 mb-4">
+      <div className="rounded-lg border bg-card p-4 sm:p-6">
+        <h2 className="text-base font-semibold text-foreground mb-2">Change Password</h2>
+        <p className="text-sm text-muted-foreground mb-4">
           Update your account password to keep your account secure.
         </p>
 
         <form onSubmit={handlePasswordSubmit} className="space-y-4">
           {/* Current Password */}
           <div className="space-y-1">
-            <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-200">
-              Current Password <span className="text-red-400">*</span>
+            <label htmlFor="currentPassword" className="block text-sm font-medium text-foreground-light">
+              Current Password <span className="text-destructive">*</span>
             </label>
             <div className="relative">
               <Input
@@ -845,12 +838,12 @@ function SecurityTab({ userData }: SecurityTabProps) {
                 onChange={handlePasswordChange}
                 placeholder="Enter current password"
                 required
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white pr-10"
+                className="w-full rounded-lg border pr-10"
               />
               <button
                 type="button"
                 onClick={() => togglePasswordVisibility("current")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 {showPasswords.current ? (
                   <EyeOff className="h-4 w-4" />
@@ -864,8 +857,8 @@ function SecurityTab({ userData }: SecurityTabProps) {
           <div className="flex sm:flex-row flex-col items-center justify-between gap-4 w-full">
             {/* New Password */}
             <div className="space-y-1 w-full">
-              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-200">
-                New Password <span className="text-red-400">*</span>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-foreground-light">
+                New Password <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -876,12 +869,12 @@ function SecurityTab({ userData }: SecurityTabProps) {
                   onChange={handlePasswordChange}
                   placeholder="Enter new password"
                   required
-                  className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white pr-10"
+                  className="w-full rounded-lg border pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility("new")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   {showPasswords.new ? (
                     <EyeOff className="h-4 w-4" />
@@ -894,8 +887,8 @@ function SecurityTab({ userData }: SecurityTabProps) {
 
             {/* Confirm Password */}
             <div className="space-y-1 w-full">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-200">
-                Confirm New Password <span className="text-red-400">*</span>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground-light">
+                Confirm New Password <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -906,12 +899,12 @@ function SecurityTab({ userData }: SecurityTabProps) {
                   onChange={handlePasswordChange}
                   placeholder="Confirm new password"
                   required
-                  className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white pr-10"
+                  className="w-full rounded-lg border pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility("confirm")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   {showPasswords.confirm ? (
                     <EyeOff className="h-4 w-4" />
@@ -933,7 +926,7 @@ function SecurityTab({ userData }: SecurityTabProps) {
                 !passwordData.newPassword ||
                 !passwordData.confirmPassword
               }
-              className="bg-indigo-500 hover:bg-indigo-600 text-white disabled:bg-slate-600 disabled:cursor-not-allowed"
+              className="disabled:cursor-not-allowed"
             >
               {changingPassword ? "Changing..." : "Update Password"}
             </Button>

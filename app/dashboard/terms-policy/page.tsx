@@ -72,11 +72,11 @@ interface SectionHeaderProps {
 function SectionHeader({ icon, title, isOpen }: SectionHeaderProps) {
     return (
         <div className="flex items-center gap-3 text-left">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground">
                 {icon}
             </span>
-            <span className="text-[15px] font-semibold text-slate-200">{title}</span>
-            <span className="ml-auto shrink-0 text-slate-500">
+            <span className="text-[15px] font-semibold text-foreground">{title}</span>
+            <span className="ml-auto shrink-0 text-muted-foreground">
                 {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </span>
         </div>
@@ -170,26 +170,26 @@ export default function TermsPolicyDashboardPage() {
     if (loading) {
         return (
             <div className="flex h-64 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             </div>
         );
     }
 
     const inputCls =
-        "bg-slate-800/80 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 transition-colors";
-    const labelCls = "block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5";
+        "transition-colors";
+    const labelCls = "block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5";
     const textareaCls =
-        "w-full rounded-md border border-slate-600 bg-slate-800/80 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none transition-colors";
+        "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring resize-none transition-colors";
 
     return (
-        <div className="min-h-screen bg-slate-900 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-4xl">
 
                 {/* Header */}
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-100">Terms &amp; Policy</h1>
-                        <p className="mt-1 text-sm text-slate-400">
+                        <h1 className="text-2xl font-bold text-foreground">Terms &amp; Policy</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
                             {isNew
                                 ? "No data yet — fill in the fields and click Create Page."
                                 : "Edit and save to update the live Terms & Policy page."}
@@ -200,7 +200,7 @@ export default function TermsPolicyDashboardPage() {
                             <Button
                                 variant="outline"
                                 onClick={handleRevalidate}
-                                className="border-amber-500/40 text-amber-400 bg-amber-500/30 hover:bg-amber-500/10 hover:text-amber-300 cursor-pointer"
+                                className="border-warning/40 text-warning bg-warning/10 hover:bg-warning/20 hover:text-warning cursor-pointer"
                             >
                                 <RefreshCw className="h-4 w-4 mr-2" />
                                 Revalidate Cache
@@ -209,7 +209,7 @@ export default function TermsPolicyDashboardPage() {
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            className="bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-60 cursor-pointer"
+                            className="disabled:opacity-60 cursor-pointer"
                         >
                             {saving ? "Saving…" : isNew ? "Create Page" : "Save Changes"}
                         </Button>
@@ -220,12 +220,12 @@ export default function TermsPolicyDashboardPage() {
 
                     {/* Meta Section */}
                     <Collapsible.Root open={openSections.meta} onOpenChange={() => toggleSection("meta")}>
-                        <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-800/40 backdrop-blur-sm">
-                            <Collapsible.Trigger className="w-full cursor-pointer px-5 py-4 hover:bg-slate-800/60 transition-colors">
+                        <div className="overflow-hidden rounded-lg border bg-card">
+                            <Collapsible.Trigger className="w-full cursor-pointer px-5 py-4 hover:bg-muted/50 transition-colors">
                                 <SectionHeader icon={<FileText size={15} />} title="SEO / Meta" isOpen={openSections.meta} />
                             </Collapsible.Trigger>
                             <Collapsible.Content>
-                                <div className="border-t border-slate-700/60 px-5 pb-6 pt-5 space-y-4">
+                                <div className="border-t border-border px-5 pb-6 pt-5 space-y-4">
                                     <div>
                                         <label className={labelCls}>Meta Title</label>
                                         <Input
@@ -269,16 +269,16 @@ export default function TermsPolicyDashboardPage() {
 
                     {/* Terms & Conditions Content */}
                     <Collapsible.Root open={openSections.terms} onOpenChange={() => toggleSection("terms")}>
-                        <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-800/40 backdrop-blur-sm">
-                            <Collapsible.Trigger className="w-full cursor-pointer px-5 py-4 hover:bg-slate-800/60 transition-colors">
+                        <div className="overflow-hidden rounded-lg border bg-card">
+                            <Collapsible.Trigger className="w-full cursor-pointer px-5 py-4 hover:bg-muted/50 transition-colors">
                                 <SectionHeader icon={<AlignLeft size={15} />} title="Terms & Conditions Content" isOpen={openSections.terms} />
                             </Collapsible.Trigger>
                             <Collapsible.Content>
-                                <div className="border-t border-slate-700/60 px-5 pb-6 pt-5">
-                                    <p className="mb-4 text-[12px] text-slate-500">
-                                        Content shown in the <span className="text-indigo-400 font-medium">Terms & Conditions</span> tab on the live page.
+                                <div className="border-t border-border px-5 pb-6 pt-5">
+                                    <p className="mb-4 text-[12px] text-muted-foreground">
+                                        Content shown in the <span className="text-brand-link font-medium">Terms & Conditions</span> tab on the live page.
                                     </p>
-                                    <div className="rounded-xl overflow-hidden border border-slate-700/60">
+                                    <div className="rounded-lg overflow-hidden border border-border">
                                         <Tiptap
                                             content={formData.content.body}
                                             onChange={(html) =>
@@ -294,16 +294,16 @@ export default function TermsPolicyDashboardPage() {
 
                     {/* Privacy Policy Content */}
                     <Collapsible.Root open={openSections.privacy} onOpenChange={() => toggleSection("privacy")}>
-                        <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-800/40 backdrop-blur-sm">
-                            <Collapsible.Trigger className="w-full cursor-pointer px-5 py-4 hover:bg-slate-800/60 transition-colors">
+                        <div className="overflow-hidden rounded-lg border bg-card">
+                            <Collapsible.Trigger className="w-full cursor-pointer px-5 py-4 hover:bg-muted/50 transition-colors">
                                 <SectionHeader icon={<ShieldCheck size={15} />} title="Privacy Policy Content" isOpen={openSections.privacy} />
                             </Collapsible.Trigger>
                             <Collapsible.Content>
-                                <div className="border-t border-slate-700/60 px-5 pb-6 pt-5">
-                                    <p className="mb-4 text-[12px] text-slate-500">
-                                        Content shown in the <span className="text-indigo-400 font-medium">Privacy Policy</span> tab on the live page.
+                                <div className="border-t border-border px-5 pb-6 pt-5">
+                                    <p className="mb-4 text-[12px] text-muted-foreground">
+                                        Content shown in the <span className="text-brand-link font-medium">Privacy Policy</span> tab on the live page.
                                     </p>
-                                    <div className="rounded-xl overflow-hidden border border-slate-700/60">
+                                    <div className="rounded-lg overflow-hidden border border-border">
                                         <Tiptap
                                             content={formData.privacyPolicyContent.body}
                                             onChange={(html) =>

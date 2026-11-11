@@ -171,7 +171,7 @@ export default function UpdateCategoryPage() {
     setLoading(true);
     const loadingToastId = toast.loading("Updating category...", {
       closeButton: true,
-      className: "!bg-transparent !text-white",
+      className: "!bg-transparent !text-foreground",
     });
 
     try {
@@ -190,7 +190,7 @@ export default function UpdateCategoryPage() {
       if (data.success) {
         toast.success("Category updated successfully!", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
         setTimeout(() => {
           router.push("/dashboard/blog/category");
@@ -198,7 +198,7 @@ export default function UpdateCategoryPage() {
       } else {
         toast.error(data.message || "Failed to update category", {
           closeButton: true,
-          className: "!bg-transparent !text-white",
+          className: "!bg-transparent !text-foreground",
         });
       }
     } catch (error: any) {
@@ -208,7 +208,7 @@ export default function UpdateCategoryPage() {
       const errorMessage = error.message || error.errors?.join(", ") || "Something went wrong. Please try again.";
       toast.error(errorMessage, {
         closeButton: true,
-        className: "!bg-transparent !text-white",
+        className: "!bg-transparent !text-foreground",
       });
     } finally {
       setLoading(false);
@@ -217,8 +217,8 @@ export default function UpdateCategoryPage() {
 
   if (fetching) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6 flex items-center justify-center">
-        <div className="text-white text-xl">Loading category data...</div>
+      <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="text-foreground text-xl">Loading category data...</div>
       </div>
     );
   }
@@ -231,15 +231,15 @@ export default function UpdateCategoryPage() {
   const topLevelCategories = categories.filter((cat) => !cat.parentCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Update Category</h1>
-            <p className="text-slate-400">Edit the details of your category</p>
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Update Category</h1>
+            <p className="text-sm text-muted-foreground">Edit the details of your category</p>
           </div>
           <Button
-            className="bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer"
+            className="cursor-pointer"
             onClick={() => router.push("/dashboard/blog/category")}
           >
             Back to Categories
@@ -247,11 +247,11 @@ export default function UpdateCategoryPage() {
         </div>
 
         <form className="space-y-6" onSubmit={handleUpdate}>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-4 sm:p-6 space-y-6">
+          <div className="rounded-lg border bg-card p-4 sm:p-6 space-y-6">
             {/* Name */}
             <div className="space-y-2">
-              <label htmlFor="name" className="block text-sm font-medium text-slate-200">
-                Name <span className="text-red-400">*</span>
+              <label htmlFor="name" className="block text-sm font-medium text-foreground-light">
+                Name <span className="text-destructive">*</span>
               </label>
               <Input
                 id="name"
@@ -260,9 +260,9 @@ export default function UpdateCategoryPage() {
                 onChange={handleChange}
                 placeholder="Category name"
                 required
-                className="w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white"
+                className="w-full rounded-lg border"
               />
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 The name is how it appears on your site.
               </p>
             </div>
@@ -270,10 +270,10 @@ export default function UpdateCategoryPage() {
             {/* Slug */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="slug" className="block text-sm font-medium text-slate-200">
-                  Slug <span className="text-red-400">*</span>
+                <label htmlFor="slug" className="block text-sm font-medium text-foreground-light">
+                  Slug <span className="text-destructive">*</span>
                 </label>
-                <label className="flex items-center gap-2 text-xs text-slate-400">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={autoGenerateSlug}
@@ -292,23 +292,23 @@ export default function UpdateCategoryPage() {
                 required
                 disabled={autoGenerateSlug}
                 className={cn(
-                  "w-full rounded-lg border border-slate-600 bg-slate-900/60 text-white placeholder-slate-400 selection:bg-indigo-500 selection:text-white",
+                  "w-full",
                   autoGenerateSlug && "opacity-60 cursor-not-allowed"
                 )}
               />
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 The "slug" is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.
               </p>
             </div>
 
             {/* Color */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-200">
+              <label className="block text-sm font-medium text-foreground-light">
                 Badge Color
               </label>
               <div className="flex items-center gap-3">
                 <div
-                  className="h-8 w-8 shrink-0 rounded-full border-2 border-white/20"
+                  className="h-8 w-8 shrink-0 rounded-full border-2 border-border"
                   style={{ background: formData.color.trim() || generateCategoryColor(formData.name || "") }}
                 />
                 <div className="flex gap-1.5 flex-wrap">
@@ -321,7 +321,7 @@ export default function UpdateCategoryPage() {
                       className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
                       style={{
                         background: hex,
-                        borderColor: formData.color === hex ? "white" : "transparent",
+                        borderColor: formData.color === hex ? "var(--foreground)" : "transparent",
                       }}
                     />
                   ))}
@@ -331,28 +331,28 @@ export default function UpdateCategoryPage() {
                   value={formData.color}
                   onChange={handleChange}
                   placeholder="Custom hex e.g. #1e40af"
-                  className="flex-1 rounded-lg border border-slate-600 bg-slate-900/60 text-white font-mono text-xs"
+                  className="flex-1 rounded-lg border font-mono text-xs"
                 />
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Auto-assigned from name if blank. Click a swatch or enter a custom hex to override.
               </p>
             </div>
 
             {/* Parent Category */}
             <div className="space-y-2">
-              <label htmlFor="parentCategory" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="parentCategory" className="block text-sm font-medium text-foreground-light">
                 Parent Category
               </label>
               {categoriesLoading ? (
-                <div className="text-sm text-slate-400">Loading categories...</div>
+                <div className="text-sm text-muted-foreground">Loading categories...</div>
               ) : (
                 <select
                   id="parentCategory"
                   name="parentCategory"
                   value={formData.parentCategory}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500 selection:bg-indigo-500 selection:text-white"
+                  className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">None</option>
                   {topLevelCategories.map((cat) => (
@@ -362,7 +362,7 @@ export default function UpdateCategoryPage() {
                   ))}
                 </select>
               )}
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Categories, unlike tags, can have a hierarchy. You might have a Jazz category, and under that have children categories for Bebop and Big Band. Totally optional.
               </p>
             </div>
@@ -374,7 +374,7 @@ export default function UpdateCategoryPage() {
               type="button"
               variant="outline"
               onClick={() => router.push("/dashboard/blog/category")}
-              className="bg-slate-800/60 text-white border-slate-600 hover:bg-slate-700"
+              className=""
             >
               Cancel
             </Button>
@@ -382,7 +382,7 @@ export default function UpdateCategoryPage() {
             <Button
               type="submit"
               disabled={loading || !formData.name || !formData.slug}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white disabled:bg-slate-600 disabled:cursor-not-allowed"
+              className="disabled:cursor-not-allowed"
             >
               {loading ? "Updating..." : "Update Category"}
             </Button>

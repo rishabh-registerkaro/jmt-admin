@@ -16,7 +16,7 @@ export default function SitesEditor({ value, onChange }: SectionEditorProps<"sit
         items={value.cards}
         onChange={(cards) => patch({ cards })}
         max={HOME_LIMITS.sites}
-        newItem={() => ({ title: "", description: "", image: { src: "", alt: "", focus: "center" as const } })}
+        newItem={() => ({ title: "", description: "", href: "#contact", image: { src: "", alt: "", focus: "center" as const } })}
         addLabel="Add site type"
         itemLabel={(item, i) => item.title || `Site type ${i + 1}`}
         render={(item, update) => (
@@ -29,6 +29,13 @@ export default function SitesEditor({ value, onChange }: SectionEditorProps<"sit
                 onChange={(description) => update({ description })}
               />
             </Grid>
+            <TextField
+              label="Card link"
+              value={item.href}
+              placeholder="#contact"
+              hint='Where the card goes when clicked — "#contact" opens the request form. Leave empty for a card that is not clickable.'
+              onChange={(href) => update({ href })}
+            />
             <ImageField label="Photo" value={item.image} onChange={(image) => update({ image })} />
           </>
         )}

@@ -33,7 +33,15 @@ const SIDEBAR_WIDTH_ICON = "4.2rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 type SidebarContextProps = {
+  /** Pinned state. Drives layout width, cookie and Ctrl/Cmd+B. */
   state: "expanded" | "collapsed"
+  /** What the user sees: expanded when pinned, hovered, or on mobile. */
+  visualState: "expanded" | "collapsed"
+  hoverOpen: boolean
+  setHoverOpen: (open: boolean) => void
+  /** While true (e.g. a dropdown inside the sidebar is open) hover-collapse is suspended. */
+  setHoverLock: (locked: boolean) => void
+  hoverLocked: boolean
   open: boolean
   setOpen: (open: boolean) => void
   openMobile: boolean
@@ -73,9 +81,26 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
+  const [hoverOpen, setHoverOpen] = React.useState(false)
+  const [hoverLocked, setHoverLock] = React.useState(false)
+
+  // Restore the pinned state saved in the cookie.
+  React.useEffect(() => {
+    if (openProp !== undefined) return
+    const match = document.cookie.match(
+      new RegExp(`(?:^|; )${SIDEBAR_COOKIE_NAME}=(true|false)`)
+    )
+    // One-time sync from an external store (cookie) after hydration; reading it
+    // during render would mismatch the server HTML.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (match) _setOpen(match[1] === "true")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
+      // Pinning/unpinning ends any temporary hover-expansion.
+      setHoverOpen(false)
       if (setOpenProp) {
         setOpenProp(openState)
       } else {
@@ -112,10 +137,17 @@ function SidebarProvider({
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? "expanded" : "collapsed"
+  const visualState =
+    isMobile || open || hoverOpen || hoverLocked ? "expanded" : "collapsed"
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
       state,
+      visualState,
+      hoverOpen,
+      setHoverOpen,
+      hoverLocked,
+      setHoverLock,
       open,
       setOpen,
       isMobile,
@@ -123,7 +155,18 @@ function SidebarProvider({
       setOpenMobile,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [
+      state,
+      visualState,
+      hoverOpen,
+      hoverLocked,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+    ]
   )
 
   return (
@@ -163,7 +206,55 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const {
+    isMobile,
+    state,
+    visualState,
+    openMobile,
+    setOpenMobile,
+    hoverOpen,
+    setHoverOpen,
+  } = useSidebar()
+
+  // Hover intent: small delays so a cursor passing over the rail doesn't flicker it open.
+  const enterTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const leaveTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const clearTimers = React.useCallback(() => {
+    if (enterTimer.current) clearTimeout(enterTimer.current)
+    if (leaveTimer.current) clearTimeout(leaveTimer.current)
+    enterTimer.current = null
+    leaveTimer.current = null
+  }, [])
+  React.useEffect(() => clearTimers, [clearTimers])
+
+  const hoverEnabled = collapsible === "icon" && state === "collapsed"
+  const handleEnter = () => {
+    if (!hoverEnabled) return
+    if (leaveTimer.current) {
+      clearTimeout(leaveTimer.current)
+      leaveTimer.current = null
+    }
+    if (hoverOpen || enterTimer.current) return
+    enterTimer.current = setTimeout(() => {
+      enterTimer.current = null
+      setHoverOpen(true)
+    }, 120)
+  }
+  const handleLeave = () => {
+    clearTimers()
+    leaveTimer.current = setTimeout(() => setHoverOpen(false), 200)
+  }
+  const handleFocus = () => {
+    if (!hoverEnabled) return
+    clearTimers()
+    setHoverOpen(true)
+  }
+  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      handleLeave()
+    }
+  }
+  const isOverlay = state === "collapsed" && visualState === "expanded"
 
   if (collapsible === "none") {
     return (
@@ -208,28 +299,45 @@ function Sidebar({
   return (
     <div
       className="group peer text-sidebar-foreground hidden md:block"
-      data-state={state}
-      data-collapsible={state === "collapsed" ? collapsible : ""}
+      data-state={visualState}
+      data-pinned={state === "expanded"}
+      data-collapsible={visualState === "collapsed" ? collapsible : ""}
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
     >
-      {/* This is what handles the sidebar gap on desktop */}
+      {/* This is what handles the sidebar gap on desktop. It follows the
+          *pinned* state only, so hover-expanding overlays the content
+          instead of pushing it. */}
       <div
         data-slot="sidebar-gap"
         className={cn(
-          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
-          "group-data-[collapsible=offcanvas]:w-0",
+          "relative bg-transparent transition-[width] duration-200 ease-out",
           "group-data-[side=right]:rotate-180",
-          variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
+          state === "expanded"
+            ? "w-(--sidebar-width)"
+            : collapsible === "offcanvas"
+              ? "w-0"
+              : collapsible === "icon"
+                ? variant === "floating" || variant === "inset"
+                  ? "w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+                  : "w-(--sidebar-width-icon)"
+                : "w-(--sidebar-width)"
         )}
       />
       <div
         data-slot="sidebar-container"
+        onMouseEnter={handleEnter}
+        // Re-arms hover when the pointer is already inside (e.g. after a
+        // dropdown portal closes) and no mouseenter will fire.
+        onMouseMove={handleEnter}
+        onMouseLeave={handleLeave}
+        onFocusCapture={handleFocus}
+        onBlurCapture={handleBlur}
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width,box-shadow] duration-200 ease-out md:flex",
+          isOverlay &&
+            "z-40 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -509,7 +617,7 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button"
-  const { isMobile, state } = useSidebar()
+  const { isMobile, visualState: state } = useSidebar()
 
   const button = (
     <Comp

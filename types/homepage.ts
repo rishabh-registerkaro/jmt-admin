@@ -57,7 +57,48 @@ export interface ContactInfo {
   replyTime: string;
 }
 
+/** Logos and the brand name used for the home links (screen-reader label). */
+export interface BrandContent {
+  name: string;
+  headerLogo: HomeImage;
+  footerLogo: HomeImage;
+}
+
+/** Button and heading labels that repeat across the navbar, FAQ and footer. */
+export interface ChromeLabels {
+  /** Navbar and FAQ owner card call button. */
+  callButton: string;
+  /** FAQ owner card WhatsApp button. */
+  whatsappButton: string;
+  /** Heading of the footer column that lists phone, WhatsApp, email and hours. */
+  footerContactTitle: string;
+}
+
+/**
+ * Languages the homepage is published in: English at "/", Bengali at "/bn",
+ * Hindi at "/hi". Bengali/Hindi text comes from HomePageContent.translations
+ * (app/lib/content/home-content.ts).
+ */
+export const SWITCHER_LANGUAGES = ["en", "bn", "hi"] as const;
+export type SwitcherLanguage = (typeof SWITCHER_LANGUAGES)[number];
+
+export function isSwitcherLanguage(value: unknown): value is SwitcherLanguage {
+  return typeof value === "string" && (SWITCHER_LANGUAGES as readonly string[]).includes(value);
+}
+
+export interface LanguageOption {
+  code: SwitcherLanguage;
+  /** Short label shown in the switcher, e.g. "EN" or "বাং". */
+  label: string;
+  /** Full name, e.g. "বাংলা (Bengali)" (tooltip and screen readers). */
+  name: string;
+}
+
 export interface SiteChrome {
+  brand: BrandContent;
+  labels: ChromeLabels;
+  /** Empty when the admin has switched the language switcher off. */
+  languages: LanguageOption[];
   nav: NavLink[];
   footerColumns: FooterColumn[];
   footerDescription: string;
@@ -97,6 +138,8 @@ export interface SiteTypeCard {
   id: string;
   title: string;
   description: string;
+  /** Where the card links to; null makes the card plain (not clickable). */
+  href: Href;
   image: HomeImage | null;
 }
 
@@ -151,16 +194,6 @@ export interface FaqGroup {
   audience: FaqAudience;
   label: string;
   items: FaqItem[];
-}
-
-export interface InsightCard {
-  id: string;
-  title: string;
-  excerpt: string;
-  category: string | null;
-  publishedAt: string | null;
-  href: Href;
-  image: HomeImage | null;
 }
 
 // ── Section copy (headings, intros and CTAs edited in the admin) ────────────
@@ -223,8 +256,35 @@ export interface ContactCopy {
   title: string;
   cardTitle: string;
   cardText: string;
+  /** Small uppercase labels on the contact card rows. */
+  labels: {
+    call: string;
+    whatsapp: string;
+    /** Text shown under the WhatsApp label (e.g. "Chat with us"). */
+    whatsappValue: string;
+    reply: string;
+  };
   formTitle: string;
   formText: string;
+  form: LeadFormCopy;
+}
+
+/** Every piece of text in the "Request workers" form. */
+export interface LeadFormCopy {
+  labels: Record<LeadField, string>;
+  /** Appended to the label of optional fields, e.g. "(optional)". */
+  optionalHint: string;
+  submit: string;
+  /** Button text while the request is being sent. */
+  submitting: string;
+  successTitle: string;
+  successText: string;
+  /** Button that brings the form back after a successful request. */
+  resetLabel: string;
+  /** Shown above the button when some fields are invalid. */
+  invalidText: string;
+  /** Shown when the request could not be sent at all. */
+  errorText: string;
 }
 
 export type HomepageSection =
@@ -243,6 +303,8 @@ export type HomepageSection =
 export interface HomepageData {
   /** Sections switched off in the admin are not rendered. */
   enabled: Record<HomepageSection, boolean>;
+  /** Every section, top to bottom, in the order chosen in the admin. */
+  order: HomepageSection[];
   /** SEO title/description from the admin; null means use the built-in defaults. */
   meta: { title: string | null; description: string | null };
   hero: HeroContent;
@@ -261,7 +323,6 @@ export interface HomepageData {
   banner: BannerContent;
   faqs: FaqGroup[];
   faqCopy: FaqCopy;
-  insights: InsightCard[];
   contactImage: HomeImage;
   contactCopy: ContactCopy;
 }

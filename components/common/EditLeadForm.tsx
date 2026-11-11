@@ -30,49 +30,46 @@ export default function EditLeadForm({ lead, onSave }: EditLeadFormProps) {
     <div className="mt-6 space-y-4 p-3">
       {/* NAME */}
       <div className="space-y-2">
-        <Label className="text-slate-300" htmlFor="name">Name</Label>
+        <Label className="text-foreground-light" htmlFor="name">Name</Label>
         <Input
           id="name"
           value={form.name}
           onChange={(e) => handleChange("name", e.target.value)}
-          className="bg-slate-800 border-slate-700 text-white"
         />
       </div>
 
       {/* EMAIL */}
       <div className="space-y-2">
-        <Label className="text-slate-300" htmlFor="email">Email</Label>
+        <Label className="text-foreground-light" htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
           value={form.email}
           onChange={(e) => handleChange("email", e.target.value)}
-          className="bg-slate-800 border-slate-700 text-white"
         />
       </div>
 
       {/* PHONE */}
       <div className="space-y-2">
-        <Label className="text-slate-300" htmlFor="phoneNo">Phone</Label>
+        <Label className="text-foreground-light" htmlFor="phoneNo">Phone</Label>
         <Input
           id="phoneNo"
           value={form.phoneNo}
           onChange={(e) => handleChange("phoneNo", e.target.value)}
-          className="bg-slate-800 border-slate-700 text-white"
         />
       </div>
 
       {/* SOURCE */}
       <div className="space-y-2">
-        <Label className="text-slate-300" htmlFor="leadSource">Source</Label>
+        <Label className="text-foreground-light" htmlFor="leadSource">Source</Label>
         <Select
           value={form.leadSource ?? "Website"}
           onValueChange={(value) => handleChange("leadSource", value)}
         >
-          <SelectTrigger className="bg-slate-800 border-slate-700 text-white w-full">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select source" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 text-white">
+          <SelectContent>
             <SelectItem value="Website">Website</SelectItem>
             <SelectItem value="Referral">Referral</SelectItem>
             <SelectItem value="Social Media">Social Media</SelectItem>
@@ -84,15 +81,15 @@ export default function EditLeadForm({ lead, onSave }: EditLeadFormProps) {
 
       {/* STATUS */}
       <div className="space-y-2">
-        <Label className="text-slate-300" htmlFor="status">Status</Label>
+        <Label className="text-foreground-light" htmlFor="status">Status</Label>
         <Select
           value={form.status}
           onValueChange={(value) => handleChange("status", value)}
         >
-          <SelectTrigger className="bg-slate-800 border-slate-700 text-white w-full">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 text-white">
+          <SelectContent>
             <SelectItem value="new">New</SelectItem>
             <SelectItem value="contacted">Contacted</SelectItem>
             <SelectItem value="converted">Converted</SelectItem>
@@ -104,7 +101,7 @@ export default function EditLeadForm({ lead, onSave }: EditLeadFormProps) {
       <SheetFooter>
         <Button
           onClick={() => onSave(form)}
-          className="bg-indigo-500 hover:bg-indigo-600 w-full cursor-pointer"
+          className="w-full cursor-pointer"
         >
           Save Changes
         </Button>

@@ -157,6 +157,7 @@ These files have **identical copies** in both repos (marked `SHARED FILE`). When
 - `app/lib/content/home-content.ts`
 - `types/homepage.ts`
 - `data/homepageFallback.ts`
+- `data/homepageTranslations.ts`
 - `utils/leadForm.ts`
 - `public/homepage/*`
 
@@ -164,20 +165,68 @@ These files have **identical copies** in both repos (marked `SHARED FILE`). When
 
 ## Deployment
 
-**Docker:**
+### Pre-deploy checklist
+
+1. **Checks pass locally.** Run `npm run typecheck` and `npm run build`. `next build` doesn't run ESLint, and the existing `no-explicit-any` lint errors don't block a deploy.
+2. **Production `.env` values are set on the host** (see [Environment variables](#environment-variables)):
+   - `DATABASE_URL`: the production MySQL, with `?connection_limit=5`.
+   - `JWT_SECRET`: a new random value. Don't reuse the dev one. Changing it signs everyone out.
+   - `REVALIDATE_SECRET`: the same value as in jmt-frontend's production env.
+   - `PRODUCTION_URL` and `JMT_FRONTEND_URL`: the real `https://` origins, with no trailing slash.
+   - `NEXT_PUBLIC_JMT_FRONTEND_URL`: set **before the build**.
+   - The SMTP and FTP groups. Test SMTP with `npm run test:smtp -- you@gmail.com`.
+3. **Serve the admin over HTTPS.** In production the `authToken` cookie is `Secure`. Over plain `http://` the browser drops it, and login looks like it succeeds but sends you straight back to `/login`.
+4. **The database is ready.** On the shared production database, apply schema changes only after you preview them (see [Schema changes](#schema-changes)). On a new database, run `db:push`, `seed:admin` and `seed:homepage` once.
+5. **Deploy jmt-frontend after this app.** It reads `/api/homepage/client` from here, so the API has to be up first.
+6. **Run the smoke tests after deploying:**
+   - `/login` signs in.
+   - Saving in **Dashboard → Homepage** shows up on jmt-frontend within a few seconds.
+   - An image upload in **Dashboard → Media** works.
+   - A test lead from the homepage form appears in **Dashboard → Leads** and sends the alert email.
+
+### Node host (e.g. Hostinger Node.js app)
 
 ```bash
-docker build -t jmt-admin .
-docker run -p 3000:3000 --env-file .env jmt-admin
+npm ci
+npm run build      # prisma generate + next build
+npm start          # listens on port 3000
 ```
 
-`.env` isn't copied into the image, so pass secrets at runtime. `NEXT_PUBLIC_JMT_FRONTEND_URL` is the exception: it's read at **build** time, so set it before `docker build` / `npm run build`.
+- Set the environment variables in the host's dashboard before you run the build, because `NEXT_PUBLIC_JMT_FRONTEND_URL` is baked in at build time.
+- Use Node 20.9 or newer.
+- `next.config.ts` pins `experimental.cpus: 2`. Hostinger containers report the host's full CPU count, and without the pin the build crashes while spawning workers.
+- If the host gives you a different port, change `-p 3000` in the `start` script, or put a reverse proxy in front.
 
-**Node host (for example Hostinger):** `npm install && npm run build && npm start`. Set the environment variables in the host's dashboard.
+### Docker
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_JMT_FRONTEND_URL=https://jmt.example.com \
+  -t jmt-admin .
+
+docker run -d --name jmt-admin -p 3000:3000 --env-file .env --restart unless-stopped jmt-admin
+```
+
+`.env` is excluded by `.dockerignore`, so secrets are never baked into the image; pass them at runtime with `--env-file`. `NEXT_PUBLIC_JMT_FRONTEND_URL` is the only build-time value, so it goes in as a `--build-arg`. The container runs as the unprivileged `node` user.
+
+Put a TLS-terminating reverse proxy in front of it (Nginx, Caddy, Traefik, or the host's own proxy). The proxy is what gives you HTTPS, which the login cookie needs (checklist step 3).
+
+### Updating a running deployment
+
+```bash
+git pull
+npm ci
+npm run build
+# restart the process (pm2 restart jmt-admin / host's "Restart" button / docker rebuild + run)
+```
+
+If `prisma/schema.prisma` changed, preview the change and apply it with `npm run db:push` **before** restarting.
 
 ## Troubleshooting
 
 - **`EPERM … query_engine-windows.dll.node` during `npm install` / `prisma generate`.** On Windows, a running `npm run dev` locks the Prisma engine. Stop the dev server and run `npx prisma generate` again.
 - **npm 11 asks to approve install scripts.** `package.json` → `allowScripts` already approves the ones this project needs (Prisma, bcrypt, esbuild). If you upgrade one of those packages, approve the new version with `npm install-scripts approve <pkg>`.
 - **Login says "Invalid credentials" on a new database.** No user exists yet. Run `npm run seed:admin`.
+- **Login works locally but loops back to `/login` in production.** The site is served over plain HTTP, so the browser drops the `Secure` auth cookie. Serve it over HTTPS.
+- **The "View live" button opens localhost in production.** `NEXT_PUBLIC_JMT_FRONTEND_URL` wasn't set at build time. Set it and rebuild.
 - **Homepage edits don't show on jmt-frontend.** Check that `JMT_FRONTEND_URL` points at it and that `REVALIDATE_SECRET` matches in both `.env` files.

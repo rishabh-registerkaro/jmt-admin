@@ -21,7 +21,7 @@ export default function ServicesEditor({ value, onChange }: SectionEditorProps<"
       <LinkFields label="Button" value={value.cta} onChange={(cta) => patch({ cta })} />
 
       <SubHeading>Service cards</SubHeading>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         The first card is shown as the large feature tile. Up to {HOME_LIMITS.services} cards.
       </p>
       <ListEditor

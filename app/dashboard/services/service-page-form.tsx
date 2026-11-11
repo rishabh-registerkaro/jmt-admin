@@ -44,16 +44,16 @@ import { SERVICE_TEMPLATES } from "@/app/lib/content/service-templates";
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
 const textareaCls = `${inputCls} resize-y`;
 const selectCls =
-  "rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500";
-const cardWrapCls = "bg-slate-800/30 p-4 rounded-lg border border-slate-700";
+  "rounded-md border border-input bg-transparent dark:bg-input/30 px-3 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:border-brand/60 focus-visible:ring-2 focus-visible:ring-ring";
+const cardWrapCls = "bg-muted/40 p-4 rounded-lg border border-border";
 const emptyStateCls =
-  "text-center py-6 text-slate-500 border border-dashed border-slate-700 rounded-lg";
-const labelCls = "text-sm font-medium text-slate-200";
+  "text-center py-6 text-muted-foreground border border-dashed border-border rounded-lg";
+const labelCls = "text-sm font-medium text-foreground";
 const addBtnCls =
-  "border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white";
+  "";
 
 // ─── Small building blocks ────────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ function Field({
   return (
     <div className="space-y-2">
       <label className={labelCls}>
-        {label} {required && <span className="text-red-400">*</span>}
+        {label} {required && <span className="text-destructive">*</span>}
       </label>
       {children}
     </div>
@@ -108,7 +108,7 @@ function RemoveButton({ onClick, title }: { onClick: () => void; title?: string 
       size="sm"
       onClick={onClick}
       title={title || "Remove"}
-      className="text-red-400 hover:text-red-300 hover:bg-red-400/20 shrink-0"
+      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
     >
       <Trash2 className="h-4 w-4" />
     </Button>
@@ -276,7 +276,7 @@ function CardsEditor({
       {section.cards.map((card, i) => (
         <div key={i} className={`${cardWrapCls} space-y-3`}>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-300">Card {i + 1}</span>
+            <span className="text-sm font-semibold text-foreground-light">Card {i + 1}</span>
             <RemoveButton
               onClick={() =>
                 onChange({ ...section, cards: section.cards.filter((_, idx) => idx !== i) })
@@ -380,7 +380,7 @@ function StepsEditor({
       {section.steps.map((step, i) => (
         <div key={i} className={`${cardWrapCls} space-y-3`}>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-300">Step {i + 1}</span>
+            <span className="text-sm font-semibold text-foreground-light">Step {i + 1}</span>
             <RemoveButton
               onClick={() =>
                 onChange({ ...section, steps: section.steps.filter((_, idx) => idx !== i) })
@@ -491,7 +491,7 @@ function FaqEditor({
       {section.faqs.map((faq, i) => (
         <div key={i} className={`${cardWrapCls} space-y-3`}>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-300">FAQ {i + 1}</span>
+            <span className="text-sm font-semibold text-foreground-light">FAQ {i + 1}</span>
             <RemoveButton
               onClick={() =>
                 onChange({ ...section, faqs: section.faqs.filter((_, idx) => idx !== i) })
@@ -622,7 +622,7 @@ function NotesEditor({
       {section.notes.map((note, i) => (
         <div key={i} className={`${cardWrapCls} space-y-3`}>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-300">Note {i + 1}</span>
+            <span className="text-sm font-semibold text-foreground-light">Note {i + 1}</span>
             <RemoveButton
               onClick={() =>
                 onChange({ ...section, notes: section.notes.filter((_, idx) => idx !== i) })
@@ -976,14 +976,14 @@ export default function ServicePageForm({
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const card = "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden";
+  const card = "rounded-lg border bg-card overflow-hidden";
 
   return (
     <div className="space-y-4">
       {mode === "create" && (
         <div className={`${card} p-4 flex flex-col sm:flex-row sm:items-center gap-3`}>
-          <div className="flex items-center gap-2 text-slate-200">
-            <LayoutTemplate className="h-5 w-5 text-indigo-400" />
+          <div className="flex items-center gap-2 text-foreground">
+            <LayoutTemplate className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium">Start from a template:</span>
           </div>
           <select
@@ -1007,26 +1007,26 @@ export default function ServicePageForm({
       <Collapsible.Root open={openSections.meta} onOpenChange={() => toggle("meta")}>
         <div className={card}>
           <Collapsible.Trigger asChild>
-            <button className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
               <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-indigo-400" />
-                <span className="text-lg font-semibold text-white">SEO / Meta</span>
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <span className="text-lg font-semibold text-foreground">SEO / Meta</span>
               </div>
               {openSections.meta ? (
-                <ChevronDown className="h-5 w-5 text-slate-400" />
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-5 w-5 text-slate-400" />
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               )}
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-border">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className={labelCls}>
-                    Slug <span className="text-red-400">*</span>
+                    Slug <span className="text-destructive">*</span>
                   </label>
-                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={autoGenerateSlug}
@@ -1039,7 +1039,7 @@ export default function ServicePageForm({
                             slug: generateSlug(`${p.content.titleLead} ${p.content.titleAccent}`),
                           }));
                       }}
-                      className="accent-indigo-500"
+                      className="accent-brand"
                     />
                     Auto-generate from title (lead + accent)
                   </label>
@@ -1054,7 +1054,7 @@ export default function ServicePageForm({
                   }
                 />
                 {autoGenerateSlug && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     Locked — generated from the hero title. Untick to edit manually (dashes allowed).
                   </p>
                 )}
@@ -1087,20 +1087,20 @@ export default function ServicePageForm({
       <Collapsible.Root open={openSections.hero} onOpenChange={() => toggle("hero")}>
         <div className={card}>
           <Collapsible.Trigger asChild>
-            <button className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
               <div className="flex items-center gap-3">
-                <Sparkles className="h-5 w-5 text-indigo-400" />
-                <span className="text-lg font-semibold text-white">Hero & Enquiry Form</span>
+                <Sparkles className="h-5 w-5 text-muted-foreground" />
+                <span className="text-lg font-semibold text-foreground">Hero & Enquiry Form</span>
               </div>
               {openSections.hero ? (
-                <ChevronDown className="h-5 w-5 text-slate-400" />
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-5 w-5 text-slate-400" />
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               )}
             </button>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-white/10">
+            <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 border-t border-border">
               <Field label="Breadcrumb">
                 <div className="space-y-2">
                   {content.breadcrumb.map((b, i) => (
@@ -1268,9 +1268,9 @@ export default function ServicePageForm({
       {/* ── Article sections ───────────────────────────────────────────────── */}
       <div className={`${card} p-4 space-y-4`}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <ListPlus className="h-5 w-5 text-indigo-400" />
-          <span className="text-lg font-semibold text-white">Page Sections</span>
-          <span className="text-xs text-slate-400">
+          <ListPlus className="h-5 w-5 text-muted-foreground" />
+          <span className="text-lg font-semibold text-foreground">Page Sections</span>
+          <span className="text-xs text-muted-foreground">
             add, remove & reorder — each section appears in the page TOC
           </span>
         </div>
@@ -1289,19 +1289,19 @@ export default function ServicePageForm({
               open={open}
               onOpenChange={() => setOpenArticleSections((p) => ({ ...p, [i]: !open }))}
             >
-              <div className="bg-slate-900/40 border border-slate-700 rounded-xl overflow-hidden">
+              <div className="bg-muted/40 border border-border rounded-lg overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-2">
                   <Collapsible.Trigger asChild>
                     <button className="flex items-center gap-2 flex-1 min-w-0 text-left hover:opacity-80">
                       {open ? (
-                        <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                       )}
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-sm font-semibold text-foreground">
                         {i + 1}. {section.label || "(untitled section)"}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-brand/10 text-brand-link">
                         {section.kind}
                       </span>
                     </button>
@@ -1314,7 +1314,7 @@ export default function ServicePageForm({
                       disabled={i === 0}
                       onClick={() => moveSection(i, -1)}
                       title="Move up"
-                      className="text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
                     >
                       <ChevronUp className="h-4 w-4" />
                     </Button>
@@ -1325,7 +1325,7 @@ export default function ServicePageForm({
                       disabled={i === content.sections.length - 1}
                       onClick={() => moveSection(i, 1)}
                       title="Move down"
-                      className="text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
                     >
                       <ChevronDown className="h-4 w-4" />
                     </Button>
@@ -1333,7 +1333,7 @@ export default function ServicePageForm({
                   </div>
                 </div>
                 <Collapsible.Content>
-                  <div className="p-4 pt-2 space-y-4 border-t border-slate-700">
+                  <div className="p-4 pt-2 space-y-4 border-t border-border">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <Field label="Anchor id" required>
                         <Input
@@ -1372,7 +1372,7 @@ export default function ServicePageForm({
           );
         })}
 
-        <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-slate-700/60">
+        <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-border">
           <select
             value={newSectionKind}
             onChange={(e) => setNewSectionKind(e.target.value as SectionKind)}
@@ -1403,7 +1403,6 @@ export default function ServicePageForm({
           type="button"
           disabled={loading}
           onClick={() => handleSubmit("published")}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white"
         >
           {mode === "create" ? "Publish Page" : "Update & Publish"}
         </Button>

@@ -52,7 +52,7 @@ export default function FaqEditor({ value, onChange }: SectionEditorProps<"faq">
       </Grid>
 
       <SubHeading>Owner card</SubHeading>
-      <p className="text-xs text-slate-500">Name and initials come from the Founder section.</p>
+      <p className="text-xs text-muted-foreground">Name and initials come from the Founder section.</p>
       <Grid>
         <TextField label="Role line" value={value.ownerRole} onChange={(ownerRole) => patch({ ownerRole })} />
         <TextField label="Card title" value={value.ownerTitle} onChange={(ownerTitle) => patch({ ownerTitle })} />
@@ -69,7 +69,7 @@ export default function FaqEditor({ value, onChange }: SectionEditorProps<"faq">
         value={value.workers}
         onChange={(workers) => patch({ workers })}
       />
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         “Join our crew” links (#join-our-crew) open the workers tab.
       </p>
 

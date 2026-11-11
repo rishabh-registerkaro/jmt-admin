@@ -19,6 +19,7 @@ import type {
   FounderContent,
   HeroContent,
   HomeImage,
+  LeadFormCopy,
   ProcessStep,
   ReasonItem,
   ServiceCard,
@@ -125,7 +126,28 @@ const SERVICE_LINKS = [
   { label: "Industrial manpower", href: "#services" },
 ];
 
+/** Bundled logos, used whenever the admin leaves a logo field empty. */
+export const BRAND_LOGOS = {
+  header: asset("logo-header.svg", "Joy Maa Tara Bama Kripa", 150, 52),
+  footer: asset("logo-footer.svg", "Joy Maa Tara Bama Kripa", 269, 96),
+} satisfies Record<string, HomeImage>;
+
 export const FALLBACK_CHROME: SiteChrome = {
+  brand: {
+    name: "Joy Maa Tara Bama Kripa",
+    headerLogo: BRAND_LOGOS.header,
+    footerLogo: BRAND_LOGOS.footer,
+  },
+  labels: {
+    callButton: "Call",
+    whatsappButton: "WhatsApp",
+    footerContactTitle: "Contact",
+  },
+  languages: [
+    { code: "en", label: "EN", name: "English" },
+    { code: "bn", label: "বাং", name: "বাংলা (Bengali)" },
+    { code: "hi", label: "हिं", name: "हिन्दी (Hindi)" },
+  ],
   nav: [
     { label: "Services", href: "#services", children: SERVICE_LINKS },
     { label: "How we work", href: "#how-we-work", children: [] },
@@ -216,7 +238,8 @@ export const FALLBACK_SERVICES: ServiceCard[] = [
   },
 ];
 
-export const SITE_TYPES: SiteTypeCard[] = [
+/** Site-type cards; each links to the contact form by default. */
+export const SITE_TYPES: Omit<SiteTypeCard, "href">[] = [
   {
     id: "bridges",
     title: "Bridges and flyovers",
@@ -460,3 +483,31 @@ export const FAQ_GROUPS: FaqGroup[] = [
     ],
   },
 ];
+
+// ── Contact card & lead form copy ────────────────────────────────────────────
+
+export const CONTACT_LABELS = {
+  call: "Call",
+  whatsapp: "WhatsApp",
+  whatsappValue: "Chat with us",
+  reply: "Reply time",
+};
+
+export const LEAD_FORM_COPY: LeadFormCopy = {
+  labels: {
+    companyName: "Company name",
+    name: "Your name",
+    phone: "Phone / WhatsApp",
+    siteLocation: "Site location",
+    headcount: "Headcount",
+    startDate: "Start date",
+  },
+  optionalHint: "(optional)",
+  submit: "Request workers",
+  submitting: "Sending…",
+  successTitle: "Request received",
+  successText: "Thanks — your requirement is in. The owner will call you back within 24 hours.",
+  resetLabel: "Send another request",
+  invalidText: "Please check the highlighted fields.",
+  errorText: "We couldn't send your request just now. Please try again, or call or WhatsApp us directly.",
+};
