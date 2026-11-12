@@ -9,12 +9,14 @@ import { useRoutePermission } from "@/hooks/useRoutePermission";
 import AccessDenied from "@/components/common/AccessDenied";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import SessionTimeout from "@/components/common/SessionTimeout";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { loading, hasAccess } = useRoutePermission();
   return (
     // Collapsed icon rail by default; it slides out on hover and can be pinned.
     <SidebarProvider defaultOpen={false}>
+      <SessionTimeout />
       <AppSidebar />
       <SidebarInset className="min-w-0">
         {/* Mobile top bar: the sidebar becomes an off-canvas drawer below md */}

@@ -206,10 +206,12 @@ export const JOIN_PAGE = {
     sending: "Sending…",
     note: "No fee. We’ll call you within 2 working days.",
     messages: {
-      success: "Thanks — your application is in. We’ll call you within 2 working days.",
+      /** Shown in place of the form once it is sent (Figma 312:293). */
+      successTitle: "Application sent",
+      success: "Thank you. Our team will call you within 2 working days. Keep your phone on.",
+      whatsapp: "Send your ID on WhatsApp to save time",
       invalid: "Please check the highlighted fields.",
       error: "We couldn't send your application just now. Please try again, or call or WhatsApp us directly.",
-      again: "Send another application",
     },
   },
 };
