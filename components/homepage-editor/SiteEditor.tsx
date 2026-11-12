@@ -3,7 +3,7 @@
 import ImageField from "@/components/common/ImageField";
 import { HOME_LIMITS } from "@/app/lib/content/home-content";
 import { BRAND_LOGOS } from "@/data/homepageFallback";
-import { Field, Grid, ListEditor, SubHeading, TextField, Toggle, inputCls, itemCardCls } from "./fields";
+import { Field, Grid, ListEditor, SubHeading, TextField, inputCls } from "./fields";
 import { patcher, type SectionEditorProps } from "./types";
 import type { HomeLinkValue } from "@/app/lib/content/home-content";
 
@@ -46,11 +46,6 @@ export default function SiteEditor({ value, onChange }: SectionEditorProps<"site
   const patch = patcher(value, onChange);
   const patchBrand = patcher(value.brand, (brand) => patch({ brand }));
   const patchLabels = patcher(value.labels, (labels) => patch({ labels }));
-  const patchLanguages = patcher(value.languages, (languages) => patch({ languages }));
-  const updateLanguage = (index: number, change: Partial<(typeof value.languages.items)[number]>) =>
-    patchLanguages({
-      items: value.languages.items.map((item, i) => (i === index ? { ...item, ...change } : item)),
-    });
 
   return (
     <>
@@ -133,43 +128,12 @@ export default function SiteEditor({ value, onChange }: SectionEditorProps<"site
         />
       </Grid>
 
-      <div className="flex items-center justify-between gap-4 pt-2">
-        <SubHeading>Language switcher</SubHeading>
-        <Toggle
-          checked={value.languages.enabled}
-          onChange={(enabled) => patchLanguages({ enabled })}
-          label="Show the language switcher"
-        />
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Translates the whole page automatically (Google Translate). English is the page&apos;s own language and
-        always stays available.
-      </p>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        {value.languages.items.map((item, index) => (
-          <div key={item.code} className={itemCardCls}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-foreground-light">{item.code.toUpperCase()}</span>
-              {item.code !== "en" && (
-                <Toggle
-                  checked={item.enabled}
-                  onChange={(enabled) => updateLanguage(index, { enabled })}
-                  label={`Show ${item.name || item.code}`}
-                />
-              )}
-            </div>
-            <TextField label="Button text" value={item.label} onChange={(label) => updateLanguage(index, { label })} />
-            <TextField label="Full name" value={item.name} onChange={(name) => updateLanguage(index, { name })} />
-          </div>
-        ))}
-      </div>
-
       <SubHeading>Navbar</SubHeading>
       <ListEditor
         items={value.nav}
         onChange={(nav) => patch({ nav })}
         max={HOME_LIMITS.nav}
-        newItem={() => ({ label: "", href: "#", children: [] })}
+        newItem={() => ({ label: "", href: "#", children: [], autoServices: false })}
         addLabel="Add menu item"
         itemLabel={(item, i) => item.label || `Menu item ${i + 1}`}
         render={(item, update) => (
@@ -178,7 +142,23 @@ export default function SiteEditor({ value, onChange }: SectionEditorProps<"site
               <TextField label="Label" value={item.label} onChange={(label) => update({ label })} />
               <TextField label="Link" value={item.href} onChange={(href) => update({ href })} />
             </Grid>
-            <Field label="Dropdown links (optional)">
+            <label className="flex cursor-pointer items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0"
+                checked={item.autoServices}
+                onChange={(e) => update({ autoServices: e.target.checked })}
+              />
+              <span>
+                List published service pages in this dropdown
+                <span className="block text-xs text-muted-foreground">
+                  Every page published under Dashboard → Services shows here automatically (its title, linking to
+                  /service/&lt;slug&gt;). Links below are added after them; one with the same label as a service
+                  page is skipped.
+                </span>
+              </span>
+            </label>
+            <Field label={item.autoServices ? "Extra dropdown links (optional)" : "Dropdown links (optional)"}>
               <LinkRows
                 items={item.children}
                 onChange={(children) => update({ children })}

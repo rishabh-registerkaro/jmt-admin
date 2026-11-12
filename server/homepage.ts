@@ -31,8 +31,9 @@ import {
   buildHomepageData,
   buildSiteChrome,
   type HomePageInput,
+  type ServiceNavInput,
 } from "@/lib/homepage/buildHomepage";
-import type { HomepageData, SiteChrome, SwitcherLanguage } from "@/types/homepage";
+import type { HomepageData, SiteChrome } from "@/types/homepage";
 
 export { HOMEPAGE_REVALIDATE_SECONDS, HOMEPAGE_TAGS, resolveHref } from "@/lib/homepage/buildHomepage";
 
@@ -102,6 +103,22 @@ const readHomePage = unstable_cache(
   cacheOptions(HOMEPAGE_TAGS.homePage),
 );
 
+/**
+ * Published JMT service pages for the navbar "Services" dropdown, oldest
+ * first so the menu order stays put when a page is edited. Tagged
+ * "jmt-service-list", which every service create/edit/delete expires.
+ */
+const readServiceNav = unstable_cache(
+  (): Promise<ServiceNavInput[]> =>
+    prisma.jmtServicePage.findMany({
+      where: { status: "published" },
+      select: { slug: true, title: true },
+      orderBy: { createdAt: "asc" },
+    }),
+  ["homepage", "service-nav"],
+  cacheOptions(HOMEPAGE_TAGS.jmtServices),
+);
+
 /** Runs a query; on any error logs once and returns the fallback instead. */
 async function withFallback<T>(label: string, query: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -118,23 +135,24 @@ async function withFallback<T>(label: string, query: () => Promise<T>, fallback:
 /** The saved homepage document, or null when none exists or MySQL is down. Per request. */
 const getHomePageRow = cache(() => withFallback("homepage content", readHomePage, null));
 
-/** Navbar, footer and contact details in `lang`. Deduplicated per request via React `cache`. */
-export const getSiteChrome = cache(async (lang: SwitcherLanguage = "en"): Promise<SiteChrome> => {
-  const [header, footer, row] = await Promise.all([
+/** Navbar, footer and contact details. Deduplicated per request via React `cache`. */
+export const getSiteChrome = cache(async (): Promise<SiteChrome> => {
+  const [header, footer, row, services] = await Promise.all([
     withFallback("header menu", readHeaderMenu, null),
     withFallback("footer menu", readFooterMenu, null),
     getHomePageRow(),
+    withFallback("service pages", readServiceNav, []),
   ]);
-  return buildSiteChrome(header, footer, row, lang);
+  return buildSiteChrome(header, footer, row, services);
 });
 
-/** All section content for the homepage in `lang`, resolved in parallel. */
-export const getHomepageData = cache(async (lang: SwitcherLanguage = "en"): Promise<HomepageData> => {
+/** All section content for the homepage, resolved in parallel. */
+export const getHomepageData = cache(async (): Promise<HomepageData> => {
   const [row, media] = await Promise.all([
     getHomePageRow(),
     withFallback("media overrides", readMediaOverrides, []),
   ]);
-  return buildHomepageData(row, media, lang);
+  return buildHomepageData(row, media);
 });
 
 /**
@@ -153,18 +171,12 @@ export async function getHomepageUpdatedAt(): Promise<string | null> {
  * Fingerprint of everything the homepage shows (sections, navbar, footer,
  * contact details, photos). Open homepage tabs poll it (LiveRefresh) and
  * reload when it changes — so a Header/Footer Menu or Media edit refreshes
- * them too, not only a Homepage save. Covers every language (a Bengali-only
- * edit changes it too). Built from the cached reads above, so it costs no
+ * them too, not only a Homepage save. Built from the cached reads above, so it costs no
  * database query until one of their tags is expired.
  */
 export async function getHomepageVersion(): Promise<string> {
-  const [data, chrome, row] = await Promise.all([getHomepageData(), getSiteChrome(), getHomePageRow()]);
-  const content = row?.content;
-  const translations =
-    typeof content === "object" && content !== null && !Array.isArray(content)
-      ? (content as Record<string, unknown>).translations ?? null
-      : null;
-  return createHash("sha1").update(JSON.stringify({ data, chrome, translations })).digest("hex").slice(0, 16);
+  const [data, chrome] = await Promise.all([getHomepageData(), getSiteChrome()]);
+  return createHash("sha1").update(JSON.stringify({ data, chrome })).digest("hex").slice(0, 16);
 }
 
 /**
@@ -172,16 +184,17 @@ export async function getHomepageVersion(): Promise<string> {
  * Preview button, app/api/preview). Menus and photo overrides are the live
  * ones; `version` stays the live version so LiveRefresh doesn't loop.
  */
-export async function buildHomepagePreview(row: HomePageInput, lang: SwitcherLanguage) {
-  const [header, footer, media, version] = await Promise.all([
+export async function buildHomepagePreview(row: HomePageInput) {
+  const [header, footer, media, services, version] = await Promise.all([
     withFallback("header menu", readHeaderMenu, null),
     withFallback("footer menu", readFooterMenu, null),
     withFallback("media overrides", readMediaOverrides, []),
+    withFallback("service pages", readServiceNav, []),
     getHomepageVersion(),
   ]);
   return {
-    data: buildHomepageData(row, media, lang),
-    chrome: buildSiteChrome(header, footer, row, lang),
+    data: buildHomepageData(row, media),
+    chrome: buildSiteChrome(header, footer, row, services),
     version,
     updatedAt: null,
   };

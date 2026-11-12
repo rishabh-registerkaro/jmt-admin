@@ -17,12 +17,10 @@ import {
   type HomeMediaSlot,
 } from "@/data/homepageFallback";
 import {
-  getLocalizedField,
-  localizeHomeContent,
-  localizeMeta,
   normalizeHomeContent,
   type HomeImageValue,
   type HomeLinkValue,
+  type HomeNavValue,
   type HomePageContent,
 } from "@/app/lib/content/home-content";
 import type {
@@ -31,10 +29,8 @@ import type {
   Href,
   HomeImage,
   HomepageData,
-  LanguageOption,
   NavChildLink,
   SiteChrome,
-  SwitcherLanguage,
 } from "@/types/homepage";
 
 /** Cache tags — each matches a tag the admin API revalidates on save. */
@@ -44,6 +40,8 @@ export const HOMEPAGE_TAGS = {
   services: "service-list",
   media: "homepage-media",
   homePage: "homepage",
+  /** JMT service pages (navbar "Services" dropdown) — jmtServiceTags in jmt-admin. */
+  jmtServices: "jmt-service-list",
 } as const;
 
 /** Seconds before cached CMS reads are refreshed even without a tag hit. */
@@ -62,6 +60,12 @@ export interface MenuInput {
 export interface MediaInput {
   filename: string;
   url: string;
+}
+
+/** A published JMT service page, listed in navbar dropdowns set to `autoServices`. */
+export interface ServiceNavInput {
+  slug: string;
+  title: string;
 }
 
 export interface HomePageInput {
@@ -230,38 +234,27 @@ function logoImage(value: HomeImageValue, fallback: HomeImage): HomeImage {
   return { ...fallback, src: value.src || fallback.src, alt: value.alt || fallback.alt };
 }
 
-/**
- * `content` is the page in the visitor's language; `english` is the same page
- * untranslated. Ids (FAQ anchors, list keys) come from the English titles so
- * links like #what-s-the-minimum-crew-size-0 work in every language.
- * Localising never changes list lengths or blanks a field, so both line up.
- */
+/** Ids (FAQ anchors, list keys) come from the titles, e.g. #what-s-the-minimum-crew-size-0. */
 function toHomepageData(
   content: HomePageContent,
   meta: HomepageData["meta"],
   images: Record<HomeMediaSlot, HomeImage>,
-  english: HomePageContent = content,
 ): HomepageData {
   const { hero, services, sites, why, trades, process, founder, banner, faq, contact } = content;
 
   const faqs: FaqGroup[] = (["companies", "workers"] as const)
-    .map((audience) => {
-      const englishItems = english.faq[audience].items.filter((item) => item.question);
-      return {
-        audience,
-        label: faq[audience].label,
-        items: faq[audience].items
-          .filter((item) => item.question)
-          .map((item, index) => ({ id: slugId(englishItems[index]?.question ?? item.question, index), ...item })),
-      };
-    })
+    .map((audience) => ({
+      audience,
+      label: faq[audience].label,
+      items: faq[audience].items
+        .filter((item) => item.question)
+        .map((item, index) => ({ id: slugId(item.question, index), ...item })),
+    }))
     .filter((group) => group.items.length > 0);
 
   const serviceCards = services.cards.filter((card) => card.title);
   const siteCards = sites.cards.filter((card) => card.title);
   const tradeCards = trades.cards.filter((card) => card.title);
-  const englishTitle = (cards: { title: string }[], index: number, fallback: string) =>
-    cards.filter((card) => card.title)[index]?.title ?? fallback;
   const steps = process.steps.filter((step) => step.title);
 
   return {
@@ -295,7 +288,7 @@ function toHomepageData(
       image: slotImage(hero.image, "hero", images),
     },
     services: serviceCards.map((card, index) => ({
-      id: slugId(englishTitle(english.services.cards, index, card.title), index),
+      id: slugId(card.title, index),
       title: card.title,
       eyebrow: card.eyebrow || null,
       badge: card.badge || null,
@@ -308,7 +301,7 @@ function toHomepageData(
       cta: cta(services.cta, "#contact"),
     },
     siteTypes: siteCards.map((card, index) => ({
-      id: slugId(englishTitle(english.sites.cards, index, card.title), index),
+      id: slugId(card.title, index),
       title: card.title,
       description: card.description,
       href: localHref(card.href),
@@ -325,7 +318,7 @@ function toHomepageData(
       badge: why.badge,
     },
     trades: tradeCards.map((card, index) => ({
-      id: slugId(englishTitle(english.trades.cards, index, card.title), index),
+      id: slugId(card.title, index),
       title: card.title,
       icon: card.icon,
       image: cardImage(card.image, card.title) ?? TRADES[index % TRADES.length].image,
@@ -379,20 +372,37 @@ function toLinks(links: HomeLinkValue[]): NavChildLink[] {
   return links.filter((link) => link.label).map((link) => ({ label: link.label, href: localHref(link.href) }));
 }
 
+/**
+ * Dropdown of a navbar item. With `autoServices` on and service pages
+ * available, the published service pages come first, then the admin's own
+ * links whose label isn't already one of them. Otherwise just the admin's links
+ * (also the fallback when jmt-admin can't be reached).
+ */
+function navChildren(item: HomeNavValue, services: ServiceNavInput[]): NavChildLink[] {
+  if (!item.autoServices || services.length === 0) return toLinks(item.children);
+  const fromServices: NavChildLink[] = services
+    .filter((service) => service.slug && service.title.trim())
+    .map((service) => ({ label: service.title.trim(), href: `/service/${service.slug}` }));
+  const taken = new Set(fromServices.map((link) => link.label.toLowerCase()));
+  const extras = item.children.filter((child) => !taken.has(child.label.trim().toLowerCase()));
+  return [...fromServices, ...toLinks(extras)];
+}
+
 // ── Public builders ──────────────────────────────────────────────────────────
 
 /**
  * Navbar, footer and contact details. Pass `null` for anything unavailable —
  * with all three null this is the bundled (Figma) navbar/footer.
+ * `services` are the published JMT service pages, in menu order.
  */
 export function buildSiteChrome(
   header: MenuInput | null,
   footer: MenuInput | null,
   row: HomePageInput | null,
-  lang: SwitcherLanguage = "en",
+  services: ServiceNavInput[] = [],
 ): SiteChrome {
   // With no saved document this is the Figma navbar/footer.
-  const { site } = localizeHomeContent(normalizeHomeContent(row?.content), lang);
+  const { site } = normalizeHomeContent(row?.content);
 
   // Contact: the shared Header/Footer Menu values first (legacy source), then
   // this homepage's own details on top. A blank field keeps the legacy value.
@@ -401,19 +411,9 @@ export function buildSiteChrome(
     applyContactChannels(contact, site);
     if (site.replyTime) contact.replyTime = site.replyTime;
   }
-  // Hours/reply time may still be the legacy (English) values from the menus.
-  contact.hours = getLocalizedField(lang, contact.hours);
-  contact.replyTime = getLocalizedField(lang, contact.replyTime);
   // Footer text for the WhatsApp link; blank shows the number itself.
   const whatsappNumber = site.whatsapp || (header && isRecord(header.contactDetails) ? text(header.contactDetails.whatsappNumber) : "");
   contact.whatsappDisplay = site.labels.whatsappDisplay || whatsappNumber || FALLBACK_CONTACT.whatsappDisplay;
-
-  // English is the page's own language, so it always stays selectable.
-  const languages: LanguageOption[] = site.languages.enabled
-    ? site.languages.items
-        .filter((item) => item.enabled || item.code === "en")
-        .map(({ code, label, name }) => ({ code, label, name }))
-    : [];
 
   return {
     brand: {
@@ -426,10 +426,13 @@ export function buildSiteChrome(
       whatsappButton: site.labels.whatsappButton,
       footerContactTitle: site.labels.footerContactTitle,
     },
-    languages,
     nav: site.nav
       .filter((item) => item.label)
-      .map((item) => ({ label: item.label, href: localHref(item.href), children: toLinks(item.children) })),
+      .map((item) => ({
+        label: item.label,
+        href: localHref(item.href),
+        children: navChildren(item, services),
+      })),
     footerColumns: site.footerColumns
       .filter((column) => column.title)
       .map((column) => ({ title: column.title, links: toLinks(column.links) })),
@@ -446,14 +449,7 @@ export function buildSiteChrome(
 export function buildHomepageData(
   row: HomePageInput | null,
   media: MediaInput[],
-  lang: SwitcherLanguage = "en",
 ): HomepageData {
-  const english = normalizeHomeContent(row?.content);
   const meta = { title: row?.metaTitle || null, description: row?.metaDescription || null };
-  return toHomepageData(
-    localizeHomeContent(english, lang),
-    localizeMeta(english, lang, meta),
-    applyMediaOverrides(media),
-    english,
-  );
+  return toHomepageData(normalizeHomeContent(row?.content), meta, applyMediaOverrides(media));
 }
