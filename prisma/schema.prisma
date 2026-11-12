@@ -39,9 +39,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  posts         Post[]
-  servicePages  ServicePage[]
-  packageBlocks PackageBlock[]
+  posts           Post[]
+  servicePages    ServicePage[]
+  packageBlocks   PackageBlock[]
+  jmtServicePages JmtServicePage[]
 
   @@map("users")
 }
@@ -76,16 +77,16 @@ model Post {
 }
 
 model Category {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  slug      String   @unique
-  color     String   @default("")
-  parentId  String?  @map("parent_category_id")
+  slug      String     @unique
+  color     String     @default("")
+  parentId  String?    @map("parent_category_id")
   parent    Category?  @relation("CategoryParent", fields: [parentId], references: [id])
   children  Category[] @relation("CategoryParent")
   posts     Post[]     @relation("PostCategories")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   @@index([parentId])
   // Paginated dashboard listing sorts by newest first
@@ -94,16 +95,16 @@ model Category {
 }
 
 model Lead {
-  id      String     @id @default(cuid())
-  name    String
-  email   String
-  phoneNo String
-  status  LeadStatus @default(new)
+  id         String     @id @default(cuid())
+  name       String
+  email      String
+  phoneNo    String
+  status     LeadStatus @default(new)
   // Which website form this lead came from (e.g. "Contact — Request a Quote")
-  leadSource String @default("Website")
+  leadSource String     @default("Website")
   // Form-specific fields as {"Field Label": value} pairs — differs per form
   // (dropdowns, subject, message…), so new forms never need schema changes.
-  formData Json? @map("form_data")
+  formData   Json?      @map("form_data")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -177,12 +178,12 @@ model TermsPolicy {
 }
 
 model HeaderMenu {
-  id        String   @id @default(cuid())
-  mainMenu  Json     @map("main_menu")
+  id             String   @id @default(cuid())
+  mainMenu       Json     @map("main_menu")
   // Utility-bar content: {whatsappLabel, whatsappNumber, careLabel, careNumber, ctaText, ctaUrl}
-  contactDetails Json? @map("contact_details")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  contactDetails Json?    @map("contact_details")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@map("header_menus")
 }
@@ -223,22 +224,22 @@ model ServicePage {
 }
 
 model PackageBlock {
-  id       String @id @default(cuid())
-  slug     String @unique
-  title    String @db.VarChar(500)
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String        @db.VarChar(500)
   // Page slugs this block is injected into, e.g. ["travel", "education"].
   // Free-text on purpose: a block can be prepared before its page exists.
-  targetPages Json @map("target_pages")
+  targetPages Json          @map("target_pages")
   // Entire block as one flexible document (header + tabs + packages).
   // Shape: app/lib/content/package-content.ts → PackageBlockContent
-  content  Json
-  status   PublishStatus @default(draft)
+  content     Json
+  status      PublishStatus @default(draft)
   // Frontend on/off switch, independent of `status`: lets an admin pull a
   // published block off the live pages (seasonal, sold out, being rewritten)
   // without reverting it to draft or deleting it.
-  visible  Boolean       @default(true)
-  authorId String
-  author   User          @relation(fields: [authorId], references: [id])
+  visible     Boolean       @default(true)
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -277,4 +278,28 @@ model HomePage {
   updatedAt       DateTime @updatedAt
 
   @@map("home_pages")
+}
+
+// Service pages of the Joy Maa Tara site (jmt-frontend, /service/<slug>).
+// Separate from ServicePage, whose "division" layout feeds the Global Elite site.
+// Edited at /dashboard/jmt-services; read by the frontend through the public
+// GET /api/jmt-services/client/<slug> (published pages only).
+model JmtServicePage {
+  id       String        @id @default(cuid())
+  slug     String        @unique
+  // Admin-facing name in the dashboard list (e.g. "Site labour supply").
+  title    String        @db.VarChar(200)
+  // Entire page as one document. Shape: types/service.ts → ServicePageContent,
+  // normalized by lib/service/normalizeServicePage.ts on every save and read.
+  content  Json
+  status   PublishStatus @default(draft)
+  authorId String
+  author   User          @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([updatedAt])
+  @@map("jmt_service_pages")
 }

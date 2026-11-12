@@ -49,6 +49,7 @@ export const config = {
     // they must be exempted here or an unauthenticated request for the favicon
     // is redirected to /login and the browser receives HTML instead of a PNG.
     // `homepage/` holds the public homepage's static images (public/homepage).
-    "/((?!_next|api|homepage/|favicon.ico|icon.png|apple-icon.png).*)",
+    // `service/` holds the service page default photos (public/service), shown in editor previews.
+    "/((?!_next|api|homepage/|service/|favicon.ico|icon.png|apple-icon.png).*)",
   ],
 };
