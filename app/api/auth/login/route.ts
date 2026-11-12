@@ -1,7 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import { issueSession } from "@/app/lib/utils/session";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,16 +32,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
-
     const response = NextResponse.json({
       message: "Login successfull",
       user: {
@@ -52,21 +42,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    response.cookies.set("authToken", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/"
-    });
-
-    // UI hint only (components/common/Header.tsx reads it), so not httpOnly.
-    response.cookies.set("loggedIn", "true", {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
+    // Short-lived, sliding session: kept alive by /api/auth/refresh while the
+    // admin is active (components/common/SessionTimeout.tsx).
+    issueSession(response, user, Date.now());
 
     return response;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 
 import { useRouter } from "next/navigation";
@@ -25,6 +25,20 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Set by components/common/SessionTimeout.tsx after an idle sign-out.
+  // Read from window (not useSearchParams) so the page needs no Suspense boundary.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reason") === "timeout") {
+      toast.info("You were signed out due to inactivity. Please log in again.", {
+        id: "session-timeout",
+        duration: 6000,
+        className: "!bg-transparent !text-foreground",
+      });
+      window.history.replaceState(null, "", "/login");
+    }
+  }, []);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
