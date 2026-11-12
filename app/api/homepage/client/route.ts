@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getHomepageData, getHomepageVersion, getSiteChrome } from "@/server/homepage";
+import { getHomepageData, getHomepageUpdatedAt, getHomepageVersion, getSiteChrome } from "@/server/homepage";
 import { isSwitcherLanguage, type HomepageData, type SiteChrome } from "@/types/homepage";
 
 // Public read for the jmt-frontend project (the Joy Maa Tara homepage), which
@@ -18,16 +18,19 @@ export interface HomepageClientResponse {
   data: HomepageData;
   chrome: SiteChrome;
   version: string;
+  /** ISO time the saved homepage last changed; null when none is saved (sitemap <lastmod>). */
+  updatedAt: string | null;
 }
 
 export async function GET(req: NextRequest) {
   const requested = req.nextUrl.searchParams.get("locale");
   const lang = isSwitcherLanguage(requested) ? requested : "en";
-  const [data, chrome, version] = await Promise.all([
+  const [data, chrome, version, updatedAt] = await Promise.all([
     getHomepageData(lang),
     getSiteChrome(lang),
     getHomepageVersion(),
+    getHomepageUpdatedAt(),
   ]);
-  const body: HomepageClientResponse = { data, chrome, version };
+  const body: HomepageClientResponse = { data, chrome, version, updatedAt };
   return NextResponse.json(body, { headers: { "Cache-Control": "no-store" } });
 }

@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 
 import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { ADMIN_ROLES, ROLES } from "@/app/lib/constants/role";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
@@ -247,6 +247,78 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
         return NextResponse.json(
             { success: false, message: "Failed to update user." },
+            { status: 500 }
+        );
+    }
+}
+
+/**
+ * DELETE /api/users/[id] — Super Admin only.
+ * Content authored by the removed user (posts, service pages, package blocks,
+ * JMT service pages) is reassigned to the Super Admin performing the delete,
+ * so nothing is lost and the required author foreign keys stay valid.
+ */
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+    try {
+        const userResult = await requireRole(req, [ROLES.SUPERADMIN]);
+        if (userResult instanceof NextResponse) {
+            return userResult;
+        }
+
+        const currentUser = userResult;
+        const { id } = await context.params;
+
+        if (!(typeof id === "string" && id.length > 0)) {
+            return NextResponse.json({
+                success: false,
+                message: "Invalid User ID format"
+            }, { status: 400 });
+        }
+
+        if (currentUser.id === id) {
+            return NextResponse.json({
+                success: false,
+                message: "You cannot delete your own account"
+            }, { status: 403 });
+        }
+
+        const targetUser = await prisma.user.findUnique({
+            where: { id },
+            select: { id: true, role: true },
+        });
+
+        if (!targetUser) {
+            return NextResponse.json({
+                success: false,
+                message: "User not found"
+            }, { status: 404 });
+        }
+
+        if (targetUser.role === ROLES.SUPERADMIN) {
+            return NextResponse.json({
+                success: false,
+                message: "Super Admin accounts cannot be deleted"
+            }, { status: 403 });
+        }
+
+        const reassign = { where: { authorId: id }, data: { authorId: currentUser.id } };
+        await prisma.$transaction([
+            prisma.post.updateMany(reassign),
+            prisma.servicePage.updateMany(reassign),
+            prisma.packageBlock.updateMany(reassign),
+            prisma.jmtServicePage.updateMany(reassign),
+            prisma.user.delete({ where: { id } }),
+        ]);
+
+        return NextResponse.json({
+            success: true,
+            message: "User deleted successfully"
+        }, { status: 200 });
+    } catch (error: any) {
+        console.error("Delete user error:", error);
+
+        return NextResponse.json(
+            { success: false, message: "Failed to delete user." },
             { status: 500 }
         );
     }

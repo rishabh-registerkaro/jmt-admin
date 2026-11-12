@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, ArrowUpDown, UserPlus, Eye, EyeOff } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, ChevronLeft, ChevronRight, ArrowUpDown, UserPlus, Eye, EyeOff, Trash2 } from "lucide-react";
+import { deleteUser } from "@/lib/apiCallingUser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,6 +77,13 @@ export default function UsersPage() {
 
   // Current logged-in user info
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  // Delete user state (Super Admin only)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const isSuperAdmin = currentUserRole === "superadmin";
+  const canDelete = (u: User) => isSuperAdmin && u.id !== currentUserId && u.role !== "superadmin";
 
   // Create user dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -166,7 +174,12 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers(1);
     axios.get("/api/auth/profile", { withCredentials: true })
-      .then((res) => { if (res.data.success) setCurrentUserRole(res.data.user.role); })
+      .then((res) => {
+        if (res.data.success) {
+          setCurrentUserRole(res.data.user.role);
+          setCurrentUserId(res.data.user.id);
+        }
+      })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -193,6 +206,26 @@ export default function UsersPage() {
       toast.error(msg, { closeButton: true, className: "!bg-transparent !text-foreground" });
     } finally {
       setCreateLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeleteLoading(true);
+    const res = await deleteUser(userToDelete.id);
+    setDeleteLoading(false);
+    if (res.success) {
+      toast.success(`${userToDelete.username} was deleted`, { closeButton: true, className: "!bg-transparent !text-foreground" });
+      if (viewUser?.id === userToDelete.id) {
+        setSheetOpen(false);
+        setViewUser(null);
+      }
+      setUserToDelete(null);
+      // Step back a page if we just removed the last row on this page
+      const page = users.length === 1 && pagination.currentPage > 1 ? pagination.currentPage - 1 : pagination.currentPage;
+      fetchUsers(page);
+    } else {
+      toast.error(res.message || "Failed to delete user", { closeButton: true, className: "!bg-transparent !text-foreground" });
     }
   };
 
@@ -364,6 +397,9 @@ export default function UsersPage() {
                 </TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Updated At</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Role</TableHead>
+                {isSuperAdmin && (
+                  <TableHead className="text-xs font-medium text-muted-foreground text-right">Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -393,9 +429,8 @@ export default function UsersPage() {
                 ))
               ) : users.length > 0 ? (
                 users.map((user) => (
-                  <>
+                  <React.Fragment key={user.id}>
                     <TableRow
-                      key={user.id}
                       className="hover:bg-muted/40 transition-colors cursor-pointer"
                       onClick={() => handleViewUser(user.id)}
                     >
@@ -416,13 +451,32 @@ export default function UsersPage() {
                           {formatRole(user.role || "")}
                         </span>
                       </TableCell>
+                      {isSuperAdmin && (
+                        <TableCell className="text-right">
+                          {canDelete(user) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Delete ${user.username}`}
+                              title="Delete user"
+                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setUserToDelete(user);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
-                  </>
+                  </React.Fragment>
                 ))
               ) : (
                 <TableRow className="hover:bg-transparent">
                   <TableCell
-                    colSpan={5}
+                    colSpan={isSuperAdmin ? 6 : 5}
                     className="text-center py-8 text-muted-foreground"
                   >
                     {search
@@ -547,12 +601,56 @@ export default function UsersPage() {
                     <div className="text-muted-foreground">Loading user details...</div>
                   </div>
                 ) : (
-                  <ViewUser user={viewUser} onRoleUpdate={() => fetchUsers(pagination.currentPage)} />
+                  <ViewUser
+                    user={viewUser}
+                    onRoleUpdate={() => fetchUsers(pagination.currentPage)}
+                    onDeleteRequest={(u) => setUserToDelete(u as User)}
+                  />
                 )}
               </>
             )}
           </SheetContent>
         </Sheet>
+
+        {/* Delete User Confirmation Dialog */}
+        <Dialog
+          open={!!userToDelete}
+          onOpenChange={(open) => {
+            if (!open && !deleteLoading) setUserToDelete(null);
+          }}
+        >
+          <DialogContent className="border sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Delete user?</DialogTitle>
+              <DialogDescription>
+                This permanently deletes{" "}
+                <span className="font-semibold text-foreground">{userToDelete?.username}</span>{" "}
+                ({userToDelete?.email}). Any posts or pages they authored will be reassigned to you.
+                This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUserToDelete(null)}
+                disabled={deleteLoading}
+                className="flex-1 cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteUser}
+                disabled={deleteLoading}
+                className="flex-1 cursor-pointer disabled:opacity-50"
+              >
+                {deleteLoading ? "Deleting..." : "Delete User"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Create User Dialog */}
         <Dialog open={createDialogOpen} onOpenChange={(open) => {

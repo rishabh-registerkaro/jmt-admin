@@ -29,20 +29,20 @@ export async function GET(req: NextRequest) {
       recentServices,
     ] = await Promise.all([
       prisma.user.count(),
-      prisma.servicePage.count(),
-      prisma.servicePage.count({ where: { status: "published" } }),
-      prisma.servicePage.count({ where: { status: "draft" } }),
+      prisma.jmtServicePage.count(),
+      prisma.jmtServicePage.count({ where: { status: "published" } }),
+      prisma.jmtServicePage.count({ where: { status: "draft" } }),
       prisma.post.count(),
       prisma.post.count({ where: { status: "published" } }),
       prisma.post.count({ where: { status: "draft" } }),
       prisma.lead.count(),
       prisma.lead.count({ where: { status: "new" } }),
-      prisma.servicePage.findMany({
+      prisma.jmtServicePage.findMany({
         select: {
           id: true,
           slug: true,
+          title: true,
           status: true,
-          content: true,
           updatedAt: true,
           author: { select: { id: true, username: true } },
         },

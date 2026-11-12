@@ -18,6 +18,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "JMT CMS Admin Panel",
   description: "JMT CMS Admin Panel",
+  // Every admin page, /login and /forgot-password included, is noindex.
+  robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 
 export default function RootLayout({

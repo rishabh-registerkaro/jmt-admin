@@ -21,11 +21,12 @@ import {
   changeUserPassword,
   ChangeUserPasswordPayload
 } from "@/lib/apiCallingUser";
-import { Shield, AlertCircle, ChevronDown, ChevronUp, Lock, Eye, EyeOff } from "lucide-react";
+import { Shield, AlertCircle, ChevronDown, ChevronUp, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
 
 interface ViewUserProps {
   user: User;
   onRoleUpdate?: (updatedUser: User) => void;
+  onDeleteRequest?: (user: User) => void;
 }
 
 const getRoleBadgeColor = (role: string) => {
@@ -56,7 +57,7 @@ const formatRole = (role: string) => {
           : "N/A";
 };
 
-export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
+export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUserProps) {
   const [displayedUser, setDisplayedUser] = useState<User>(user);
   const [selectedRole, setSelectedRole] = useState(user.role);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -710,6 +711,32 @@ export default function ViewUser({ user, onRoleUpdate }: ViewUserProps) {
           )}
         </div>
       )}
+
+      {/* Delete User - Super Admin only; cannot delete self or another Super Admin */}
+      {currentUserRole === "superadmin" &&
+        onDeleteRequest &&
+        currentUserId !== displayedUser.id &&
+        displayedUser.role !== "superadmin" && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              <h3 className="text-lg font-semibold text-foreground">Delete User</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Permanently removes this account. Any content they authored will be reassigned to you.
+            </p>
+            <div className="flex justify-end">
+              <Button
+                variant="destructive"
+                onClick={() => onDeleteRequest(displayedUser)}
+                className="cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete User
+              </Button>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

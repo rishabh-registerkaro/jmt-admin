@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Edit, Plus, Trash2, Search, View, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit, Plus, Trash2, Search, View, ChevronLeft, ChevronRight, Phone, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -42,6 +42,25 @@ import {
 } from "@/components/ui/dialog";
 import AddLeadForm from "@/components/common/AddLead";
 
+type LeadStatus = Lead["status"];
+const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "converted", "lost"];
+
+interface SourceOption {
+  source: string;
+  count: number;
+}
+
+/** First form answer as the lead's topic, and the remaining answers as "Label: value". */
+function splitFormData(formData: Lead["formData"]) {
+  const entries = Object.entries(formData ?? {}).filter(([, v]) => String(v ?? "").trim() !== "");
+  const [first, ...rest] = entries;
+  return {
+    topic: first ? String(first[1]) : "",
+    topicLabel: first ? first[0] : "",
+    details: rest.map(([k, v]) => `${k}: ${v}`),
+  };
+}
+
 interface PaginationInfo {
   currentPage: number;
   totalPages: number;
@@ -59,6 +78,9 @@ export default function LeadsPage() {
     "all" | "new" | "contacted" | "converted" | "lost"
   >("all");
   const [search, setSearch] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [sources, setSources] = useState<SourceOption[]>([]);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 1,
@@ -85,6 +107,9 @@ export default function LeadsPage() {
       if (status !== "all") {
         params.append("status", status);
       }
+      if (sourceFilter !== "all") {
+        params.append("source", sourceFilter);
+      }
       
       const res = await fetch(`/api/lead?${params.toString()}`);
       const data = await res.json();
@@ -94,6 +119,9 @@ export default function LeadsPage() {
         setFilteredLeads(data.leads);
         if (data.pagination) {
           setPagination(data.pagination);
+        }
+        if (Array.isArray(data.sources)) {
+          setSources(data.sources);
         }
       } else {
         toast.error(data.message || "Failed to fetch leads", {
@@ -112,15 +140,11 @@ export default function LeadsPage() {
     }
   };
 
+  // Runs on mount and whenever a filter changes.
   useEffect(() => {
     fetchLeads(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
-
-  useEffect(() => {
-    fetchLeads(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status, sourceFilter]);
 
   // Filter leads based on search and status
   useEffect(() => {
@@ -159,6 +183,57 @@ export default function LeadsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  /** Two short lines for the Created column: "Today" / "12 Nov 2026" and the time. */
+  const formatDateParts = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+    const day = sameDay(date, now)
+      ? "Today"
+      : sameDay(date, yesterday)
+        ? "Yesterday"
+        : date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    return { day, time };
+  };
+
+  /** Inline status change from the table; reverts if the save fails. */
+  const handleStatusChange = async (lead: Lead, next: LeadStatus) => {
+    if (next === lead.status) return;
+    const previous = lead.status;
+    const apply = (value: LeadStatus) =>
+      setLeads((all) => all.map((l) => (l._id === lead._id ? { ...l, status: value } : l)));
+    apply(next);
+    setUpdatingId(lead._id);
+    try {
+      const res = await fetch(`/api/lead/${lead._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to update status");
+      }
+      toast.success(`Marked as ${next.charAt(0).toUpperCase() + next.slice(1)}`);
+      // Under a status filter the lead no longer belongs on this page.
+      if (status !== "all") fetchLeads(pagination.currentPage);
+    } catch (error) {
+      apply(previous);
+      toast.error(error instanceof Error ? error.message : "Failed to update status");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const openView = (lead: Lead) => {
+    setViewLead(lead);
+    setEditLead(null);
+    setDrawerOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -325,6 +400,21 @@ export default function LeadsPage() {
             </SelectContent>
           </Select>
 
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-full sm:w-[220px] rounded-lg border" title={sourceFilter === "all" ? undefined : sourceFilter}>
+              <SelectValue placeholder="All Sources" />
+            </SelectTrigger>
+            <SelectContent className="max-w-[min(90vw,420px)]">
+              <SelectItem value="all">All Sources</SelectItem>
+              {sources.map(({ source, count }) => (
+                <SelectItem key={source} value={source}>
+                  <span className="truncate">{source}</span>
+                  <span className="ml-1 text-muted-foreground">({count})</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto">
@@ -351,18 +441,24 @@ export default function LeadsPage() {
           </Dialog>
         </div>
 
-        {/* Leads Table */}
-        <div className="rounded-lg border bg-card p-4 sm:p-6">
-          <Table>
+        {/* Leads Table — 5 columns with capped widths so it fits without
+            sideways scrolling; Actions stays pinned right if the screen is narrow. */}
+        <div className="rounded-lg border bg-card p-2 sm:p-4">
+          <Table className="min-w-[760px] table-fixed">
+            <colgroup>
+              <col className="w-[28%]" />
+              <col />
+              <col className="w-[132px]" />
+              <col className="w-[112px]" />
+              <col className="w-[116px]" />
+            </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">Name/Email</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Phone</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Topic</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Lead</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Topic / Source</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Source</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Created</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-center">
+                <TableHead className="sticky right-0 z-10 bg-card text-xs font-medium text-muted-foreground text-center">
                   Actions
                 </TableHead>
               </TableRow>
@@ -371,35 +467,23 @@ export default function LeadsPage() {
               {loading ? (
                 // Skeleton loading rows
                 Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow
-                    key={`skeleton-${index}`}
-                    className="hover:bg-transparent"
-                  >
+                  <TableRow key={`skeleton-${index}`} className="hover:bg-transparent">
                     <TableCell>
-                      <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-28 mb-2"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-40"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-32 mb-2"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-48"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-muted rounded animate-pulse w-28"></div>
+                      <div className="h-7 bg-muted rounded animate-pulse w-24"></div>
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-16 mb-2"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-12"></div>
                     </TableCell>
-                    <TableCell>
-                      <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="h-6 bg-muted rounded-full animate-pulse w-20"></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="h-4 bg-muted rounded animate-pulse w-16"></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="h-4 bg-muted rounded animate-pulse w-28"></div>
-                    </TableCell>
-                    <TableCell>
+                    <TableCell className="sticky right-0 bg-card">
                       <div className="flex justify-center gap-2">
                         <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
                         <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
@@ -408,90 +492,156 @@ export default function LeadsPage() {
                   </TableRow>
                 ))
               ) : filteredLeads.length > 0 ? (
-                filteredLeads.map((lead) => (
-                  <TableRow
-                    key={lead._id}
-                    className="hover:bg-muted/40 transition-colors"
-                  >
-                    <TableCell className="text-foreground-light font-medium">
-                      <div className="flex flex-col">
-                        <span className="text-foreground-light text-sm font-medium">
-                          {lead.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground mt-0.5">
-                          {lead.email}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground-light">
-                      {lead.phoneNo}
-                    </TableCell>
-                    <TableCell className="text-foreground-light">
-                      {Object.values(lead.formData ?? {})[0] || "-"}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor( lead.status )}`}
-                      >
-                        {lead.status.charAt(0).toUpperCase() +
-                          lead.status.slice(1)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-foreground-light text-sm">
-                      {lead.leadSource || "Website"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatDate(lead.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setViewLead(lead);
-                            setEditLead(null);
-                            setDrawerOpen(true);
-                          }}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                        >
-                          <View className="h-4 w-4" />
-                        </Button>
+                filteredLeads.map((lead) => {
+                  const { topic, topicLabel, details } = splitFormData(lead.formData);
+                  const source = lead.leadSource || "Website";
+                  const { day, time } = formatDateParts(lead.createdAt);
+                  return (
+                    <TableRow
+                      key={lead._id}
+                      onClick={() => openView(lead)}
+                      className="group cursor-pointer hover:bg-muted/40 transition-colors"
+                    >
+                      {/* Lead: name, email, phone */}
+                      <TableCell className="align-top whitespace-normal">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="truncate text-sm font-medium text-foreground-light" title={lead.name}>
+                            {lead.name}
+                          </span>
+                          {lead.email && (
+                            <a
+                              href={`mailto:${lead.email}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                              title={lead.email}
+                            >
+                              <Mail className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{lead.email}</span>
+                            </a>
+                          )}
+                          {lead.phoneNo && (
+                            <a
+                              href={`tel:${lead.phoneNo}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                              title={`Call ${lead.phoneNo}`}
+                            >
+                              <Phone className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{lead.phoneNo}</span>
+                            </a>
+                          )}
+                        </div>
+                      </TableCell>
 
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditLead(lead);
-                            setViewLead(null);
-                            setDrawerOpen(true);
-                          }}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                      {/* Topic (first form answer), the other answers, then the source page */}
+                      <TableCell className="align-top whitespace-normal">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span
+                            className="line-clamp-2 break-words text-sm text-foreground-light"
+                            title={topic ? `${topicLabel}: ${topic}` : undefined}
+                          >
+                            {topic || <span className="text-muted-foreground">—</span>}
+                          </span>
+                          {details.length > 0 && (
+                            <span
+                              className="line-clamp-2 break-words text-xs text-muted-foreground"
+                              title={details.join("\n")}
+                            >
+                              {details.join(" · ")}
+                            </span>
+                          )}
+                          <span
+                            className="line-clamp-2 break-words text-xs italic text-muted-foreground/80"
+                            title={source}
+                          >
+                            {source}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Status: change it right here */}
+                      <TableCell className="align-top" onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value={lead.status}
+                          onValueChange={(value) => handleStatusChange(lead, value as LeadStatus)}
+                          disabled={updatingId === lead._id}
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(lead._id)}
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                          <SelectTrigger
+                            className={`!h-7 w-[118px] rounded-full px-2.5 text-xs font-medium ${getStatusColor(lead.status)}`}
+                            aria-label={`Status for ${lead.name}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LEAD_STATUSES.map((s) => (
+                              <SelectItem key={s} value={s} className="text-xs">
+                                {s.charAt(0).toUpperCase() + s.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Created: short date + time, full timestamp on hover */}
+                      <TableCell className="align-top whitespace-nowrap" title={formatDate(lead.createdAt)}>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm text-foreground-light">{day}</span>
+                          <span className="text-xs text-muted-foreground">{time}</span>
+                        </div>
+                      </TableCell>
+
+                      {/* Actions: pinned to the right edge */}
+                      <TableCell
+                        className="sticky right-0 align-top bg-card group-hover:bg-muted transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            title="View"
+                            aria-label="View lead"
+                            onClick={() => openView(lead)}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          >
+                            <View className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            title="Edit"
+                            aria-label="Edit lead"
+                            onClick={() => {
+                              setEditLead(lead);
+                              setViewLead(null);
+                              setDrawerOpen(true);
+                            }}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            title="Delete"
+                            aria-label="Delete lead"
+                            onClick={() => handleDelete(lead._id)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell
-                    colSpan={9}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {search || status !== "all"
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    {search || status !== "all" || sourceFilter !== "all"
                       ? "No leads found matching your filters"
                       : "No leads found"}
                   </TableCell>

@@ -289,6 +289,12 @@ const ROWS: readonly Row[] = [
   ["(optional)", "(ঐচ্ছিক)", "(वैकल्पिक)"],
   ["Sending…", "পাঠানো হচ্ছে…", "भेजा जा रहा है…"],
   ["Request received", "অনুরোধ পেয়েছি", "अनुरोध मिल गया"],
+  ["Thanks for your response!", "আপনার সাড়ার জন্য ধন্যবাদ!", "आपके जवाब के लिए धन्यवाद!"],
+  [
+    "We've received your requirement and will connect with you shortly.",
+    "আপনার চাহিদা আমরা পেয়েছি, খুব শীঘ্রই আপনার সঙ্গে যোগাযোগ করব।",
+    "आपकी ज़रूरत हमें मिल गई है, हम जल्द ही आपसे संपर्क करेंगे।",
+  ],
   [
     "Thanks — your requirement is in. The owner will call you back within 24 hours.",
     "ধন্যবাদ — আপনার চাহিদা পেয়েছি। ২৪ ঘণ্টার মধ্যে মালিক নিজে ফোন করবেন।",

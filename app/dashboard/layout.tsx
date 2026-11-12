@@ -23,7 +23,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <span className="text-sm font-semibold">JMT CMS</span>
           <ThemeToggle className="ml-auto" />
         </header>
-        <main className="flex-1 w-full min-w-0 overflow-auto">
+        {/* overflow-x-clip (not overflow-auto): stops sideways page scroll on phones
+            without becoming a scroll container, so the editors' sticky Save bars stick. */}
+        <div className="flex-1 w-full min-w-0 overflow-x-clip">
           {loading ? (
             <div className="min-h-screen w-full bg-background p-4 sm:p-6">
               <div className="mx-auto max-w-7xl space-y-6">
@@ -68,7 +70,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ) : (
             <AccessDenied />
           )}
-        </main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

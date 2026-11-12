@@ -34,7 +34,7 @@ interface DashboardStats {
     slug: string;
     status: "draft" | "published";
     updatedAt: string;
-    content?: { badge?: string; titleAccent?: string };
+    title?: string;
     author?: { username: string };
   }>;
 }
@@ -255,7 +255,7 @@ export default function Dashboard() {
               {stats.recentServices.map((svc) => (
                 <li key={svc._id}>
                   <Link
-                    href={`/dashboard/services/update-service?slug=${svc.slug}`}
+                    href={`/dashboard/services/${svc._id}`}
                     className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-hidden"
                   >
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background">
@@ -263,7 +263,7 @@ export default function Dashboard() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">
-                        {svc.content?.badge || svc.slug}
+                        {svc.title || svc.slug}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         Updated {formatDate(svc.updatedAt)}

@@ -9,12 +9,58 @@ import { LEAD_FIELDS, type LeadField, type LeadFormState, type LeadFormValues } 
 
 export const LEAD_SOURCE = "Homepage — Request workers";
 
+/** Hidden fields with the page the form was filled on (path + document title). */
+export const PAGE_PATH_FIELD = "page_path";
+export const PAGE_TITLE_FIELD = "page_title";
+
+/**
+ * "Request workers — <page title> (<path>)" for the leads table's Source
+ * column, so the dashboard shows which page the form was sent from. Falls back
+ * to LEAD_SOURCE when the page is unknown. Kept under the column's 191 chars.
+ */
+export function leadSourceFor(rawPath: unknown, rawTitle: unknown): string {
+  const clean = (v: unknown, max: number) =>
+    typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "";
+  const path = clean(rawPath, 90);
+  // Drop the site-name suffix ("Site labour supply | Joy Maa Tara" → "Site labour supply").
+  const title = clean(rawTitle, 200).split(" | ")[0].trim().slice(0, 70);
+  if (!path.startsWith("/")) return LEAD_SOURCE;
+  const isHome = /^\/(?:(?:bn|hi|en)\/?)?$/.test(path);
+  const label = isHome ? "Homepage" : title || "Page";
+  return `Request workers — ${label} (${path})`;
+}
+
 /** Hidden field real visitors never fill; bots that do are silently dropped. */
 // Non-semantic on purpose: a name like "website" gets browser-autofilled, which
 // would make real visitors trip the honeypot and silently lose their lead.
 export const HONEYPOT_FIELD = "jmt_hp_ref";
 
+/** Hidden field with the page language ("en" | "bn" | "hi"), so the form's replies match it. */
+export const LOCALE_FIELD = "locale";
+
 export const MAX_HEADCOUNT = 5000;
+
+// ── Service pages ────────────────────────────────────────────────────────────
+// On a service page the form also sends the roles ticked in "Roles we supply",
+// one SERVICES_FIELD entry per role. The homepage form sends none. (Which page
+// the lead came from is already recorded by PAGE_PATH_FIELD / leadSourceFor.)
+export const SERVICES_FIELD = "services";
+/** Key the roles are saved under in the lead's formData (shown in the dashboard). */
+export const SERVICES_REQUESTED_LABEL = "Services requested";
+const MAX_SERVICES = 40;
+const MAX_SERVICE_LENGTH = 80;
+
+/** Role names from the form, cleaned and de-duplicated, in the order sent. */
+export function readLeadServices(formData: FormData): string[] {
+  const services: string[] = [];
+  for (const raw of formData.getAll(SERVICES_FIELD)) {
+    if (typeof raw !== "string") continue;
+    const name = raw.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, MAX_SERVICE_LENGTH);
+    if (name && !services.includes(name)) services.push(name);
+    if (services.length >= MAX_SERVICES) break;
+  }
+  return services;
+}
 
 const LIMITS: Record<LeadField, number> = {
   companyName: 150,

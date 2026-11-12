@@ -13,10 +13,55 @@ Two public sites read content from it:
 
 | Site | Repo / location | How it talks to this API |
 |---|---|---|
-| Joy Maa Tara homepage | [`jmt-frontend`](../jmt-frontend), port 3002 | `GET /api/homepage/client`, `GET /api/homepage/version`, `POST /api/lead/homepage` |
+| Joy Maa Tara website | [`jmt-frontend`](../jmt-frontend), port 3002 | `GET /api/homepage/client`, `/api/homepage/version`, `/api/jmt-services/client/*`, `/api/site-pages/client/*`, and `POST /api/lead/{homepage,contact,join}` |
 | Global Elite website | `PRODUCTION_URL` | `/api/*/client/*` routes (CORS allows `PRODUCTION_URL`) |
 
 After every content save, `app/lib/utils/revalidateFrontend.ts` calls `POST /api/revalidate` on **both** sites, so edits show up right away.
+
+### Where each Joy Maa Tara page is edited
+
+| Page on jmt-frontend | Dashboard | Table | API (dashboard / public) |
+|---|---|---|---|
+| `/` homepage, plus the navbar, footer and contact details on every page | **Homepage** | `home_pages` | `/api/homepage` / `/api/homepage/client` |
+| `/service/<slug>` | **Services** (`/dashboard/services`, one editor per page at `/dashboard/services/<id>`) | `jmt_service_pages` | `/api/jmt-services` / `/api/jmt-services/client/<slug>` |
+| `/about` | **About Us** | `jmt_site_pages` (key `about`) | `/api/site-pages/about` / `/api/site-pages/client/about` |
+| `/contact` | **Contact** | `jmt_site_pages` (key `contact`) | `/api/site-pages/contact` / `/api/site-pages/client/contact` |
+| `/join-our-crew` | **Join Our Crew** | `jmt_site_pages` (key `join-our-crew`) | `/api/site-pages/join-our-crew` / `/api/site-pages/client/join-our-crew` |
+
+About Us, Contact and Join Our Crew are top-level sidebar items, next to Menus.
+
+> **Changes to the dashboard URLs**
+> - **Services** (`/dashboard/services`) now lists the Joy Maa Tara service pages: create a page, import a built-in one, edit, delete. "Add New Service" opens the same list with the new-page form open. The old `/dashboard/jmt-services` pages and the Global Elite service editor (`/dashboard/services/update-service`) were removed. The Global Elite service API routes are unchanged.
+> - The sidebar's **About Us** and **Contact** items used to open the **Global Elite** editors (`/dashboard/about`, `/dashboard/contact`, tables `about_pages` and `contact_pages`). They now open the Joy Maa Tara pages. The Global Elite editors and their data are unchanged and still reachable by URL.
+
+### Preview (unsaved edits)
+
+The Homepage, Services and site page editors have a **Preview** button. It opens the real jmt-frontend page in a new tab with your **unsaved** changes, and that tab follows your edits as you type (within a couple of seconds). Only **Save changes** publishes to the live site.
+
+1. The editor sends the draft to `POST /api/preview` (`hooks/useDraftPreview.ts`). It goes through the same normalizers as Save and is kept **in this server's memory** for 2 hours (`app/lib/server/previewStore.ts`). Nothing is written to the database.
+2. The tab opens `{NEXT_PUBLIC_JMT_FRONTEND_URL}/api/preview?token=…&path=…`, which turns on Next.js Draft Mode for that browser only.
+3. jmt-frontend reads the draft server-to-server from `GET /api/preview/<token>`, guarded by `REVALIDATE_SECRET`, so drafts can't be read from a browser.
+
+Because drafts live in memory, they're lost on restart, and with several jmt-admin instances (including serverless hosts such as Vercel) a preview can hit an instance that doesn't have the draft. The preview tab then shows the live page with a "preview expired" bar. Click Preview again.
+
+### Leads
+
+Leads from every Joy Maa Tara form (homepage, service pages, Contact, Join our crew) land in **Dashboard → Leads**.
+
+- **Source** says which form and page a lead came from, for example `Request workers — Site labour supply (/service/site-service-supply)`. The list has a **Source** filter with a count per source.
+- Leads from a service page also list the roles the visitor ticked, under **Services requested**.
+- **Spam limits** (`app/lib/utils/leadThrottle.ts`): at most 5 submissions per IP per 10 minutes (in memory, per server instance) and 3 per email or phone number per 10 minutes (checked in MySQL, so it holds across instances). Over the limit the API answers `429`. A signed-in admin using **Add Lead** is exempt. This doesn't stop a botnet that rotates both IPs and identities; that would need a shared store or a CAPTCHA.
+
+### How the site page editor works
+
+About, Contact and Join our crew share one generic editor (`components/site-page-editor/ContentEditor.tsx`). It has no hand-written form. Instead, it builds the form from each page's **bundled copy** (`data/about.ts`, `data/contactPage.ts`, `data/joinPage.ts`, which are copies of jmt-frontend's `data/` files):
+
+- one card per section, with fields for text, the shorter phone versions, orange-accent headings, images (Media Library or upload, with the size read automatically), icon dropdowns, switches and lists you can add to, remove from and reorder;
+- **Reset section to default** per card, and **Reset page to default**, which deletes the saved document so the page goes back to the bundled copy.
+
+The saved document is one JSON column. On every save and read it's merged over the bundled copy (`lib/sitePages/mergeContent.ts`, an identical copy of the jmt-frontend file). Unknown keys are dropped, and values of the wrong type or unsafe image URLs fall back to the default. Adding a field to the bundled copy therefore makes it editable without a schema change.
+
+Per-page settings (section titles and hints, icon choices, and **locked** fields that the editor hides and the merge never changes) live in `app/lib/content/site-pages.ts`. Locked fields must match `SITE_PAGE_LOCKED` in jmt-frontend's `lib/sitePages/registry.ts`. To make another jmt-frontend page editable, see "Making another page editable" in the jmt-frontend README.
 
 ---
 
@@ -53,6 +98,8 @@ npm run seed:admin -- --email you@example.com --username admin --password "a-str
 npm run seed:homepage       # fills the homepage editor with the default content
 ```
 
+The About, Contact and Join our crew pages need no seeding. Until they're saved from the dashboard, the website shows their bundled copy, and the editor opens pre-filled with it.
+
 Public signup is disabled, so `seed:admin` is how you get the first login. After that, create more users from **Dashboard → Users**.
 
 ### Run
@@ -73,10 +120,10 @@ To see the public homepage too, run [`jmt-frontend`](../jmt-frontend) on port 30
 |---|---|---|
 | `DATABASE_URL` | **yes** | MySQL connection string: `mysql://USER:PASSWORD@HOST:3306/DB?connection_limit=5`. URL-encode special characters in the password (`@` → `%40`, `#` → `%23`). |
 | `JWT_SECRET` | **yes** | Signs login tokens. Use a long random string (`openssl rand -hex 32`). |
-| `REVALIDATE_SECRET` | for the frontends | Shared secret. It must be the **same value** in `jmt-frontend/.env`. It guards cache refreshes, and it lets the homepage lead form's per-visitor rate limit see real visitor IPs. |
+| `REVALIDATE_SECRET` | for the frontends | Shared secret. It must be the **same value** in `jmt-frontend/.env`. It guards cache refreshes and draft previews, and it lets the homepage lead form's per-visitor rate limit see real visitor IPs. |
 | `PRODUCTION_URL` | for Global Elite | Origin of the Global Elite website. Used for CORS and cache refreshes. |
 | `JMT_FRONTEND_URL` | for jmt-frontend | Origin of jmt-frontend (default `http://localhost:3002`). Cache-refresh calls go here. |
-| `NEXT_PUBLIC_JMT_FRONTEND_URL` | for jmt-frontend | The same URL, for the homepage editor's "View live" link. It's baked in at **build** time. |
+| `NEXT_PUBLIC_JMT_FRONTEND_URL` | for jmt-frontend | The same URL, for the editors' "View live" and **Preview** links. It's baked in at **build** time. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | for email | SMTP settings. Gmail: use `smtp.gmail.com:587` and an [App Password](https://myaccount.google.com/apppasswords), not the normal password. |
 | `ADMIN_NOTIFY_EMAIL`, `NOTIFY_CC_EMAIL` | for lead alerts | Where new-lead emails go. The CC is optional. |
 | `HOSTINGER_FTP_HOST`, `HOSTINGER_FTP_USER`, `HOSTINGER_FTP_PASS`, `HOSTINGER_FTP_PORT` | for uploads | FTP account from Hostinger → Files → FTP Accounts. The host has no `ftp://` prefix. |
@@ -125,28 +172,42 @@ app/
   api/                 REST API (route handlers)
     */client/*         public read endpoints used by the websites (CORS)
     homepage/          homepage CMS: admin CRUD, /client bundle, /version
-    lead/homepage/     lead form endpoint for jmt-frontend
+    jmt-services/      JMT service pages: admin CRUD, /client/<slug>
+    site-pages/        JMT About / Contact / Join our crew: [key] (GET, PUT, DELETE = reset), /client/[key]
+    lead/              form endpoints for jmt-frontend (homepage, contact, join)
+    preview/           POST: store an unsaved draft; [token]: draft read by jmt-frontend (shared secret)
   dashboard/           admin UI pages (one folder per section)
+    services/          JMT service pages: list (services-list.tsx) and editor ([id])
+    site-pages/[key]/  About / Contact / Join Our Crew editor
+  robots.ts            Disallow: / (the admin is never indexed)
   login/ forgot-password/ signup/
   lib/
     config/            Prisma client (db.ts), email (SMTP)
     constants/         roles
     content/           default content and templates for each CMS section
-    utils/             auth, CORS, revalidation, serialization, media helpers
+                       (site-pages.ts: registry of the About / Contact / Join pages)
+    server/            shared helpers for the JMT service and site page routes, previewStore.ts (drafts)
+    utils/             auth, CORS, revalidation, serialization, media helpers, leadThrottle.ts (spam limits)
   types/               dashboard types
 components/
   ui/                  shadcn/ui primitives
   common/              shared dashboard components (sidebar, editor, media picker, …)
-  homepage-editor/     section editors for /dashboard/homepage
-hooks/                 React hooks (route permissions, mobile)
+  homepage-editor/     section editors for /dashboard/homepage (their field components are reused)
+  jmt-service-editor/  section editors for the service pages
+  site-page-editor/    generic editor for About Us, Contact and Join Our Crew
+hooks/                 React hooks (route permissions, mobile, useDraftPreview for the Preview button)
 lib/                   axios API clients used by the dashboard
 lib/homepage/          homepage view-model builder (shared with jmt-frontend)
+lib/service/           service page normalizer (shared with jmt-frontend)
+lib/sitePages/         mergeContent.ts: saved site page over bundled copy (shared with jmt-frontend)
 server/homepage.ts     cached homepage reads for GET /api/homepage/client
-types/ data/ utils/    homepage types, fallback content, lead-form rules (shared with jmt-frontend)
+types/ data/ utils/    types, bundled default content, form rules (shared with jmt-frontend)
 prisma/                schema.prisma and seed scripts
 scripts/               maintenance scripts (SMTP test)
-public/homepage/       bundled homepage images (for the editor previews)
+public/                bundled default images for the editor previews (homepage/, service/, about/, join/, contact/);
+                       proxy.ts lets them through without a login
 proxy.ts               auth gate: redirects to /login when not signed in
+next.config.ts         security headers (noindex, HSTS, no framing), Vercel production env check
 ```
 
 ### Files shared with jmt-frontend
@@ -158,8 +219,12 @@ These files have **identical copies** in both repos (marked `SHARED FILE`). When
 - `types/homepage.ts`
 - `data/homepageFallback.ts`
 - `data/homepageTranslations.ts`
-- `utils/leadForm.ts`
-- `public/homepage/*`
+- `utils/leadForm.ts` (also defines the lead form's hidden page and services fields), `utils/contactForm.ts`, `utils/joinForm.ts`
+- `lib/service/normalizeServicePage.ts`, `data/services/*`, `types/service.ts`
+- `lib/sitePages/mergeContent.ts`
+- `data/about.ts`, `data/contactPage.ts`, `data/joinPage.ts`, `types/about.ts`, which come **from** jmt-frontend (edit them there first)
+- `TOKEN_PATTERN` in `app/lib/server/previewStore.ts` must match `PREVIEW_TOKEN_PATTERN` in jmt-frontend's `lib/preview.ts`
+- `public/homepage/*`, plus the photos in `public/about/` and `public/join/` and `public/contact/chip-*.svg`
 
 ---
 
@@ -181,8 +246,11 @@ These files have **identical copies** in both repos (marked `SHARED FILE`). When
 6. **Run the smoke tests after deploying:**
    - `/login` signs in.
    - Saving in **Dashboard → Homepage** shows up on jmt-frontend within a few seconds.
+   - Saving **About Us**, **Contact** or **Join Our Crew** in the dashboard shows up on its page.
+   - **Preview** in an editor opens the site with the unsaved change and a preview bar.
    - An image upload in **Dashboard → Media** works.
-   - A test lead from the homepage form appears in **Dashboard → Leads** and sends the alert email.
+   - A test lead from the homepage form appears in **Dashboard → Leads** with its page in **Source**, and sends the alert email.
+   - `/robots.txt` answers `Disallow: /`.
 
 ### Node host (e.g. Hostinger Node.js app)
 
@@ -196,6 +264,14 @@ npm start          # listens on port 3000
 - Use Node 20.9 or newer.
 - `next.config.ts` pins `experimental.cpus: 2`. Hostinger containers report the host's full CPU count, and without the pin the build crashes while spawning workers.
 - If the host gives you a different port, change `-p 3000` in the `start` script, or put a reverse proxy in front.
+
+### Vercel
+
+- Import the repo and add the environment variables in **Project → Settings → Environment Variables** before the first build.
+- A **production** build fails on purpose if `DATABASE_URL`, `JWT_SECRET`, `REVALIDATE_SECRET`, `JMT_FRONTEND_URL` or `NEXT_PUBLIC_JMT_FRONTEND_URL` is missing, or if any of them except `DATABASE_URL` points at localhost (`next.config.ts`). Preview builds aren't checked.
+- Vercel rejects request bodies over 4.5 MB, so uploads are capped at **4 MB** there (25 MB elsewhere). Compress large images first.
+- The database must accept connections from outside (Hostinger → **Remote MySQL**). Vercel's IPs change, so that usually means allowing any host (`%`). Keep `connection_limit=5`.
+- The lead IP limit and draft previews are in memory, so on Vercel they are per function instance (best effort). The per-email/phone lead limit is in MySQL and always applies.
 
 ### Docker
 
@@ -230,3 +306,8 @@ If `prisma/schema.prisma` changed, preview the change and apply it with `npm run
 - **Login works locally but loops back to `/login` in production.** The site is served over plain HTTP, so the browser drops the `Secure` auth cookie. Serve it over HTTPS.
 - **The "View live" button opens localhost in production.** `NEXT_PUBLIC_JMT_FRONTEND_URL` wasn't set at build time. Set it and rebuild.
 - **Homepage edits don't show on jmt-frontend.** Check that `JMT_FRONTEND_URL` points at it and that `REVALIDATE_SECRET` matches in both `.env` files.
+- **About Us / Contact / Join Our Crew says "out-of-date database client", or `/api/site-pages/*` returns 500.** The `jmt_site_pages` table or the Prisma client is missing. Run `npm run db:push` (it only adds that table), stop the dev server, run `npx prisma generate`, and start it again.
+- **The preview tab says the preview expired.** The draft is older than 2 hours, the server restarted, or the request reached another instance. Click **Preview** again. If it never works, check that `REVALIDATE_SECRET` matches in both apps.
+- **A form says "Too many submissions".** The spam limit was hit (see [Leads](#leads)). It clears after 10 minutes.
+- **An upload fails with "File too large" on Vercel.** The limit there is 4 MB. Resize the image first.
+- **`npm run typecheck` reports missing `app/dashboard/jmt-services/...` modules.** Those are stale generated types in `.next/` from removed pages. Delete the `.next` folder and run it again.

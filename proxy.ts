@@ -50,6 +50,10 @@ export const config = {
     // is redirected to /login and the browser receives HTML instead of a PNG.
     // `homepage/` holds the public homepage's static images (public/homepage).
     // `service/` holds the service page default photos (public/service), shown in editor previews.
-    "/((?!_next|api|homepage/|service/|favicon.ico|icon.png|apple-icon.png).*)",
+    // `about/`, `join/` and `contact/` hold the site pages' default photos and icons (copies of
+    // jmt-frontend/public), shown in the Website pages editor previews.
+    // robots.txt must reach crawlers (app/robots.ts: Disallow /) instead of
+    // being redirected to /login.
+    "/((?!_next|api|homepage/|service/|about/|join/|contact/|favicon.ico|icon.png|apple-icon.png|robots.txt).*)",
   ],
 };

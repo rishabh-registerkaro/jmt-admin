@@ -99,3 +99,9 @@ export const jmtServiceTags = (...slugs: string[]) => [
   "jmt-service-list",
   ...slugs.filter(Boolean).map((slug) => `jmt-service-${slug}`),
 ];
+
+/**
+ * Cache tag of a Joy Maa Tara site page (About, Contact, Join our crew) —
+ * jmt-frontend lib/sitePages/registry.ts → sitePageTag.
+ */
+export const jmtSitePageTags = (...keys: string[]) => keys.filter(Boolean).map((key) => `jmt-page-${key}`);

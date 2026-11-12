@@ -5,7 +5,7 @@
 
 import { useId, type ReactNode } from "react";
 import * as Collapsible from "@radix-ui/react-collapsible";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HomeLinkValue } from "@/app/lib/content/home-content";
 
@@ -18,7 +18,6 @@ export const itemCardCls = "rounded-lg border bg-muted/40 p-4 space-y-3";
 const labelCls = "text-sm font-medium text-foreground";
 const hintCls = "text-xs text-muted-foreground";
 const addBtnCls = "text-foreground-light hover:text-foreground";
-const iconBtnCls = "h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30";
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -137,15 +136,8 @@ export function AddButton({ onClick, label, disabled }: { onClick: () => void; l
   );
 }
 
-function move<T>(items: T[], from: number, to: number): T[] {
-  const next = [...items];
-  const [item] = next.splice(from, 1);
-  next.splice(to, 0, item);
-  return next;
-}
-
 /**
- * Repeatable list of cards with reorder / remove controls.
+ * Repeatable list of cards with a remove control.
  * `render` receives the item plus an `update(patch)` helper.
  */
 export function ListEditor<T>({
@@ -175,28 +167,6 @@ export function ListEditor<T>({
           <div className="flex items-center justify-between gap-2">
             <span className="truncate text-sm font-medium text-foreground-light">{itemLabel(item, index)}</span>
             <div className="flex shrink-0 items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                title="Move up"
-                className={iconBtnCls}
-                disabled={index === 0}
-                onClick={() => onChange(move(items, index, index - 1))}
-              >
-                <ArrowUp className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                title="Move down"
-                className={iconBtnCls}
-                disabled={index === items.length - 1}
-                onClick={() => onChange(move(items, index, index + 1))}
-              >
-                <ArrowDown className="h-4 w-4" />
-              </Button>
               <Button
                 type="button"
                 variant="ghost"
@@ -267,7 +237,7 @@ export function StringListEditor({
   );
 }
 
-/** Pill switch used for "show this section on the homepage". */
+/** Pill switch (used for the language switcher settings). */
 export function Toggle({
   checked,
   onChange,
@@ -300,15 +270,13 @@ export function Toggle({
   );
 }
 
-/** Collapsible section card; optional visibility switch in the header. */
+/** Collapsible section card. */
 export function SectionCard({
   icon: Icon,
   title,
   hint,
   open,
   onToggle,
-  enabled,
-  onEnabledChange,
   children,
 }: {
   icon: React.ElementType;
@@ -316,18 +284,11 @@ export function SectionCard({
   hint?: string;
   open: boolean;
   onToggle: () => void;
-  enabled?: boolean;
-  onEnabledChange?: (enabled: boolean) => void;
   children: ReactNode;
 }) {
-  const hidden = enabled === false;
   return (
     <Collapsible.Root open={open} onOpenChange={onToggle}>
-      <div
-        className={`overflow-hidden rounded-lg border bg-card ${
-          hidden ? "border-border opacity-70" : "border-border"
-        }`}
-      >
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         <div className="flex items-center gap-3 pr-4 hover:bg-muted/50">
           <Collapsible.Trigger asChild>
             <button type="button" className="flex min-w-0 flex-1 items-center gap-3 p-4 text-left">
@@ -343,9 +304,6 @@ export function SectionCard({
               </div>
             </button>
           </Collapsible.Trigger>
-          {onEnabledChange && enabled !== undefined && (
-            <Toggle checked={enabled} onChange={onEnabledChange} label={`Show ${title} section`} />
-          )}
         </div>
         <Collapsible.Content>
           <div className="space-y-4 border-t border-border p-4 sm:px-6 sm:pb-6">{children}</div>
