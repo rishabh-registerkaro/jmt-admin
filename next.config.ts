@@ -1,16 +1,29 @@
 import type { NextConfig } from "next";
 
-// Fail a Vercel *production* build that is missing required settings, or that
-// would bake "http://localhost:3002" into the dashboard's "View live" links
-// (NEXT_PUBLIC_* values are inlined at build time). Previews/local unaffected.
+// Check a Vercel *production* build's settings. Previews/local unaffected.
+//  • Secrets the admin cannot run without → fail the build.
+//  • Frontend URLs → only warn. The code falls back to http://localhost:3002,
+//    so a missing value just breaks "View live" links and cache refreshes
+//    (NEXT_PUBLIC_* values are inlined at build time — rebuild after setting).
 if (process.env.VERCEL_ENV === "production") {
-  const required = ["DATABASE_URL", "JWT_SECRET", "REVALIDATE_SECRET", "JMT_FRONTEND_URL", "NEXT_PUBLIC_JMT_FRONTEND_URL"];
-  const bad = required.filter((name) => {
+  const isBad = (name: string, allowLocalhost = false) => {
     const value = process.env[name] ?? "";
-    return !value.trim() || (name !== "DATABASE_URL" && /localhost|127\.0\.0\.1/.test(value));
-  });
-  if (bad.length > 0) {
-    throw new Error(`[next.config] Production build is missing or has localhost values for: ${bad.join(", ")}`);
+    return !value.trim() || (!allowLocalhost && /localhost|127\.0\.0\.1/.test(value));
+  };
+
+  const missingSecrets = ["DATABASE_URL", "JWT_SECRET", "REVALIDATE_SECRET"].filter((name) =>
+    isBad(name, name === "DATABASE_URL"),
+  );
+  if (missingSecrets.length > 0) {
+    throw new Error(`[next.config] Production build is missing or has localhost values for: ${missingSecrets.join(", ")}`);
+  }
+
+  const badUrls = ["JMT_FRONTEND_URL", "NEXT_PUBLIC_JMT_FRONTEND_URL"].filter((name) => isBad(name));
+  if (badUrls.length > 0) {
+    console.warn(
+      `[next.config] WARNING: ${badUrls.join(", ")} missing or set to localhost. ` +
+        `"View live" links and frontend cache refreshes will not work until they point at the live frontend URL.`,
+    );
   }
 }
 
