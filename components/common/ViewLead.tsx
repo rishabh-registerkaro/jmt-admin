@@ -2,12 +2,20 @@
 
 import { Lead } from "@/app/types/lead";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SERVICES_REQUESTED_LABEL } from "@/utils/leadForm";
 
 interface ViewLeadProps {
   lead: Lead;
 }
 
 export default function ViewLead({ lead }: ViewLeadProps) {
+  // Roles ticked on a service page — shown as chips, not in the generic list.
+  const { [SERVICES_REQUESTED_LABEL]: servicesValue, ...otherDetails } = lead.formData ?? {};
+  const services = String(servicesValue ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   return (
     <div className="space-y-6 p-4 mt-4">
       <div className="flex flex-col items-center text-center space-y-3">
@@ -42,13 +50,31 @@ export default function ViewLead({ lead }: ViewLeadProps) {
 
       {/* Form-specific fields — whatever {"Field Label": value} pairs the
           submitting form sent; new forms show up here automatically. */}
-      {lead.formData && Object.keys(lead.formData).length > 0 && (
+      {services.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-brand-link uppercase tracking-wide mb-2">
+            Services Requested ({services.length})
+          </h3>
+          <ul className="flex flex-wrap gap-2">
+            {services.map((service) => (
+              <li
+                key={service}
+                className="px-3 py-1 text-xs font-medium rounded-full border border-brand/30 bg-brand/10 text-brand-link"
+              >
+                {service}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {Object.keys(otherDetails).length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-brand-link uppercase tracking-wide mb-2">
             Form Details
           </h3>
           <div className="space-y-1">
-            {Object.entries(lead.formData).map(([label, value]) =>
+            {Object.entries(otherDetails).map(([label, value]) =>
               String(value ?? "").length > 60 ? (
                 <div key={label} className="flex flex-col gap-1.5 border-b border-border py-2">
                   <span className="text-muted-foreground text-sm">{label}</span>

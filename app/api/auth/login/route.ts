@@ -60,7 +60,13 @@ export async function POST(req: NextRequest) {
       path: "/"
     });
 
-    response.cookies.set("loggedIn", "true");
+    // UI hint only (components/common/Header.tsx reads it), so not httpOnly.
+    response.cookies.set("loggedIn", "true", {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
 
     return response;
 

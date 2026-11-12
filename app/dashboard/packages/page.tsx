@@ -65,7 +65,6 @@ export default function PackagesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   /** Slug of the block whose visibility is mid-flight, to disable its switch */
-  const [togglingSlug, setTogglingSlug] = useState<string | null>(null);
   /** Slug being duplicated, so the row's menu can show progress */
   const [duplicatingSlug, setDuplicatingSlug] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -147,38 +146,6 @@ export default function PackagesPage() {
         },
       },
     });
-  };
-
-  // Flip a block on or off the live site without opening the editor. The block
-  // keeps its published state; only `visible` changes, and the API clears the
-  // cache of every page it targets.
-  const handleToggleVisible = async (block: PackageBlock) => {
-    const next = block.visible === false;
-    setTogglingSlug(block.slug);
-    try {
-      const res = await fetch(`/api/packages/${block.slug}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ visible: next }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setBlocks((prev) =>
-          prev.map((b) => (b.slug === block.slug ? { ...b, visible: next } : b))
-        );
-        toast.success(
-          next ? "Block is now showing on the website" : "Block is now hidden from the website",
-          { closeButton: true }
-        );
-      } else {
-        toast.error(data.message || "Failed to change visibility", { closeButton: true });
-      }
-    } catch {
-      toast.error("Failed to change visibility", { closeButton: true });
-    } finally {
-      setTogglingSlug(null);
-    }
   };
 
   // Copy a whole block — tabs, packages, wording, target pages — into a new
@@ -300,7 +267,6 @@ export default function PackagesPage() {
                 <TableHead className="text-xs font-medium text-muted-foreground">Appears on</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Packages</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">On website</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Last Modified</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground text-center">Actions</TableHead>
               </TableRow>
@@ -388,45 +354,6 @@ export default function PackagesPage() {
                           {block.status === "published" ? "Published" : "Draft"}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={block.visible !== false}
-                          disabled={togglingSlug === block.slug}
-                          onClick={() => handleToggleVisible(block)}
-                          title={
-                            block.visible !== false
-                              ? "Showing on the website — click to hide"
-                              : "Hidden from the website — click to show"
-                          }
-                          className="inline-flex items-center gap-2 cursor-pointer disabled:opacity-40 group"
-                        >
-                          <span
-                            className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${
-                              block.visible !== false ? "bg-brand" : "bg-border-strong"
-                            }`}
-                          >
-                            <span
-                              className={`absolute top-0.5 left-0 h-4 w-4 rounded-full bg-background shadow-sm transition-transform ${
-                                block.visible !== false ? "translate-x-4.5" : "translate-x-0.5"
-                              }`}
-                            />
-                          </span>
-                          <span
-                            className={`text-xs font-medium ${
-                              block.visible !== false ? "text-brand-link" : "text-muted-foreground"
-                            }`}
-                          >
-                            {block.visible !== false ? "Visible" : "Hidden"}
-                          </span>
-                        </button>
-                        {block.status === "draft" && block.visible !== false && (
-                          <div className="text-[11px] text-muted-foreground mt-1">
-                            Draft — not live either way
-                          </div>
-                        )}
-                      </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {block.updatedAt
                           ? formatDate(block.updatedAt)
@@ -506,7 +433,7 @@ export default function PackagesPage() {
                 })
               ) : (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No package blocks found. Create your first one using the &quot;Add New
                     Block&quot; button.
                   </TableCell>

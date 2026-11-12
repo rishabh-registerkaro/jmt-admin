@@ -6,7 +6,7 @@ const getCorsHeaders = (origin: string | null) => {
     const allowed = [PRODUCTION_URL].filter(Boolean);
     const isAllowed = origin && (allowed.includes(origin) || origin.startsWith('http://localhost:'));
     return {
-        'Access-Control-Allow-Origin': isAllowed ? origin : (PRODUCTION_URL || '*'),
+        'Access-Control-Allow-Origin': isAllowed ? origin : PRODUCTION_URL,
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
     };

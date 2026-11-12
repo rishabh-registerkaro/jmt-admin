@@ -25,6 +25,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ChevronsUpDown,
+  HardHat,
 } from "lucide-react";
 import {
   Tooltip,
@@ -76,11 +77,6 @@ const navigationItems = [
         title: "Homepage",
         url: "/dashboard/homepage",
         icon: House,
-      },
-      {
-        title: "JMT Service Pages",
-        url: "/dashboard/jmt-services",
-        icon: Briefcase,
       },
       {
         title: "Posts",
@@ -164,15 +160,23 @@ const navigationItems = [
           },
         ],
       },
+      // Joy Maa Tara site pages (jmt-frontend /about, /contact, /join-our-crew),
+      // all edited by app/dashboard/site-pages/[key]. The older Global Elite
+      // editors at /dashboard/about and /dashboard/contact are no longer linked.
       {
         title: "About Us",
-        url: "/dashboard/about",
+        url: "/dashboard/site-pages/about",
         icon: Info,
       },
       {
         title: "Contact",
-        url: "/dashboard/contact",
+        url: "/dashboard/site-pages/contact",
         icon: Contact,
+      },
+      {
+        title: "Join Our Crew",
+        url: "/dashboard/site-pages/join-our-crew",
+        icon: HardHat,
       },
       {
         title: "Terms & Policy",
@@ -223,13 +227,13 @@ const filterNavigationItemsByRole = (
           items: group.items.filter(
             (item) =>
               item.title === "Homepage" ||
-              item.title === "JMT Service Pages" ||
               item.title === "Posts" ||
               item.title === "Media Library" ||
               item.title === "Menus" ||
               item.title === "Services" ||
               item.title === "About Us" ||
-              item.title === "Contact",
+              item.title === "Contact" ||
+              item.title === "Join Our Crew",
           ),
         };
       }

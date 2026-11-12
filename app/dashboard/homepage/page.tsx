@@ -46,14 +46,12 @@ import FaqEditor from "@/components/homepage-editor/FaqEditor";
 import ContactEditor from "@/components/homepage-editor/ContactEditor";
 import SiteEditor from "@/components/homepage-editor/SiteEditor";
 import TranslationEditor from "@/components/homepage-editor/TranslationEditor";
+import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
 // Must match HOMEPAGE_CHANNEL in jmt-frontend/components/homepage/LiveRefresh.tsx.
 // BroadcastChannel is same-origin only, so it reaches homepage tabs only when the
 // frontend is served from the same origin as this admin; otherwise open tabs
 // pick up the save on focus / every 30 s.
 const HOMEPAGE_CHANNEL = "jmt-homepage";
-
-/** Public URL of the jmt-frontend project (the Joy Maa Tara homepage). */
-const FRONTEND_URL = (process.env.NEXT_PUBLIC_JMT_FRONTEND_URL || "http://localhost:3002").replace(/\/+$/, "");
 
 type AnyEditor = ComponentType<SectionEditorProps<HomeSectionKey>>;
 
@@ -88,6 +86,15 @@ interface EditorState {
 
 const snapshot = (state: EditorState) => JSON.stringify(state);
 
+/** What Save sends (and Preview shows). Section visibility switches were removed, so every section is shown. */
+const toSaveBody = (state: EditorState) => ({
+  ...state,
+  content: {
+    ...state.content,
+    ...Object.fromEntries(SECTIONS.map(({ key }) => [key, { ...state.content[key], enabled: true }])),
+  },
+});
+
 export default function HomepageDashboardPage() {
   const [state, setState] = useState<EditorState>(() => ({
     ...HOME_META_DEFAULTS,
@@ -100,10 +107,22 @@ export default function HomepageDashboardPage() {
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ hero: true });
   const [editLang, setEditLang] = useState<EditLanguage>("en");
-  // Opened in a new tab by Preview / View live (the page in the language being edited).
-  const previewUrl = `${FRONTEND_URL}${EDIT_LANGUAGES.find((l) => l.code === editLang)?.path ?? ""}`;
+  // The page in the language being edited.
+  const langPath = EDIT_LANGUAGES.find((l) => l.code === editLang)?.path ?? "";
+  const liveUrl = `${FRONTEND_URL}${langPath}`;
 
   const dirty = !loading && snapshot(state) !== saved;
+
+  // Preview: the website with these unsaved edits, in a new tab (hooks/useDraftPreview.ts).
+  const previewPayload = useMemo(
+    () => (loading || loadError ? null : { kind: "homepage" as const, ...toSaveBody(state) }),
+    [loading, loadError, state],
+  );
+  const { openPreview, opening: previewOpening } = useDraftPreview({
+    payload: previewPayload,
+    path: langPath || "/",
+    windowName: "jmt-preview-homepage",
+  });
 
   const applyServerDoc = useCallback((doc: Record<string, unknown> | null | undefined) => {
     const next: EditorState = {
@@ -147,12 +166,6 @@ export default function HomepageDashboardPage() {
   const setSection = <K extends keyof HomePageContent>(key: K, value: HomePageContent[K]) =>
     setState((prev) => ({ ...prev, content: { ...prev.content, [key]: value } }));
 
-  const setEnabled = (key: HomeSectionKey, enabled: boolean) =>
-    setState((prev) => ({
-      ...prev,
-      content: { ...prev.content, [key]: { ...prev.content[key], enabled } },
-    }));
-
   const toggle = (key: string) => setOpen((prev) => ({ ...prev, [key]: !prev[key] }));
   const allOpen = useMemo(() => SECTIONS.every((s) => open[s.key]), [open]);
   const setAll = (value: boolean) =>
@@ -168,7 +181,7 @@ export default function HomepageDashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(state),
+        body: JSON.stringify(toSaveBody(state)),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
@@ -209,12 +222,12 @@ export default function HomepageDashboardPage() {
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="mx-auto max-w-5xl space-y-4">
         {/* Header — sticky so Save is always reachable on this long form */}
-        <div className="sticky top-14 md:top-0 z-20 -mx-4 sm:-mx-6 mb-2 flex flex-col gap-3 border-b border-border bg-background/90 px-4 sm:px-6 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-              <LayoutTemplate className="h-6 w-6 text-muted-foreground" /> Homepage
+        <div className="sticky top-14 md:top-0 z-20 -mx-4 sm:-mx-6 mb-2 flex flex-col gap-2 sm:gap-3 border-b border-border bg-background/90 px-4 sm:px-6 py-3 sm:py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-xl sm:text-2xl font-bold text-foreground">
+              <LayoutTemplate className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" /> Homepage
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="truncate text-xs sm:text-sm text-muted-foreground">
               {dirty ? (
                 <span className="text-warning">Unsaved changes</span>
               ) : (
@@ -222,7 +235,7 @@ export default function HomepageDashboardPage() {
               )}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 max-sm:[&>*]:h-8 max-sm:[&>*]:px-3">
             <Button
               variant="ghost"
               onClick={() => setAll(!allOpen)}
@@ -230,14 +243,21 @@ export default function HomepageDashboardPage() {
             >
               {allOpen ? "Collapse all" : "Expand all"}
             </Button>
-            <Button asChild variant="outline">
-              <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-                <Eye className="mr-2 h-4 w-4" /> Preview
-              </a>
+            {/* The website with the unsaved edits — nothing is published until Save */}
+            <Button
+              variant="outline"
+              onClick={openPreview}
+              disabled={previewOpening || Boolean(loadError)}
+              aria-label="Preview unsaved changes"
+              title="Open the website with your unsaved changes (not published)"
+            >
+              <Eye className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{previewOpening ? "Opening..." : "Preview"}</span>
             </Button>
             <Button asChild variant="outline">
-              <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" /> View live
+              <a href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label="View live">
+                <ExternalLink className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">View live</span>
               </a>
             </Button>
             {dirty && (
@@ -251,7 +271,7 @@ export default function HomepageDashboardPage() {
             <Button
               onClick={handleSave}
               disabled={saving || Boolean(loadError) || (!dirty && exists)}
-              className="px-6"
+              className="ml-auto px-6 sm:ml-0"
             >
               {saving ? "Saving..." : exists ? "Save changes" : "Publish homepage"}
             </Button>
@@ -270,13 +290,6 @@ export default function HomepageDashboardPage() {
             >
               Retry
             </Button>
-          </div>
-        )}
-
-        {!exists && !loadError && (
-          <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
-            The homepage has not been saved from the CMS yet, so it shows the built-in design content. The
-            form below is pre-filled with that content — edit it and click <strong>Publish homepage</strong>.
           </div>
         )}
 
@@ -325,8 +338,6 @@ export default function HomepageDashboardPage() {
               hint={hint}
               open={!!open[key]}
               onToggle={() => toggle(key)}
-              enabled={content[key].enabled}
-              onEnabledChange={(enabled) => setEnabled(key, enabled)}
             >
               <Editor value={content[key]} onChange={(value) => setSection(key, value)} />
             </SectionCard>

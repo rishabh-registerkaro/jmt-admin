@@ -7,6 +7,7 @@ import { getCorsHeaders } from "@/app/lib/utils/corsHeader";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/app/lib/utils/authorization";
 import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { identityOverLimit, ipOverLimit, requestIp } from "@/app/lib/utils/leadThrottle";
 
 export async function OPTIONS(req: NextRequest) {
   return NextResponse.json({}, { headers: getCorsHeaders(req) });
@@ -70,12 +71,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Dashboard "Add Lead" (a signed-in admin) is exempt from the spam limits.
+    const admin = req.cookies.has("authToken") ? await requireRole(req, ADMIN_ROLES) : null;
+    const isAdmin = admin !== null && !(admin instanceof NextResponse);
+
+    if (!isAdmin) {
+      const email = String(body.email).trim().toLowerCase();
+      const phoneNo = String(body.phoneNo).trim();
+      if (ipOverLimit(requestIp(req)) || (await identityOverLimit(email, phoneNo))) {
+        return NextResponse.json(
+          { success: false, message: "Too many submissions. Please try again in a few minutes." },
+          { status: 429, headers: { ...corsHeaders, "Retry-After": "600" } }
+        );
+      }
+    }
+
     // Website visitors always create "new" leads; the dashboard's "Add Lead"
     // form may pick a status, which is honoured only for a logged-in admin.
     let status: LeadStatus = "new";
-    if (typeof body.status === "string" && (Object.values(LeadStatus) as string[]).includes(body.status)) {
-      const admin = await requireRole(req, ADMIN_ROLES);
-      if (!(admin instanceof NextResponse)) status = body.status as LeadStatus;
+    if (isAdmin && typeof body.status === "string" && (Object.values(LeadStatus) as string[]).includes(body.status)) {
+      status = body.status as LeadStatus;
     }
 
     // Every submission is its own lead — the same person submitting from a
@@ -169,6 +184,11 @@ export async function GET(req: NextRequest) {
     if (status) {
       query.status = status;
     }
+    // Exact source, as listed in `sources` below (Source filter in the dashboard).
+    const source = searchParams.get("source");
+    if (source) {
+      query.leadSource = source;
+    }
 
     // Get total count for pagination
     const total = noMatch ? 0 : await prisma.lead.count({ where: query });
@@ -185,6 +205,14 @@ export async function GET(req: NextRequest) {
 
     const serializedLeads = leads.map((lead) => withMongoId(lead));
 
+    // Every source with its lead count, for the dashboard's Source filter.
+    const sourceGroups = await prisma.lead.groupBy({
+      by: ["leadSource"],
+      _count: { _all: true },
+      orderBy: { _count: { leadSource: "desc" } },
+    });
+    const sources = sourceGroups.map((g) => ({ source: g.leadSource, count: g._count._all }));
+
     // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -196,6 +224,7 @@ export async function GET(req: NextRequest) {
         message: "Fetched Leads Data successfully",
         leadCount: total,
         leads: serializedLeads,
+        sources,
         pagination: {
           currentPage: page,
           totalPages,

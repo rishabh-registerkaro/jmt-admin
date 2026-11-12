@@ -16,7 +16,8 @@ async function revalidateHomepageMedia(filename: string) {
   }
 }
 
-const MAX_MEDIA_SIZE = 25 * 1024 * 1024; // 25MB
+// 25MB, except on Vercel, which rejects request bodies over 4.5MB itself.
+const MAX_MEDIA_SIZE = process.env.VERCEL ? 4 * 1024 * 1024 : 25 * 1024 * 1024;
 // Allowed MIME type → the only extension a file of that type is stored with.
 // The extension is never taken from the uploaded name: the media folder is
 // served by Hostinger's web server, so "shell.php" sent as image/png would
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
     if (file.size > MAX_MEDIA_SIZE) {
-      return NextResponse.json({ error: "File too large (max 25MB)" }, { status: 400 });
+      return NextResponse.json({ error: `File too large (max ${MAX_MEDIA_SIZE / 1024 / 1024}MB)` }, { status: 400 });
     }
     if (!Object.hasOwn(ALLOWED_MEDIA_TYPES, file.type)) {
       return NextResponse.json({ error: "File type not allowed" }, { status: 400 });

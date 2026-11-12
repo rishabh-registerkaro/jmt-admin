@@ -282,7 +282,7 @@ model HomePage {
 
 // Service pages of the Joy Maa Tara site (jmt-frontend, /service/<slug>).
 // Separate from ServicePage, whose "division" layout feeds the Global Elite site.
-// Edited at /dashboard/jmt-services; read by the frontend through the public
+// Edited at /dashboard/services; read by the frontend through the public
 // GET /api/jmt-services/client/<slug> (published pages only).
 model JmtServicePage {
   id       String        @id @default(cuid())
@@ -302,4 +302,21 @@ model JmtServicePage {
   @@index([status])
   @@index([updatedAt])
   @@map("jmt_service_pages")
+}
+
+// Copy of the Joy Maa Tara site's fixed pages (jmt-frontend /about, /contact,
+// /join-our-crew), one JSON document per page. Edited at
+// /dashboard/site-pages/<key>; read by the frontend through the public
+// GET /api/site-pages/client/<key>. The bundled copy in jmt-frontend/data is
+// the schema and fallback: saved content is merged over it
+// (lib/sitePages/mergeContent.ts), so new fields never need a migration.
+model JmtSitePage {
+  id        String   @id @default(cuid())
+  // Registry key: app/lib/content/site-pages.ts (e.g. "about", "contact").
+  key       String   @unique @db.VarChar(80)
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("jmt_site_pages")
 }

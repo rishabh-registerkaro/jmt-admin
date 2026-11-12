@@ -13,10 +13,7 @@ import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronRight,
-  ChevronUp,
   Copy,
-  Eye,
-  EyeOff,
   FileText,
   LayoutTemplate,
   Layers,
@@ -118,45 +115,6 @@ function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
     <Button type="button" variant="outline" size="sm" onClick={onClick} className={addBtnCls}>
       <Plus className="h-4 w-4 mr-1" /> {label}
     </Button>
-  );
-}
-
-function MoveButtons({
-  onUp,
-  onDown,
-  canUp,
-  canDown,
-}: {
-  onUp: () => void;
-  onDown: () => void;
-  canUp: boolean;
-  canDown: boolean;
-}) {
-  return (
-    <div className="flex items-center">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        disabled={!canUp}
-        onClick={onUp}
-        title="Move up"
-        className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
-      >
-        <ChevronUp className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        disabled={!canDown}
-        onClick={onDown}
-        title="Move down"
-        className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
-      >
-        <ChevronDown className="h-4 w-4" />
-      </Button>
-    </div>
   );
 }
 
@@ -367,20 +325,6 @@ function PackageEditor({
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <span className="text-xs font-semibold text-muted-foreground">Day row {i + 1}</span>
                   <div className="flex items-center gap-1">
-                    <MoveButtons
-                      canUp={i > 0}
-                      canDown={i < pkg.itinerary.length - 1}
-                      onUp={() => {
-                        const next = [...pkg.itinerary];
-                        [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                        set({ itinerary: next });
-                      }}
-                      onDown={() => {
-                        const next = [...pkg.itinerary];
-                        [next[i + 1], next[i]] = [next[i], next[i + 1]];
-                        set({ itinerary: next });
-                      }}
-                    />
                     <RemoveButton
                       onClick={() => set({ itinerary: pkg.itinerary.filter((_, idx) => idx !== i) })}
                     />
@@ -674,11 +618,11 @@ export default function PackageBlockForm({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/services?page=1&limit=50", { credentials: "include" });
+        const res = await fetch("/api/jmt-services", { credentials: "include" });
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
-        const slugs = (data?.servicePages ?? [])
+        const slugs = (data?.pages ?? [])
           .map((s: { slug?: string }) => s?.slug)
           .filter((s: unknown): s is string => typeof s === "string" && s.length > 0);
         setPageSuggestions(slugs);
@@ -724,26 +668,10 @@ export default function PackageBlockForm({
   const setTab = (i: number, patch: Partial<PackageTab>) =>
     setContent({ tabs: content.tabs.map((t, idx) => (idx === i ? { ...t, ...patch } : t)) });
 
-  const moveTab = (i: number, dir: -1 | 1) => {
-    const target = i + dir;
-    if (target < 0 || target >= content.tabs.length) return;
-    const tabs = [...content.tabs];
-    [tabs[i], tabs[target]] = [tabs[target], tabs[i]];
-    setContent({ tabs });
-  };
-
   const setPackage = (ti: number, pi: number, pkg: PackageItem) =>
     setTab(ti, {
       packages: content.tabs[ti].packages.map((p, idx) => (idx === pi ? pkg : p)),
     });
-
-  const movePackage = (ti: number, pi: number, dir: -1 | 1) => {
-    const target = pi + dir;
-    const packages = [...content.tabs[ti].packages];
-    if (target < 0 || target >= packages.length) return;
-    [packages[pi], packages[target]] = [packages[target], packages[pi]];
-    setTab(ti, { packages });
-  };
 
   // ── Duplicate ─────────────────────────────────────────────────────────────
   // Copying a row beats retyping it. The copy is inserted directly below its
@@ -869,7 +797,7 @@ export default function PackageBlockForm({
         slug: cleanSlug,
         title: formData.title.trim(),
         targetPages,
-        visible: formData.visible,
+        visible: true,
         content: cleaned,
         status,
       };
@@ -1042,42 +970,6 @@ export default function PackageBlockForm({
                 </div>
               </Field>
 
-              {/* Frontend on/off — deliberately separate from Draft/Publish so a
-                  finished block can be pulled off the live pages and put back
-                  without losing its published state. */}
-              <div className="rounded-lg border border-border bg-muted/40 p-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.visible}
-                    onChange={(e) =>
-                      setFormData((p) => ({ ...p, visible: e.target.checked }))
-                    }
-                    className="accent-brand mt-0.5 h-4 w-4"
-                  />
-                  <span>
-                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
-                      {formData.visible ? (
-                        <>
-                          <Eye className="h-4 w-4 text-brand-link" />
-                          Showing on the website
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff className="h-4 w-4 text-warning" />
-                          Hidden from the website
-                        </>
-                      )}
-                    </span>
-                    <span className="text-xs text-muted-foreground block mt-1">
-                      {formData.visible
-                        ? "Untick to pull this block off the live pages while keeping it published."
-                        : "Still published and saved — visitors just won't see it until you tick this again."}
-                    </span>
-                  </span>
-                </label>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Anchor id" hint="Used for the in-page link, e.g. #packages">
                   <Input
@@ -1197,12 +1089,6 @@ export default function PackageBlockForm({
                       </button>
                     </Collapsible.Trigger>
                     <div className="flex items-center gap-1">
-                      <MoveButtons
-                        canUp={ti > 0}
-                        canDown={ti < content.tabs.length - 1}
-                        onUp={() => moveTab(ti, -1)}
-                        onDown={() => moveTab(ti, 1)}
-                      />
                       <DuplicateButton
                         onClick={() => duplicateTab(ti)}
                         title="Duplicate this tab and all its packages"
@@ -1269,12 +1155,6 @@ export default function PackageBlockForm({
                                       </button>
                                     </Collapsible.Trigger>
                                     <div className="flex items-center gap-1">
-                                      <MoveButtons
-                                        canUp={pi > 0}
-                                        canDown={pi < tab.packages.length - 1}
-                                        onUp={() => movePackage(ti, pi, -1)}
-                                        onDown={() => movePackage(ti, pi, 1)}
-                                      />
                                       <DuplicateButton
                                         onClick={() => duplicatePackage(ti, pi)}
                                         title="Duplicate this package"

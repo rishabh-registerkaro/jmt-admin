@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { getUserProfile, UserProfile } from "@/lib/apiCallingProfile";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { ADMIN_ROLES, CONTENT_ROLES, EDITOR_ROLES } from "@/app/lib/constants/role";
 
 // Define route-to-role mapping
 const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/dashboard/leads": ADMIN_ROLES,
   "/dashboard/users": ADMIN_ROLES,
   "/dashboard/terms-policy": ADMIN_ROLES,
-  "/dashboard/services": ADMIN_ROLES,
-  "/dashboard/services/create-service": ADMIN_ROLES,
-  "/dashboard/services/update-service": ADMIN_ROLES, // This will match any update-service route
+  "/dashboard/services": CONTENT_ROLES,
+  "/dashboard/services/create-service": EDITOR_ROLES,
+  "/dashboard/services/[id]": CONTENT_ROLES,
   "/dashboard/packages": ADMIN_ROLES,
   "/dashboard/packages/create-package": ADMIN_ROLES,
   "/dashboard/packages/update-package": ADMIN_ROLES,
@@ -25,6 +25,7 @@ const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/dashboard/footer-menu": ["superadmin", "admin", "editor", "contributor"],
   "/dashboard/about": ["superadmin", "admin", "editor", "contributor"],
   "/dashboard/homepage": ["superadmin", "admin", "editor", "contributor"],
+  "/dashboard/site-pages/[key]": CONTENT_ROLES,
   "/dashboard/profile": ["superadmin", "admin", "editor", "contributor"],
 };
 

@@ -41,8 +41,7 @@ import {
   type PartProps,
 } from "@/components/jmt-service-editor/sections";
 import type { ServicePageContent, ServiceSectionKey } from "@/types/service";
-
-const FRONTEND_URL = (process.env.NEXT_PUBLIC_JMT_FRONTEND_URL || "http://localhost:3002").replace(/\/+$/, "");
+import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
 
 type Status = "draft" | "published";
 interface EditorState {
@@ -73,6 +72,12 @@ const SECTIONS: { key: Part; title: string; hint: string; icon: React.ElementTyp
 ];
 
 const snapshot = (s: EditorState) => JSON.stringify(s);
+
+/** Section visibility switches were removed, so every section is saved (and previewed) as shown. */
+const allVisible = (content: ServicePageContent): ServicePageContent => ({
+  ...content,
+  visible: Object.fromEntries(Object.keys(content.visible).map((k) => [k, true])) as ServicePageContent["visible"],
+});
 
 export default function JmtServiceEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -116,11 +121,22 @@ export default function JmtServiceEditorPage() {
 
   const allOpen = useMemo(() => SECTIONS.every((s) => open[s.key]), [open]);
 
+  // Preview: the page with these unsaved edits, in a new tab — works for drafts too (hooks/useDraftPreview.ts).
+  const previewPayload = useMemo(
+    () => (state ? { kind: "service" as const, slug: state.slug, content: allVisible(state.content) } : null),
+    [state],
+  );
+  const { openPreview, opening: previewOpening } = useDraftPreview({
+    payload: previewPayload,
+    path: `/service/${state?.slug || liveSlug}`,
+    windowName: `jmt-preview-service-${id}`,
+  });
+
   if (loadError) {
     return (
       <div className="p-6 text-sm text-destructive">
         Could not load this page: {loadError}{" "}
-        <Link href="/dashboard/jmt-services" className="underline">
+        <Link href="/dashboard/services" className="underline">
           Back to the list
         </Link>
       </div>
@@ -137,8 +153,6 @@ export default function JmtServiceEditorPage() {
   const { content } = state;
   const setContent = <K extends keyof ServicePageContent>(key: K, value: ServicePageContent[K]) =>
     setState((prev) => prev && { ...prev, content: { ...prev.content, [key]: value } });
-  const setVisible = (key: ServiceSectionKey, on: boolean) =>
-    setContent("visible", { ...content.visible, [key]: on });
   const toggle = (key: string) => setOpen((prev) => ({ ...prev, [key]: !prev[key] }));
   const setAll = (value: boolean) =>
     setOpen(Object.fromEntries(["settings", "contact", ...SECTIONS.map((s) => s.key)].map((k) => [k, value])));
@@ -152,7 +166,7 @@ export default function JmtServiceEditorPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(body),
+        body: JSON.stringify({ ...body, content: allVisible(body.content) }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
@@ -174,13 +188,13 @@ export default function JmtServiceEditorPage() {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="mx-auto max-w-5xl space-y-4">
-        <div className="sticky top-14 md:top-0 z-20 -mx-4 sm:-mx-6 mb-2 flex flex-col gap-3 border-b border-border bg-background/90 px-4 sm:px-6 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky top-14 md:top-0 z-20 -mx-4 sm:-mx-6 mb-2 flex flex-col gap-2 sm:gap-3 border-b border-border bg-background/90 px-4 sm:px-6 py-3 sm:py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <Link href="/dashboard/jmt-services" className="mb-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-3 w-3" /> JMT Service Pages
+            <Link href="/dashboard/services" className="mb-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-3 w-3" /> Services
             </Link>
-            <h1 className="truncate text-2xl font-bold text-foreground">{state.title || "Untitled page"}</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="truncate text-xl sm:text-2xl font-bold text-foreground">{state.title || "Untitled page"}</h1>
+            <p className="truncate text-xs sm:text-sm text-muted-foreground">
               {dirty ? (
                 <span className="text-warning">Unsaved changes</span>
               ) : published ? (
@@ -190,18 +204,25 @@ export default function JmtServiceEditorPage() {
               )}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 max-sm:[&>*]:h-8 max-sm:[&>*]:px-3">
             <Button variant="ghost" onClick={() => setAll(!allOpen)} className="text-foreground-light hover:bg-muted/50 hover:text-foreground">
               {allOpen ? "Collapse all" : "Expand all"}
             </Button>
-            <Button asChild variant="outline">
-              <a href={liveUrl} target="_blank" rel="noopener noreferrer">
-                <Eye className="mr-2 h-4 w-4" /> Preview
-              </a>
+            {/* The page with the unsaved edits — nothing is published until Save */}
+            <Button
+              variant="outline"
+              onClick={openPreview}
+              disabled={previewOpening}
+              aria-label="Preview unsaved changes"
+              title="Open this page with your unsaved changes (not published)"
+            >
+              <Eye className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{previewOpening ? "Opening..." : "Preview"}</span>
             </Button>
             <Button asChild variant="outline">
-              <a href={liveUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" /> View live
+              <a href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label="View live">
+                <ExternalLink className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">View live</span>
               </a>
             </Button>
             {dirty && (
@@ -217,7 +238,7 @@ export default function JmtServiceEditorPage() {
                 Publish
               </Button>
             )}
-            <Button onClick={() => save()} disabled={saving || !dirty} className="px-6">
+            <Button onClick={() => save()} disabled={saving || !dirty} className="ml-auto px-6 sm:ml-0">
               {saving ? "Saving..." : "Save changes"}
             </Button>
           </div>
@@ -262,7 +283,7 @@ export default function JmtServiceEditorPage() {
           Page sections — same order as the website, top to bottom
         </h2>
 
-        {SECTIONS.map(({ key, title, hint, icon, Editor, visibility }) => (
+        {SECTIONS.map(({ key, title, hint, icon, Editor }) => (
           <SectionCard
             key={key}
             icon={icon}
@@ -270,8 +291,6 @@ export default function JmtServiceEditorPage() {
             hint={hint}
             open={!!open[key]}
             onToggle={() => toggle(key)}
-            enabled={visibility ? content.visible[visibility] : undefined}
-            onEnabledChange={visibility ? (on) => setVisible(visibility, on) : undefined}
           >
             <Editor value={content[key]} onChange={(value) => setContent(key, value)} />
           </SectionCard>

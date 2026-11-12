@@ -30,6 +30,7 @@ import {
   MEDIA_SLOTS,
   buildHomepageData,
   buildSiteChrome,
+  type HomePageInput,
 } from "@/lib/homepage/buildHomepage";
 import type { HomepageData, SiteChrome, SwitcherLanguage } from "@/types/homepage";
 
@@ -51,6 +52,7 @@ const homePageSelect = {
   metaTitle: true,
   metaDescription: true,
   content: true,
+  updatedAt: true,
 } satisfies Prisma.HomePageSelect;
 
 type MenuRow = Prisma.HeaderMenuGetPayload<{ select: typeof menuSelect }>;
@@ -95,7 +97,8 @@ const readMediaOverrides = unstable_cache(
 const readHomePage = unstable_cache(
   (): Promise<HomePageRow | null> =>
     prisma.homePage.findFirst({ select: homePageSelect, orderBy: { updatedAt: "desc" } }),
-  ["homepage", "content"],
+  // v2: the row now includes updatedAt (sitemap lastmod); new key so no older cached shape is served.
+  ["homepage", "content", "v2"],
   cacheOptions(HOMEPAGE_TAGS.homePage),
 );
 
@@ -135,6 +138,18 @@ export const getHomepageData = cache(async (lang: SwitcherLanguage = "en"): Prom
 });
 
 /**
+ * When the saved homepage document last changed (ISO string), or null when
+ * nothing is saved. jmt-frontend's sitemap uses it as <lastmod>.
+ * unstable_cache serializes Dates to strings, so normalize either form.
+ */
+export async function getHomepageUpdatedAt(): Promise<string | null> {
+  const updatedAt: unknown = (await getHomePageRow())?.updatedAt;
+  if (!updatedAt) return null;
+  const date = new Date(updatedAt as string | Date);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+/**
  * Fingerprint of everything the homepage shows (sections, navbar, footer,
  * contact details, photos). Open homepage tabs poll it (LiveRefresh) and
  * reload when it changes — so a Header/Footer Menu or Media edit refreshes
@@ -150,4 +165,24 @@ export async function getHomepageVersion(): Promise<string> {
       ? (content as Record<string, unknown>).translations ?? null
       : null;
   return createHash("sha1").update(JSON.stringify({ data, chrome, translations })).digest("hex").slice(0, 16);
+}
+
+/**
+ * The homepage bundle built from an unsaved editor draft (the dashboard's
+ * Preview button, app/api/preview). Menus and photo overrides are the live
+ * ones; `version` stays the live version so LiveRefresh doesn't loop.
+ */
+export async function buildHomepagePreview(row: HomePageInput, lang: SwitcherLanguage) {
+  const [header, footer, media, version] = await Promise.all([
+    withFallback("header menu", readHeaderMenu, null),
+    withFallback("footer menu", readFooterMenu, null),
+    withFallback("media overrides", readMediaOverrides, []),
+    getHomepageVersion(),
+  ]);
+  return {
+    data: buildHomepageData(row, media, lang),
+    chrome: buildSiteChrome(header, footer, row, lang),
+    version,
+    updatedAt: null,
+  };
 }

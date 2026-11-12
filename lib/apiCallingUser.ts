@@ -54,6 +54,23 @@ export const updateUserRole = async (userId: string, payload: UpdateUserRolePayl
 
 
 /**
+ * Delete a user (Super Admin only). Their content is reassigned to the caller.
+ */
+export const deleteUser = async (userId: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+        const response = await axiosInstance.delete(`/api/users/${userId}`);
+        return response.data;
+    } catch (error: any) {
+        console.error("Error deleting user:", error);
+        return {
+            success: false,
+            message: error.response?.data?.message || "Failed to delete user",
+        };
+    }
+}
+
+
+/**
  * Change user password (Admin/SuperAdmin only)
  * @param userId - The ID of the user whose password needs to be changed
  * @param payload - Object containing newPassword and optionally currentPassword (for own password)

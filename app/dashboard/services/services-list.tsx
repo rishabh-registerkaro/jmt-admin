@@ -1,6 +1,6 @@
 "use client";
 
-// JMT service pages — list, create, import built-in pages, delete.
+// Services — the JMT service pages: list, create, import built-in pages, delete.
 // Each page is served by jmt-frontend at /service/<slug> (and /bn, /hi).
 
 import { useEffect, useState } from "react";
@@ -38,14 +38,15 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export default function JmtServicesPage() {
+/** `startWithNewForm` opens the "new page" form straight away (Add New Service). */
+export default function ServicesList({ startWithNewForm = false }: { startWithNewForm?: boolean }) {
   const router = useRouter();
   const [reloadKey, setReloadKey] = useState(0);
   const [rows, setRows] = useState<Row[]>([]);
   const [builtIn, setBuiltIn] = useState<BuiltIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [showNew, setShowNew] = useState(false);
+  const [showNew, setShowNew] = useState(startWithNewForm);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -70,7 +71,7 @@ export default function JmtServicesPage() {
     try {
       const data = await api<{ page: Row }>("/api/jmt-services", { method: "POST", body: JSON.stringify(body) });
       toast.success(success);
-      router.push(`/dashboard/jmt-services/${data.page.id}`);
+      router.push(`/dashboard/services/${data.page.id}`);
     } catch (error) {
       toast.error((error as Error).message, { closeButton: true });
       setBusy(false);
@@ -104,14 +105,14 @@ export default function JmtServicesPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-              <Briefcase className="h-6 w-6 text-muted-foreground" /> JMT Service Pages
+              <Briefcase className="h-6 w-6 text-muted-foreground" /> Services
             </h1>
             <p className="text-sm text-muted-foreground">
               Pages on the Joy Maa Tara site at /service/&lt;slug&gt;. Saving updates the live page within seconds.
             </p>
           </div>
           <Button onClick={() => setShowNew((v) => !v)}>
-            <Plus className="mr-2 h-4 w-4" /> New page
+            <Plus className="mr-2 h-4 w-4" /> Add New Service
           </Button>
         </div>
 
@@ -212,7 +213,7 @@ export default function JmtServicesPage() {
                 rows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium text-foreground">
-                      <Link href={`/dashboard/jmt-services/${row.id}`} className="hover:underline">
+                      <Link href={`/dashboard/services/${row.id}`} className="hover:underline">
                         {row.title}
                       </Link>
                     </TableCell>
@@ -230,7 +231,7 @@ export default function JmtServicesPage() {
                     <TableCell>
                       <div className="flex justify-end gap-1">
                         <Button asChild variant="ghost" size="sm" title="Edit">
-                          <Link href={`/dashboard/jmt-services/${row.id}`}>
+                          <Link href={`/dashboard/services/${row.id}`}>
                             <Pencil className="h-4 w-4" />
                           </Link>
                         </Button>

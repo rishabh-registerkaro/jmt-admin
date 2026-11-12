@@ -150,10 +150,8 @@ export const FALLBACK_CHROME: SiteChrome = {
   ],
   nav: [
     { label: "Services", href: "#services", children: SERVICE_LINKS },
-    { label: "How we work", href: "#how-we-work", children: [] },
     { label: "About", href: "#about", children: [] },
     { label: "Join our crew", href: "#join-our-crew", children: [] },
-    { label: "Contact", href: "#contact", children: [] },
   ],
   footerColumns: [
     {
@@ -506,8 +504,8 @@ export const LEAD_FORM_COPY: LeadFormCopy = {
   optionalHint: "(optional)",
   submit: "Request workers",
   submitting: "Sending…",
-  successTitle: "Request received",
-  successText: "Thanks — your requirement is in. The owner will call you back within 24 hours.",
+  successTitle: "Thanks for your response!",
+  successText: "We've received your requirement and will connect with you shortly.",
   resetLabel: "Send another request",
   invalidText: "Please check the highlighted fields.",
   errorText: "We couldn't send your request just now. Please try again, or call or WhatsApp us directly.",

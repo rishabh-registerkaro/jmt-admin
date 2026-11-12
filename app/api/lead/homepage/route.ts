@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/app/lib/config/db";
+import { identityOverLimit } from "@/app/lib/utils/leadThrottle";
 import { sendLeadNotification } from "@/app/lib/config/email";
 import { normalizeSecret } from "@/app/lib/utils/revalidateFrontend";
 import {
   EMPTY_LEAD_VALUES,
   HONEYPOT_FIELD,
-  LEAD_SOURCE,
+  PAGE_PATH_FIELD,
+  PAGE_TITLE_FIELD,
+  SERVICES_REQUESTED_LABEL,
+  leadSourceFor,
+  readLeadServices,
   readLeadValues,
   validateLead,
 } from "@/utils/leadForm";
@@ -115,7 +120,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (isRateLimited(clientIp(req))) {
+  // In-memory per IP (one instance) + per phone/email in MySQL (all instances).
+  if (isRateLimited(clientIp(req)) || (await identityOverLimit(values.email, values.phone).catch(() => false))) {
     return reply(
       {
         status: "error",
@@ -128,7 +134,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Service pages send the roles ticked in "Roles we supply" (none from the homepage).
+  // First key on purpose: the leads table's Topic column shows it.
+  const services = readLeadServices(formData);
   const details: Record<string, string> = {
+    [SERVICES_REQUESTED_LABEL]: services.join(", "),
     "Company name": values.companyName,
     "Site location": values.siteLocation,
     Headcount: values.headcount,
@@ -144,7 +154,7 @@ export async function POST(req: NextRequest) {
         name: values.name,
         email: values.email.toLowerCase(),
         phoneNo: values.phone,
-        leadSource: LEAD_SOURCE,
+        leadSource: leadSourceFor(formData.get(PAGE_PATH_FIELD), formData.get(PAGE_TITLE_FIELD)),
         formData: leadFormData,
         status: "new",
       },
