@@ -90,3 +90,12 @@ export const packageTags = (targetPages: string[]) => [
   "package-list",
   ...targetPages.filter(Boolean).map((p) => `packages-${p}`),
 ];
+
+/**
+ * Cache tags of a Joy Maa Tara service page (jmt-frontend server/service.ts →
+ * SERVICE_TAGS). The list tag also covers the slug list used at build time.
+ */
+export const jmtServiceTags = (...slugs: string[]) => [
+  "jmt-service-list",
+  ...slugs.filter(Boolean).map((slug) => `jmt-service-${slug}`),
+];

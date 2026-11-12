@@ -78,6 +78,11 @@ const navigationItems = [
         icon: House,
       },
       {
+        title: "JMT Service Pages",
+        url: "/dashboard/jmt-services",
+        icon: Briefcase,
+      },
+      {
         title: "Posts",
         url: "/dashboard/blog",
         icon: MessageSquareText,
@@ -218,6 +223,7 @@ const filterNavigationItemsByRole = (
           items: group.items.filter(
             (item) =>
               item.title === "Homepage" ||
+              item.title === "JMT Service Pages" ||
               item.title === "Posts" ||
               item.title === "Media Library" ||
               item.title === "Menus" ||
