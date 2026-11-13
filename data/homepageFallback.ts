@@ -143,11 +143,6 @@ export const FALLBACK_CHROME: SiteChrome = {
     whatsappButton: "WhatsApp",
     footerContactTitle: "Contact",
   },
-  languages: [
-    { code: "en", label: "EN", name: "English" },
-    { code: "bn", label: "বাং", name: "বাংলা (Bengali)" },
-    { code: "hi", label: "हिं", name: "हिन्दी (Hindi)" },
-  ],
   nav: [
     { label: "Services", href: "#services", children: SERVICE_LINKS },
     { label: "About", href: "#about", children: [] },

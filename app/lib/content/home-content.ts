@@ -31,16 +31,13 @@ import {
   SITE_TYPES,
   TRADES,
 } from "@/data/homepageFallback";
-import { SEED_TRANSLATIONS } from "@/data/homepageTranslations";
 import {
   LEAD_FIELDS,
-  SWITCHER_LANGUAGES,
   type FaqAudience,
   type HeroTrustIcon,
   type ImageFocus,
   type LeadField,
   type ProcessIcon,
-  type SwitcherLanguage,
   type TradeIcon,
 } from "@/types/homepage";
 
@@ -99,20 +96,20 @@ export interface HomeLinkValue {
 
 export interface HomeNavValue extends HomeLinkValue {
   children: HomeLinkValue[];
+  /**
+   * Fill the dropdown with the published JMT service pages (Dashboard →
+   * Services), each linking to /service/<slug>. `children` are kept as extra
+   * links after them, minus any whose label repeats a service page's title.
+   */
+  autoServices: boolean;
 }
+
+/** Saved menu items from before `autoServices` existed: the "Services" item turns it on. */
+const isServicesNavLabel = (label: string) => label.trim().toLowerCase() === "services";
 
 export interface HomeFaqGroupValue {
   label: string;
   items: { question: string; answer: string }[];
-}
-
-export interface HomeLanguageValue {
-  /** Fixed: one entry per language the translator supports. */
-  code: (typeof SWITCHER_LANGUAGES)[number];
-  label: string;
-  name: string;
-  /** Hidden languages are left out of the switcher (English always shows). */
-  enabled: boolean;
 }
 
 export interface HomeLeadFormValue {
@@ -235,7 +232,6 @@ export interface HomePageContent {
       whatsappDisplay: string;
       footerContactTitle: string;
     };
-    languages: { enabled: boolean; items: HomeLanguageValue[] };
     /** Blank = keep using the Header Menu care number. */
     phone: string;
     /** Blank = keep using the Header Menu WhatsApp number. */
@@ -249,12 +245,6 @@ export interface HomePageContent {
     footerColumns: { title: string; links: HomeLinkValue[] }[];
     copyright: string;
   };
-  /**
-   * Bengali and Hindi text, edited at Homepage → বাংলা / हिन्दी. Missing or
-   * outdated entries fall back to the built-in translation, then to English
-   * (see localizeHomeContent below).
-   */
-  translations: HomeTranslations;
 }
 
 export const HOME_META_DEFAULTS = {
@@ -410,10 +400,6 @@ export function defaultHomeContent(): HomePageContent {
         ...FALLBACK_CHROME.labels,
         whatsappDisplay: FALLBACK_CONTACT.whatsappDisplay,
       },
-      languages: {
-        enabled: true,
-        items: FALLBACK_CHROME.languages.map((l) => ({ ...l, enabled: true })),
-      },
       phone: "",
       whatsapp: "",
       email: "",
@@ -423,6 +409,7 @@ export function defaultHomeContent(): HomePageContent {
         label: n.label,
         href: n.href ?? "",
         children: n.children.map((c) => link(c.label, c.href ?? "")),
+        autoServices: isServicesNavLabel(n.label),
       })),
       footerDescription: FALLBACK_CHROME.footerDescription,
       footerColumns: FALLBACK_CHROME.footerColumns.map((col) => ({
@@ -431,7 +418,6 @@ export function defaultHomeContent(): HomePageContent {
       })),
       copyright: FALLBACK_CHROME.copyright ?? "",
     },
-    translations: { bn: {}, hi: {} },
   };
 }
 
@@ -513,24 +499,6 @@ function sectionOrder(value: unknown, fallback: HomeSectionKey[]): HomeSectionKe
   return order;
 }
 
-/** One entry per supported language, in the stored order; unknown codes are dropped. */
-function languageItems(value: unknown, fallback: HomeLanguageValue[]): HomeLanguageValue[] {
-  if (!Array.isArray(value)) return fallback;
-  const items: HomeLanguageValue[] = [];
-  for (const raw of value) {
-    const i = isRecord(raw) ? raw : {};
-    const base = fallback.find((f) => f.code === i.code);
-    if (!base || items.some((item) => item.code === base.code)) continue;
-    items.push({
-      code: base.code,
-      label: str(i.label, base.label) || base.label,
-      name: str(i.name, base.name) || base.name,
-      enabled: bool(i.enabled, true),
-    });
-  }
-  for (const base of fallback) if (!items.some((item) => item.code === base.code)) items.push(base);
-  return items;
-}
 const EMPTY_LINK: HomeLinkValue = { label: "", href: "" };
 
 /** Deep-merges stored JSON over the defaults and drops anything unknown or unsafe. */
@@ -567,8 +535,6 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
   const formLabels = isRecord(form.labels) ? form.labels : {};
   const brand = isRecord(site.brand) ? site.brand : {};
   const siteLabels = isRecord(site.labels) ? site.labels : {};
-  const languages = isRecord(site.languages) ? site.languages : {};
-  const translations = isRecord(c.translations) ? c.translations : {};
 
   return {
     sectionOrder: sectionOrder(c.sectionOrder, d.sectionOrder),
@@ -730,10 +696,6 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
         whatsappDisplay: str(siteLabels.whatsappDisplay, d.site.labels.whatsappDisplay),
         footerContactTitle: str(siteLabels.footerContactTitle, d.site.labels.footerContactTitle),
       },
-      languages: {
-        enabled: bool(languages.enabled, d.site.languages.enabled),
-        items: languageItems(languages.items, d.site.languages.items),
-      },
       phone: str(site.phone, d.site.phone),
       whatsapp: str(site.whatsapp, d.site.whatsapp),
       email: str(site.email, d.site.email),
@@ -741,9 +703,11 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
       replyTime: str(site.replyTime, d.site.replyTime),
       nav: list(site.nav, d.site.nav, HOME_LIMITS.nav, (item) => {
         const i = isRecord(item) ? item : {};
+        const navLink = linkValue(i, EMPTY_LINK);
         return {
-          ...linkValue(i, EMPTY_LINK),
+          ...navLink,
           children: list(i.children, [], HOME_LIMITS.navChildren, (child) => linkValue(child, EMPTY_LINK)),
+          autoServices: bool(i.autoServices, isServicesNavLabel(navLink.label)),
         };
       }),
       footerDescription: str(site.footerDescription, d.site.footerDescription),
@@ -756,166 +720,8 @@ export function normalizeHomeContent(raw: unknown): HomePageContent {
       }),
       copyright: str(site.copyright, d.site.copyright),
     },
-    translations: {
-      bn: translationEntries(translations.bn),
-      hi: translationEntries(translations.hi),
-    },
   };
 }
 
 /** Fallback preview/alt for the five slot photos (editor previews + public fallback). */
 export const HOME_SLOT_DEFAULTS = FALLBACK_IMAGES;
-
-// ── Translations (Bengali / Hindi) ───────────────────────────────────────────
-//
-// The page is written in English; each other language is a flat map from a
-// field's path ("hero.titleLead", "faq.companies.items.0.question", plus
-// "meta.title" / "meta.description") to its translation. Each entry also keeps
-// the English it was translated from, and is only used while that English is
-// unchanged — after an edit, or when list items move, the field falls back to
-// a still-matching built-in translation or to English, never to text that
-// belongs to another field.
-
-/** Languages the page content can be translated into (English is the source). */
-export const TRANSLATED_LANGUAGES = ["bn", "hi"] as const;
-export type TranslatedLanguage = (typeof TRANSLATED_LANGUAGES)[number];
-
-export interface HomeTranslation {
-  /** The English text this was translated from. */
-  source: string;
-  text: string;
-}
-
-export type HomeTranslations = Record<TranslatedLanguage, Record<string, HomeTranslation>>;
-
-export const META_TRANSLATION_PATHS = { title: "meta.title", description: "meta.description" } as const;
-
-/** Keys that hold links, images, switches or codes — never visible copy. */
-const NON_TEXT_KEYS = new Set([
-  "href",
-  "src",
-  "focus",
-  "icon",
-  "enabled",
-  "initials",
-  "code",
-  "sectionOrder",
-  "translations",
-]);
-
-/** Fields that stay as written in every language: names, numbers, switcher labels. */
-const NON_TEXT_PATHS = new Set([
-  "founder.name",
-  "site.brand.name",
-  "site.languages",
-  "site.phone",
-  "site.whatsapp",
-  "site.email",
-  "site.labels.whatsappDisplay",
-]);
-
-const TRANSLATION_PATH = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z0-9]+){1,6}$/;
-const MAX_TRANSLATIONS = 1500;
-
-function isTranslatablePath(path: string): boolean {
-  if (path === META_TRANSLATION_PATHS.title || path === META_TRANSLATION_PATHS.description) return true;
-  if (!TRANSLATION_PATH.test(path)) return false;
-  const parts = path.split(".");
-  return !parts.some(
-    (part, i) => NON_TEXT_KEYS.has(part) || NON_TEXT_PATHS.has(parts.slice(0, i + 1).join(".")),
-  );
-}
-
-function translationEntries(value: unknown): Record<string, HomeTranslation> {
-  const out: Record<string, HomeTranslation> = {};
-  if (!isRecord(value)) return out;
-  let count = 0;
-  for (const [path, raw] of Object.entries(value)) {
-    if (count >= MAX_TRANSLATIONS) break;
-    if (!isTranslatablePath(path) || !isRecord(raw)) continue;
-    const source = str(raw.source, "");
-    const text = str(raw.text, "");
-    if (!source || !text) continue;
-    out[path] = { source, text };
-    count += 1;
-  }
-  return out;
-}
-
-/** Every non-empty visible text field of the page as [path, English], top to bottom. */
-export function translatableEntries(content: HomePageContent): [path: string, english: string][] {
-  const out: [string, string][] = [];
-  const walk = (value: unknown, path: string) => {
-    if (typeof value === "string") {
-      if (value) out.push([path, value]);
-    } else if (Array.isArray(value)) {
-      value.forEach((item, index) => walk(item, `${path}.${index}`));
-    } else if (isRecord(value)) {
-      for (const [key, child] of Object.entries(value)) {
-        const childPath = path ? `${path}.${key}` : key;
-        if (!NON_TEXT_KEYS.has(key) && !NON_TEXT_PATHS.has(childPath)) walk(child, childPath);
-      }
-    }
-  };
-  walk(content, "");
-  return out;
-}
-
-/** The built-in translation of an English string, if there is one. */
-export function seedTranslation(lang: TranslatedLanguage, english: string): string | undefined {
-  return SEED_TRANSLATIONS[lang][english];
-}
-
-/**
- * One field in `lang`: the CMS translation while it still matches the
- * English, else the built-in translation, else the English itself.
- */
-export function getLocalizedField(lang: SwitcherLanguage, english: string, saved?: HomeTranslation): string {
-  if (lang === "en" || !english) return english;
-  if (saved && saved.source === english && saved.text) return saved.text;
-  return seedTranslation(lang, english) ?? english;
-}
-
-function setAtPath(target: unknown, path: string, value: string): void {
-  const parts = path.split(".");
-  let node: unknown = target;
-  for (const part of parts.slice(0, -1)) {
-    if (typeof node !== "object" || node === null) return;
-    node = (node as Record<string, unknown>)[part];
-  }
-  if (typeof node === "object" && node !== null) {
-    (node as Record<string, unknown>)[parts[parts.length - 1]] = value;
-  }
-}
-
-/**
- * The page content with every visible text field in `lang`. Structure (order,
- * switches, links, images, list lengths) always stays the English page's.
- */
-export function localizeHomeContent(content: HomePageContent, lang: SwitcherLanguage): HomePageContent {
-  if (lang === "en") return content;
-  const saved = content.translations[lang];
-  const out = structuredClone(content);
-  for (const [path, english] of translatableEntries(content)) {
-    setAtPath(out, path, getLocalizedField(lang, english, saved[path]));
-  }
-  return out;
-}
-
-/** Meta title/description in `lang`; blank English falls back to HOME_META_DEFAULTS. */
-export function localizeMeta(
-  content: HomePageContent,
-  lang: SwitcherLanguage,
-  meta: { title: string | null; description: string | null },
-): { title: string | null; description: string | null } {
-  if (lang === "en") return meta;
-  const saved = content.translations[lang];
-  return {
-    title: getLocalizedField(lang, meta.title ?? HOME_META_DEFAULTS.metaTitle, saved[META_TRANSLATION_PATHS.title]),
-    description: getLocalizedField(
-      lang,
-      meta.description ?? HOME_META_DEFAULTS.metaDescription,
-      saved[META_TRANSLATION_PATHS.description],
-    ),
-  };
-}

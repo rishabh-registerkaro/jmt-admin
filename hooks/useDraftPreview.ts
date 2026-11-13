@@ -28,7 +28,7 @@ export type PreviewPayload =
 interface Options {
   /** The draft as it would be saved; null while the editor is still loading. */
   payload: PreviewPayload | null;
-  /** Website path to show, e.g. "/", "/bn", "/service/site-service-supply". */
+  /** Website path to show, e.g. "/", "/service/site-service-supply". */
   path: string;
   /** Browser tab name, so repeated clicks reuse one preview tab per editor. */
   windowName: string;

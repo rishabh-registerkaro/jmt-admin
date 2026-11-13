@@ -218,7 +218,6 @@ These files have **identical copies** in both repos (marked `SHARED FILE`). When
 - `app/lib/content/home-content.ts`
 - `types/homepage.ts`
 - `data/homepageFallback.ts`
-- `data/homepageTranslations.ts`
 - `utils/leadForm.ts` (also defines the lead form's hidden page and services fields), `utils/contactForm.ts`, `utils/joinForm.ts`
 - `lib/service/normalizeServicePage.ts`, `data/services/*`, `types/service.ts`
 - `lib/sitePages/mergeContent.ts`

@@ -30,7 +30,6 @@ import {
   normalizeHomeContent,
   type HomePageContent,
   type HomeSectionKey,
-  type TranslatedLanguage,
 } from "@/app/lib/content/home-content";
 import { SectionCard, TextField } from "@/components/homepage-editor/fields";
 import type { SectionEditorProps } from "@/components/homepage-editor/types";
@@ -45,7 +44,6 @@ import BannerEditor from "@/components/homepage-editor/BannerEditor";
 import FaqEditor from "@/components/homepage-editor/FaqEditor";
 import ContactEditor from "@/components/homepage-editor/ContactEditor";
 import SiteEditor from "@/components/homepage-editor/SiteEditor";
-import TranslationEditor from "@/components/homepage-editor/TranslationEditor";
 import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
 // Must match HOMEPAGE_CHANNEL in jmt-frontend/components/homepage/LiveRefresh.tsx.
 // BroadcastChannel is same-origin only, so it reaches homepage tabs only when the
@@ -54,15 +52,6 @@ import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
 const HOMEPAGE_CHANNEL = "jmt-homepage";
 
 type AnyEditor = ComponentType<SectionEditorProps<HomeSectionKey>>;
-
-type EditLanguage = "en" | TranslatedLanguage;
-
-/** Which language's text the form edits. The website serves them at /, /bn and /hi. */
-const EDIT_LANGUAGES: { code: EditLanguage; label: string; path: string }[] = [
-  { code: "en", label: "English", path: "" },
-  { code: "bn", label: "বাংলা", path: "/bn" },
-  { code: "hi", label: "हिन्दी", path: "/hi" },
-];
 
 /** One card per section; shown in the order chosen for the page (content.sectionOrder). */
 const SECTIONS: { key: HomeSectionKey; title: string; hint: string; icon: React.ElementType; Editor: AnyEditor }[] = [
@@ -106,10 +95,7 @@ export default function HomepageDashboardPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ hero: true });
-  const [editLang, setEditLang] = useState<EditLanguage>("en");
-  // The page in the language being edited.
-  const langPath = EDIT_LANGUAGES.find((l) => l.code === editLang)?.path ?? "";
-  const liveUrl = `${FRONTEND_URL}${langPath}`;
+  const liveUrl = FRONTEND_URL;
 
   const dirty = !loading && snapshot(state) !== saved;
 
@@ -120,7 +106,7 @@ export default function HomepageDashboardPage() {
   );
   const { openPreview, opening: previewOpening } = useDraftPreview({
     payload: previewPayload,
-    path: langPath || "/",
+    path: "/",
     windowName: "jmt-preview-homepage",
   });
 
@@ -293,35 +279,6 @@ export default function HomepageDashboardPage() {
           </div>
         )}
 
-        <div role="tablist" aria-label="Language to edit" className="inline-flex rounded-lg border border-border bg-card p-1">
-          {EDIT_LANGUAGES.map((l) => (
-            <button
-              key={l.code}
-              type="button"
-              role="tab"
-              aria-selected={editLang === l.code}
-              onClick={() => setEditLang(l.code)}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                editLang === l.code
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {l.label}
-            </button>
-          ))}
-        </div>
-
-        {editLang !== "en" ? (
-          <TranslationEditor
-            lang={editLang}
-            content={content}
-            metaTitle={state.metaTitle}
-            metaDescription={state.metaDescription}
-            onChange={(entries) => setSection("translations", { ...content.translations, [editLang]: entries })}
-          />
-        ) : (
-          <>
         <h2 className="px-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Page sections — same order as the website, top to bottom
         </h2>
@@ -351,7 +308,7 @@ export default function HomepageDashboardPage() {
         <SectionCard
           icon={Settings2}
           title="Navbar, footer & contact details"
-          hint="Logos, phone, WhatsApp, email, button labels, language switcher, menu links and footer"
+          hint="Logos, phone, WhatsApp, email, button labels, menu links and footer"
           open={!!open.site}
           onToggle={() => toggle("site")}
         >
@@ -383,8 +340,6 @@ export default function HomepageDashboardPage() {
             onChange={(metaDescription) => setState((prev) => ({ ...prev, metaDescription }))}
           />
         </SectionCard>
-          </>
-        )}
 
         <div className="flex justify-end pb-10">
           <Button

@@ -74,31 +74,10 @@ export interface ChromeLabels {
   footerContactTitle: string;
 }
 
-/**
- * Languages the homepage is published in: English at "/", Bengali at "/bn",
- * Hindi at "/hi". Bengali/Hindi text comes from HomePageContent.translations
- * (app/lib/content/home-content.ts).
- */
-export const SWITCHER_LANGUAGES = ["en", "bn", "hi"] as const;
-export type SwitcherLanguage = (typeof SWITCHER_LANGUAGES)[number];
-
-export function isSwitcherLanguage(value: unknown): value is SwitcherLanguage {
-  return typeof value === "string" && (SWITCHER_LANGUAGES as readonly string[]).includes(value);
-}
-
-export interface LanguageOption {
-  code: SwitcherLanguage;
-  /** Short label shown in the switcher, e.g. "EN" or "বাং". */
-  label: string;
-  /** Full name, e.g. "বাংলা (Bengali)" (tooltip and screen readers). */
-  name: string;
-}
 
 export interface SiteChrome {
   brand: BrandContent;
   labels: ChromeLabels;
-  /** Empty when the admin has switched the language switcher off. */
-  languages: LanguageOption[];
   nav: NavLink[];
   footerColumns: FooterColumn[];
   footerDescription: string;

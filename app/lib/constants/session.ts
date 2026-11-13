@@ -2,7 +2,7 @@
 // SessionTimeout component (client), so keep this file free of server-only imports.
 
 /** Signed out after this long with no mouse/keyboard/touch activity in any tab. */
-export const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+export const SESSION_IDLE_TIMEOUT_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 /** The "you're about to be signed out" dialog opens this long before the idle timeout. */
 export const SESSION_WARNING_MS = 60 * 1000; // 1 minute
