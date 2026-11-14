@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { inputCls, selectCls } from "@/components/homepage-editor/fields";
 import { slugify } from "@/lib/service/normalizeServicePage";
 
-const FRONTEND_URL = (process.env.NEXT_PUBLIC_JMT_FRONTEND_URL || "http://localhost:3002").replace(/\/+$/, "");
+import { FRONTEND_URL } from "@/lib/frontendUrl";
 
 interface Row {
   id: string;

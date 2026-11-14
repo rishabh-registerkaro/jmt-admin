@@ -16,7 +16,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 /** Public URL of the jmt-frontend project (the Joy Maa Tara website). */
-export const FRONTEND_URL = (process.env.NEXT_PUBLIC_JMT_FRONTEND_URL || "http://localhost:3002").replace(/\/+$/, "");
+export { FRONTEND_URL } from "@/lib/frontendUrl";
+import { FRONTEND_URL } from "@/lib/frontendUrl";
 
 const SYNC_DELAY_MS = 600;
 
