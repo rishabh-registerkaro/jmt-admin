@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Verify OTP was verified (expired OTPs were auto-deleted by the
-        // Mongo TTL index before; now they are filtered out here instead)
+        // Verify OTP was verified. verify-otp extends expiresAt to match the
+        // 15-minute reset token, so this check lines up with the JWT expiry.
         const otpRecord = await prisma.otp.findFirst({
             where: {
                 id: decoded.otpId,
