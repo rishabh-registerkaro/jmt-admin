@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 import { toast } from "sonner";
+import { RevalidateButton } from "@/components/common/RevalidateButton";
 import {
   BadgeCheck,
   Building2,
@@ -254,6 +255,10 @@ export default function HomepageDashboardPage() {
                 Discard
               </Button>
             )}
+            <RevalidateButton
+              label="Homepage"
+              tags={["homepage", "homepage-media", "header-menu", "footer-menu", "service-list", "jmt-service-list"]}
+            />
             <Button
               onClick={handleSave}
               disabled={saving || Boolean(loadError) || (!dirty && exists)}

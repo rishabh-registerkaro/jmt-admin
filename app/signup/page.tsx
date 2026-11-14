@@ -113,6 +113,7 @@ export default function SignupPage() {
               id="password"
               name="password"
               type="password"
+              minLength={8}
               required
               value={form.password}
               onChange={handleChange}

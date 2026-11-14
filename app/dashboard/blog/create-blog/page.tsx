@@ -2,7 +2,7 @@
 
 import { useState, useEffect, ChangeEvent, FormEvent, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { createPost } from "@/lib/apiCalling";
+import { createPost, type CreatePostPayload } from "@/lib/apiCalling";
 import { getUsers, UserListItem } from "@/lib/apiCallingProfile";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import AdditionalFieldsBlog from "@/components/common/AdditionalFileldsBlog";
 import Editor from "@/components/common/Editor";
 import { toast } from "sonner";
+import { toApiError } from "@/app/dashboard/_lib/api-error";
 import { Upload, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { uploadFileToMedia } from "@/app/lib/utils/media";
 
@@ -50,7 +51,7 @@ export default function BlogPage() {
   const [additionalFields, setAdditionalFields] = useState<Record<string, {
     label: string;
     type: "text" | "image" | "file" | "editor";
-    value: any;
+    value: string;
   }>>({});
   const [loading, setLoading] = useState(false);
   const [autoGenerateSlug, setAutoGenerateSlug] = useState(true);
@@ -70,12 +71,6 @@ export default function BlogPage() {
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
   };
-
-  // Fetch categories and users on mount
-  useEffect(() => {
-    fetchCategories();
-    fetchUsers();
-  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -112,6 +107,13 @@ export default function BlogPage() {
       setUsersLoading(false);
     }
   };
+
+  // Fetch categories and users on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchCategories();
+    fetchUsers();
+  }, []);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -238,9 +240,9 @@ export default function BlogPage() {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss(loadingToastId);
-      toast.error(error.message || "Failed to upload image", {
+      toast.error(toApiError(error).message || "Failed to upload image", {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
       });
@@ -288,7 +290,7 @@ export default function BlogPage() {
 
     try {
       // Parse all schemas from textareas
-      const parsedSchemas: Array<Record<string, any>> = [];
+      const parsedSchemas: Array<Record<string, unknown>> = [];
       for (const schemaStr of schemas) {
         if (schemaStr.trim()) {
           try {
@@ -299,9 +301,9 @@ export default function BlogPage() {
             } else {
               parsedSchemas.push(parsed);
             }
-          } catch (error: any) {
+          } catch (error) {
             toast.dismiss(loadingToastId);
-            toast.error(`Invalid JSON in schema field: ${error.message}. Please check your JSON syntax.`, {
+            toast.error(`Invalid JSON in schema field: ${toApiError(error).message}. Please check your JSON syntax.`, {
               closeButton: true,
               duration: 5000,
             });
@@ -311,7 +313,10 @@ export default function BlogPage() {
         }
       }
 
-      const payload: any = {
+      const payload: CreatePostPayload & {
+        schema: Array<Record<string, unknown>> | null;
+        author?: string;
+      } = {
         title: formData.title,
         slug: formData.slug,
         excerpt: formData.excerpt,
@@ -374,12 +379,12 @@ export default function BlogPage() {
           }
         );
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast.dismiss(loadingToastId);
       const errorMessage =
-        error.message ||
-        error.errors?.join(", ") ||
+        toApiError(error).message ||
+        toApiError(error).errors?.join(", ") ||
         "Something went wrong. Please try again.";
         toast.error(errorMessage, {
           closeButton: true,
@@ -759,7 +764,7 @@ export default function BlogPage() {
                 <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
                   <p className="text-sm">No FAQ items added yet</p>
                   <p className="text-xs mt-1">
-                    Click "Add FAQ" to create FAQ items
+                    Click &quot;Add FAQ&quot; to create FAQ items
                   </p>
                 </div>
               )}

@@ -34,13 +34,14 @@ export default function ForgotPasswordPage() {
   const isMountedRef = useRef(true);
 
   // Helper function to check if request was cancelled
-  const isCancelled = useCallback((error: any): boolean => {
+  const isCancelled = useCallback((error: unknown): boolean => {
     if (!error) return false;
+    if (axios.isCancel(error)) return true;
+    if (typeof error !== "object") return false;
     return (
-      axios.isCancel(error) ||
-      error.name === 'AbortError' ||
-      error.code === 'ERR_CANCELED' ||
-      error.message === 'canceled'
+      ("name" in error && error.name === 'AbortError') ||
+      ("code" in error && error.code === 'ERR_CANCELED') ||
+      ("message" in error && error.message === 'canceled')
     );
   }, []);
 
@@ -180,7 +181,7 @@ export default function ForgotPasswordPage() {
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Don't show error if request was cancelled or component unmounted
       if (isCancelled(error) || !isMountedRef.current) {
         return;
@@ -228,7 +229,7 @@ export default function ForgotPasswordPage() {
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Don't show error if request was cancelled or component unmounted
       if (isCancelled(error) || !isMountedRef.current) {
         return;
@@ -258,8 +259,8 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters", {
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters", {
         duration: 4000,
         className: "!bg-transparent !text-foreground",
       });
@@ -303,7 +304,7 @@ export default function ForgotPasswordPage() {
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Don't show error if request was cancelled or component unmounted
       if (isCancelled(error) || !isMountedRef.current) {
         return;
@@ -350,7 +351,7 @@ export default function ForgotPasswordPage() {
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Don't show error if request was cancelled or component unmounted
       if (isCancelled(error) || !isMountedRef.current) {
         return;
@@ -598,7 +599,7 @@ export default function ForgotPasswordPage() {
                 !newPassword ||
                 !confirmPassword ||
                 newPassword !== confirmPassword ||
-                newPassword.length < 6
+                newPassword.length < 8
               }
               className="w-full mt-2 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >

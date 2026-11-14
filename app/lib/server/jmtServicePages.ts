@@ -73,6 +73,6 @@ export function errorResponse(action: string, error: unknown) {
  * Expires the given pages on jmt-frontend (best effort, never throws).
  * Goes through revalidateFrontendTags, not revalidateJmtFrontend: the latter
  * skips its call when JMT_FRONTEND_URL equals PRODUCTION_URL (expecting the
- * Global Elite notifier to cover that origin), so on its own it would send nothing.
+ * main-website notifier to cover that origin), so on its own it would send nothing.
  */
 export const revalidatePages = (...slugs: string[]) => revalidateFrontendTags(jmtServiceTags(...slugs));

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/app/lib/config/db";
-import { identityOverLimit } from "@/app/lib/utils/leadThrottle";
+import { hasSharedSecret, identityOverLimit } from "@/app/lib/utils/leadThrottle";
 import { sendLeadNotification } from "@/app/lib/config/email";
-import { normalizeSecret } from "@/app/lib/utils/revalidateFrontend";
 import {
   EMPTY_JOIN_VALUES,
   HONEYPOT_FIELD,
@@ -27,7 +26,7 @@ import {
 
 const NOTIFY_TIMEOUT_MS = 8000;
 
-/** Header jmt-frontend uses to pass on the visitor's IP (trusted only with the secret). */
+/** Header jmt-frontend uses to pass on the visitor's IP (POST rejects requests without the secret). */
 const CLIENT_IP_HEADER = "x-jmt-client-ip";
 
 const RATE_LIMIT_MAX = 5;
@@ -35,12 +34,8 @@ const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const recentSubmissions = new Map<string, number[]>();
 
 function clientIp(req: NextRequest): string {
-  const expected = normalizeSecret(process.env.REVALIDATE_SECRET);
-  const provided = normalizeSecret(req.headers.get("x-revalidate-secret"));
-  if (expected && provided === expected) {
-    const forwarded = req.headers.get(CLIENT_IP_HEADER)?.trim();
-    if (forwarded) return forwarded;
-  }
+  const forwarded = req.headers.get(CLIENT_IP_HEADER)?.trim();
+  if (forwarded) return forwarded;
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
 }
 
@@ -73,6 +68,19 @@ function successState(): JoinFormState {
 const reply = (state: JoinFormState, status = 200) => NextResponse.json(state, { status });
 
 export async function POST(req: NextRequest) {
+  // Only jmt-frontend's server may post here; it proves itself with the shared secret.
+  if (!hasSharedSecret(req)) {
+    return reply(
+      {
+        status: "error",
+        message: "We couldn't send your application just now. Please try again, or call or WhatsApp us directly.",
+        fieldErrors: {},
+        values: EMPTY_JOIN_VALUES,
+      },
+      401,
+    );
+  }
+
   let formData: FormData;
   try {
     formData = await req.formData();

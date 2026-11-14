@@ -31,6 +31,7 @@ import {
   defaultAboutContent,
   type AboutPageContent,
 } from "@/app/lib/content/about-content";
+import { revalidateTags } from "@/lib/revalidateClient";
 
 // ─── Shared styles (same idiom as the services editor) ───────────────────────
 
@@ -230,23 +231,7 @@ export default function AboutDashboardPage() {
   }, []);
 
   const handleRevalidate = async () => {
-    const toastId = toast.loading("Revalidating cache...");
-    try {
-      const res = await fetch("/api/revalidate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tags: ["about-page"] }),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Cache cleared — frontend will fetch fresh content", { id: toastId });
-      } else {
-        toast.error(data.message || "Revalidation failed", { id: toastId });
-      }
-    } catch {
-      toast.error("Revalidation failed", { id: toastId });
-    }
+    await revalidateTags(["about-page"]);
   };
 
   const handleSave = async () => {

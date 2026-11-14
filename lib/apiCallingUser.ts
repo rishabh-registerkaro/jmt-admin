@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosInstance";
+import { getApiErrorBody } from "./apiError";
 
 export interface User {
     id: string;
@@ -43,11 +44,11 @@ export const updateUserRole = async (userId: string, payload: UpdateUserRolePayl
     try {
         const response = await axiosInstance.patch<UpdateUserRoleResponse>(`/api/users/${userId}`, payload);
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error updating user role:", error);
         return {
             success: false,
-            message: error.response?.data?.message || "Failed to update user role",
+            message: getApiErrorBody(error)?.message || "Failed to update user role",
         };
     }
 }
@@ -60,11 +61,11 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean; me
     try {
         const response = await axiosInstance.delete(`/api/users/${userId}`);
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error deleting user:", error);
         return {
             success: false,
-            message: error.response?.data?.message || "Failed to delete user",
+            message: getApiErrorBody(error)?.message || "Failed to delete user",
         };
     }
 }
@@ -84,11 +85,11 @@ export const changeUserPassword = async (userId: string, payload: ChangeUserPass
             payload
         );
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error changing user password:", error);
         return {
             success: false,
-            message: error.response?.data?.message || "Failed to change user password",
+            message: getApiErrorBody(error)?.message || "Failed to change user password",
         };
     }
 }

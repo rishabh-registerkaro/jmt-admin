@@ -8,7 +8,7 @@ import { deleteFileFromMedia, uploadFileToMedia } from "@/app/lib/utils/media";
 interface AdditionalFieldData {
   label: string;
   type: "text" | "image" | "file" | "editor";
-  value: any;
+  value: string;
 }
 
 interface AdditionalFieldsBlogProps {
@@ -52,7 +52,6 @@ const ALLOWED_FILE_TYPES = [
 const AdditionalFieldsBlog = ({
   additionalFields,
   setAdditionalFields,
-  isEditing,
 }: AdditionalFieldsBlogProps) => {
   const [showAddFieldForm, setShowAddFieldForm] = useState(false);
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(
@@ -97,7 +96,9 @@ const AdditionalFieldsBlog = ({
         }
       }
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount initialisation from the initial additionalFields; kept as an effect to preserve timing
     setFieldMetadata(metadata);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNewFieldChange = (
@@ -255,7 +256,7 @@ const AdditionalFieldsBlog = ({
 
   const updateFieldValue = (
     fieldName: string,
-    value: any,
+    value: string,
     publicId?: string,
     resource_type?: string
   ) => {
@@ -324,19 +325,6 @@ const AdditionalFieldsBlog = ({
         return newSet;
       });
     }
-  };
-
-  const handleChangeFile = async (fieldName: string) => {
-    const metadata = fieldMetadata[fieldName];
-
-    if (metadata?.publicId) {
-      await deleteFileFromMedia(
-        metadata.publicId,
-        metadata.resource_type || "image"
-      );
-    }
-
-    updateFieldValue(fieldName, "");
   };
 
   return (
@@ -454,8 +442,8 @@ const AdditionalFieldsBlog = ({
                   )}
                   <p className="text-xs text-warning mt-2 flex items-center gap-1">
                     <span>⚡</span>
-                    File will be uploaded when you click "Add
-                    Field"
+                    File will be uploaded when you click &quot;Add
+                    Field&quot;
                   </p>
                 </div>
               )}
@@ -491,7 +479,6 @@ const AdditionalFieldsBlog = ({
           <div className="space-y-4 mt-4">
             {Object.entries(additionalFields).map(([fieldName, fieldData]) => {
               const isUploading = uploadingFields.has(fieldName);
-              const metadata = fieldMetadata[fieldName];
 
               return (
                 <div
@@ -678,7 +665,7 @@ const AdditionalFieldsBlog = ({
           <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
             <p className="text-sm">No additional fields added yet</p>
             <p className="text-xs mt-1">
-              Click "Add Field" to create custom fields
+              Click &quot;Add Field&quot; to create custom fields
             </p>
           </div>
         )}

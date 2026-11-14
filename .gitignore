@@ -24,3 +24,6 @@ Thumbs.db
 .vscode/
 .idea/
 .claude/
+
+# Local fix notes / PR draft
+fix.md

@@ -267,7 +267,7 @@ model AboutPage {
 
 // Public homepage (Joy Maa Tara) served by this app at "/". Singleton.
 // Owns its own navbar/footer/contact details so editing it never touches the
-// HeaderMenu/FooterMenu records used by the separate Global Elite frontend.
+// HeaderMenu/FooterMenu records used by the separate main website.
 model HomePage {
   id              String   @id @default(cuid())
   metaTitle       String?
@@ -281,7 +281,7 @@ model HomePage {
 }
 
 // Service pages of the Joy Maa Tara site (jmt-frontend, /service/<slug>).
-// Separate from ServicePage, whose "division" layout feeds the Global Elite site.
+// Separate from ServicePage, whose "division" layout feeds the main website.
 // Edited at /dashboard/services; read by the frontend through the public
 // GET /api/jmt-services/client/<slug> (published pages only).
 model JmtServicePage {

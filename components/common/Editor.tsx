@@ -19,10 +19,10 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Bold, Italic, Strikethrough, Underline as UnderlineIcon,
   List, ListOrdered, Quote, Code2, Minus,
-  Link2, Image as ImageIcon, Table as TableIcon,
+  Link2, Image as ImageIcon,
   Undo, Redo, Heading1, Heading2, Heading3, Upload, X, Loader2, ExternalLink, Trash2
 } from 'lucide-react';
-import { uploadFileToMedia, uploadMediaAsset } from '@/app/lib/utils/media';
+import { uploadFileToMedia } from '@/app/lib/utils/media';
 
 
 const lowlight = createLowlight();
@@ -34,7 +34,7 @@ interface EditorProps {
 }
 
 const Tiptap = ({ content = '', onChange, placeholder = 'Start writing...' }: EditorProps) => {
-  const [updated, setUpdated] = useState(0);
+  const [, setUpdated] = useState(0);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

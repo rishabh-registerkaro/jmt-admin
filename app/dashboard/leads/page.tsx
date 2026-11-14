@@ -20,7 +20,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { Lead } from "@/app/types/lead";
 import {
   Sheet,
@@ -28,7 +27,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import EditLeadForm from "@/components/common/EditLeadForm";
 import ViewLead from "@/components/common/ViewLead";
@@ -94,7 +92,6 @@ export default function LeadsPage() {
   const [viewLead, setViewLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
-  const router = useRouter();
 
   const fetchLeads = async (page: number = 1) => {
     try {
@@ -142,6 +139,7 @@ export default function LeadsPage() {
 
   // Runs on mount and whenever a filter changes.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
     fetchLeads(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, sourceFilter]);
@@ -171,6 +169,7 @@ export default function LeadsPage() {
       );
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- filtered list is state that fetchLeads also sets; kept as-is to avoid a behaviour change
     setFilteredLeads(filtered);
   }, [leads, status, search]);
 
@@ -250,7 +249,7 @@ export default function LeadsPage() {
     }
   };
 
-  const handleCreateLead = async (lead: any) => {
+  const handleCreateLead = async (lead: unknown) => {
     try {
       const toastId = toast.loading("Creating lead...");
 
@@ -312,7 +311,7 @@ export default function LeadsPage() {
                 className: "!bg-transparent !text-foreground",
               });
             }
-          } catch (error) {
+          } catch {
             toast.error("Failed to delete lead", {
               closeButton: true,
               className: "!bg-transparent !text-foreground",
@@ -342,7 +341,7 @@ export default function LeadsPage() {
         return;
       }
 
-      const data = await res.json();
+      await res.json();
       setDrawerOpen(false);
       fetchLeads();
 
@@ -376,7 +375,7 @@ export default function LeadsPage() {
 
           <Select
             value={status}
-            onValueChange={(value) => setStatus(value as any)}
+            onValueChange={(value) => setStatus(value as typeof status)}
           >
             <SelectTrigger className="w-full sm:w-[180px] rounded-lg border">
               <SelectValue placeholder="All Status" />

@@ -9,6 +9,8 @@ import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner"
+import { toApiError } from "@/app/dashboard/_lib/api-error";
+import { RevalidateButton } from "@/components/common/RevalidateButton";
 import { createCategory, deleteCategory } from "@/lib/apiCallingCategory";
 
 const toastConfig = {
@@ -60,17 +62,6 @@ export default function CategoryPage() {
   // Full list only for the parent-category dropdown (small payload: names/ids)
   const [allCategories, setAllCategories] = useState<Category[]>([]);
 
-  // Fetch the paginated table chunk whenever the page changes
-  useEffect(() => {
-    fetchCategories(currentPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
-
-  // Fetch the full list once for the parent dropdown
-  useEffect(() => {
-    fetchAllCategories();
-  }, []);
-
   const fetchCategories = async (page: number = 1) => {
     try {
       setCategoriesLoading(true);
@@ -107,6 +98,18 @@ export default function CategoryPage() {
       console.error("Error fetching all categories:", error);
     }
   };
+
+  // Fetch the paginated table chunk whenever the page changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchCategories(currentPage);
+  }, [currentPage]);
+
+  // Fetch the full list once for the parent dropdown
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchAllCategories();
+  }, []);
 
   const generateSlug = (name: string) => {
     return name
@@ -165,11 +168,11 @@ export default function CategoryPage() {
       } else {
         toast.error(data.message || "Failed to create category", toastConfig);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast.dismiss(loadingToastId);
       toast.error(
-        error.message || "Something went wrong. Please try again.",
+        toApiError(error).message || "Something went wrong. Please try again.",
         toastConfig
       );
     } finally {
@@ -200,13 +203,13 @@ export default function CategoryPage() {
             } else {
               toast.error(data.message || "Failed to delete category", toastConfig);
             }
-          } catch (error: any) {
+          } catch (error) {
             console.error("Error deleting category:", error);
 
             // Stop loading
             toast.dismiss(loadingToastId);
 
-            const message = error?.message || "Something went wrong. Please try again.";
+            const message = toApiError(error).message || "Something went wrong. Please try again.";
 
             // Special handling when category has child categories
             if (message.includes("child categories")) {
@@ -261,9 +264,12 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Categories</h1>
-          <p className="text-sm text-muted-foreground">Manage your post categories</p>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Categories</h1>
+            <p className="text-sm text-muted-foreground">Manage your post categories</p>
+          </div>
+          <RevalidateButton label="the blog list" tags={["post-list"]} className="shrink-0" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -324,7 +330,7 @@ export default function CategoryPage() {
                     )}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    The "slug" is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.
+                    The &quot;slug&quot; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.
                   </p>
                 </div>
 

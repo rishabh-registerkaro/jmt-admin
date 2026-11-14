@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { requireRole } from "@/app/lib/utils/authorization";
 import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 // Public self-signup is disabled: accounts are created by admins only.
 // Without this guard anyone could POST here, get a "contributor" account and
@@ -20,6 +21,12 @@ export async function POST(req: NextRequest) {
     if (!username || !email || !password) {
       return NextResponse.json(
         { message: "All Fields are required" },
+        { status: 400 }
+      );
+    }
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { message: "Password must be at least 8 characters" },
         { status: 400 }
       );
     }
@@ -52,8 +59,8 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    if (error.code === "P2002") {
+  } catch (error) {
+    if (errorFields(error).code === "P2002") {
       return NextResponse.json(
         { message: "Username or Email already exists" },
         { status: 409 }

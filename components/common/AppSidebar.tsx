@@ -5,7 +5,6 @@ import {
   LogOut,
   MessageSquareText,
   Music2,
-  Settings,
   ChevronRight,
   ChevronDown,
   Plus,
@@ -52,6 +51,8 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { getUserProfile, UserProfile } from "@/lib/apiCallingProfile";
+import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { ResetCacheButton } from "./ResetCacheButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -161,7 +162,7 @@ const navigationItems = [
         ],
       },
       // Joy Maa Tara site pages (jmt-frontend /about, /contact, /join-our-crew),
-      // all edited by app/dashboard/site-pages/[key]. The older Global Elite
+      // all edited by app/dashboard/site-pages/[key]. The older main-website
       // editors at /dashboard/about and /dashboard/contact are no longer linked.
       {
         title: "About Us",
@@ -304,6 +305,7 @@ export function AppSidebar() {
 
   // Update submenu states only when pathname changes - merge to preserve manually opened menus
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- merges route-driven open state into manually toggled submenu state on navigation
     setOpenSubmenus((prev) => {
       const merged = { ...prev };
       Object.keys(shouldOpenSubmenus).forEach((key) => {
@@ -326,9 +328,14 @@ export function AppSidebar() {
       setTimeout(() => {
         router.push("/login");
       }, 500);
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss(loadingToastId);
-      toast.error(error.message || "Failed to logout.", { closeButton: true });
+      // logout() rejects with either an Error or a plain { message } object
+      const message =
+        typeof error === "object" && error !== null && "message" in error
+          ? (error as { message?: string }).message
+          : undefined;
+      toast.error(message || "Failed to logout.", { closeButton: true });
       // Even if logout fails, redirect to login
       setTimeout(() => {
         router.push("/login");
@@ -569,6 +576,12 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
+        {/* Clears every cached page on both websites — admins only (the API enforces it too) */}
+        {(ADMIN_ROLES as readonly string[]).includes(userData?.role ?? "") && (
+          <div className={state === "expanded" ? "" : "flex justify-center"}>
+            <ResetCacheButton collapsed={state !== "expanded"} />
+          </div>
+        )}
         {state === "expanded" ? (
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 flex-1">

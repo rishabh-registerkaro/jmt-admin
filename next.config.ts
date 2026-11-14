@@ -51,14 +51,9 @@ const nextConfig: NextConfig = {
   experimental: {
     cpus: 2,
   },
+  poweredByHeader: false,
   images: {
     unoptimized: true,
-  remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "navajowhite-octopus-630288.hostingersite.com",
-      },
-    ],
   },
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];

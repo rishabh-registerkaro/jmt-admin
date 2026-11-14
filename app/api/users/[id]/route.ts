@@ -56,7 +56,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
             success: true,
             user: formattedUser
         }, { status: 200 })
-    } catch (error: any) {
+    } catch (error) {
         console.error("Get user by ID error:", error);
 
         return NextResponse.json(
@@ -119,10 +119,10 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
             }
 
             // validate new password length
-            if (newPassword.length < 6) {
+            if (newPassword.length < 8) {
                 return NextResponse.json({
                     success: false,
-                    message: "New password must be at least 6 characters"
+                    message: "New password must be at least 8 characters"
                 }, { status: 400 })
             }
 
@@ -242,7 +242,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
                 }
             }, { status: 200 })
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Update user error:", error);
 
         return NextResponse.json(
@@ -314,7 +314,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
             success: true,
             message: "User deleted successfully"
         }, { status: 200 });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Delete user error:", error);
 
         return NextResponse.json(

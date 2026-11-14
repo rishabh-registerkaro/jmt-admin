@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import { sendOTP } from "@/app/lib/config/email";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 export async function POST(req: NextRequest) {
     try {
@@ -93,8 +94,7 @@ export async function POST(req: NextRequest) {
         // sending OTP to email
         try {
             await sendOTP(email, otpCode);
-            console.log(`OTP sent successfully to: ${email}`);
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error sending email:", error);
 
             // Delete the OTP record if email fails
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
                 {
                     success: false,
                     message: "Failed to send OTP email. Please try again later.",
-                    error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                    error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
                 },
                 { status: 500 }
             );
@@ -120,13 +120,13 @@ export async function POST(req: NextRequest) {
             success: true,
             message: "OTP sent to your email",
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Request OTP error:", error);
         return NextResponse.json(
             {
                 success: false,
                 message: "Internal server error",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             { status: 500 }
         );

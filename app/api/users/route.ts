@@ -4,6 +4,8 @@ import prisma from "@/app/lib/config/db";
 import { requireRole } from "@/app/lib/utils/authorization";
 import { ADMIN_ROLES } from "@/app/lib/constants/role";
 import bcrypt from "bcrypt";
+import { Prisma } from "@prisma/client";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 export async function POST(req: NextRequest) {
     try {
@@ -44,9 +46,9 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        if (password.length < 6) {
+        if (password.length < 8) {
             return NextResponse.json(
-                { success: false, message: "Password must be at least 6 characters" },
+                { success: false, message: "Password must be at least 8 characters" },
                 { status: 400 }
             );
         }
@@ -87,9 +89,9 @@ export async function POST(req: NextRequest) {
             },
             { status: 201 }
         );
-    } catch (error: any) {
+    } catch (error) {
         console.error("Create user error:", error);
-        if (error.code === "P2002") {
+        if (errorFields(error).code === "P2002") {
             return NextResponse.json(
                 { success: false, message: "Username or email already exists" },
                 { status: 409 }
@@ -128,7 +130,7 @@ export async function GET(req: NextRequest){
         const sortOrder = searchParams.get('sortOrder') || 'desc'; // asc or desc
 
         // building query
-        const where: any = {};
+        const where: Prisma.UserWhereInput = {};
 
         if(search) {
             where.OR = [
@@ -138,7 +140,7 @@ export async function GET(req: NextRequest){
         }
 
         // Building sort object
-        const orderBy: any = {};
+        const orderBy: Prisma.UserOrderByWithRelationInput = {};
         if(sortBy === "username" || sortBy === "email" || sortBy === "createdAt"){
             orderBy[sortBy] = sortOrder === "asc" ? "asc" : "desc";
         }else{

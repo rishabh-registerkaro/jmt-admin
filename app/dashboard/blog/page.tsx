@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import axios from "axios";
+import { revalidateTags } from "@/lib/revalidateClient";
 
 interface Author {
   _id: string;
@@ -70,11 +71,6 @@ export default function BlogPage() {
     loadUsers();
   }, []);
 
-  // Fetch posts - only on page change, not on filter change
-  useEffect(() => {
-    fetchPosts();
-  }, [pagination.page]);
-
   const fetchPosts = async () => {
     try {
       setLoading(true);
@@ -128,24 +124,14 @@ export default function BlogPage() {
     }
   };
 
+  // Fetch posts - only on page change, not on filter change
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchPosts();
+  }, [pagination.page]);
+
   const handleRevalidate = async (slug: string) => {
-    const toastId = toast.loading("Revalidating cache...");
-    try {
-      const res = await fetch("/api/revalidate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tags: ["post-list", `post-${slug}`] }),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Cache cleared — frontend will fetch fresh content", { id: toastId });
-      } else {
-        toast.error(data.message || "Revalidation failed", { id: toastId });
-      }
-    } catch {
-      toast.error("Revalidation failed", { id: toastId });
-    }
+    await revalidateTags(["post-list", `post-${slug}`]);
   };
 
   const formatDate = (dateString: string) => {
@@ -395,7 +381,7 @@ export default function BlogPage() {
               ) : (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    No posts found. Create your first post using the "Add New Post" button.
+                    No posts found. Create your first post using the &quot;Add New Post&quot; button.
                   </TableCell>
                 </TableRow>
               )}

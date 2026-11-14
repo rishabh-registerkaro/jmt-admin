@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
             users: formattedUsers
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Get users error:", error);
         return NextResponse.json(
             { success: false, message: "Failed to fetch users." },

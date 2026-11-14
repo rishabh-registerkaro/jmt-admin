@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { revalidateTags } from "@/lib/revalidateClient";
 
 interface SubSubChildMenuItem {
     sub_sub_child_title: string;
@@ -56,11 +57,6 @@ export default function FooterMenuPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    // Fetch footer menu
-    useEffect(() => {
-        fetchFooterMenu();
-    }, []);
-
     const fetchFooterMenu = async () => {
         try {
             setLoading(true);
@@ -80,6 +76,12 @@ export default function FooterMenuPage() {
             setLoading(false);
         }
     };
+
+    // Fetch footer menu
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+        fetchFooterMenu();
+    }, []);
 
     // ========== MAIN MENU FUNCTIONS (Same as Header Menu) ==========
     const addMainMenu = () => {
@@ -418,23 +420,7 @@ export default function FooterMenuPage() {
     };
 
     const handleRevalidate = async () => {
-        const toastId = toast.loading("Revalidating cache...");
-        try {
-            const res = await fetch("/api/revalidate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tags: ["footer-menu"] }),
-                credentials: "include",
-            });
-            const data = await res.json();
-            if (data.success) {
-                toast.success("Cache cleared — frontend will fetch fresh content", { id: toastId });
-            } else {
-                toast.error(data.message || "Revalidation failed", { id: toastId });
-            }
-        } catch {
-            toast.error("Revalidation failed", { id: toastId });
-        }
+        await revalidateTags(["footer-menu"]);
     };
 
     const handleSave = async () => {
@@ -465,7 +451,7 @@ export default function FooterMenuPage() {
                     closeButton: true,
                 });
             }
-        } catch (error) {
+        } catch {
             toast.error("Failed to save footer menu", {
                 closeButton: true,
             });
@@ -826,7 +812,7 @@ export default function FooterMenuPage() {
 
                     {mainMenu.length === 0 && (
                         <div className="text-center py-12">
-                            <p className="text-muted-foreground">No main menu items. Click "Add Main Menu" to get started.</p>
+                            <p className="text-muted-foreground">No main menu items. Click &quot;Add Main Menu&quot; to get started.</p>
                         </div>
                     )}
                 </div>
@@ -1137,7 +1123,7 @@ export default function FooterMenuPage() {
 
                     {contactDetails.length === 0 && (
                         <div className="text-center py-12">
-                            <p className="text-muted-foreground">No contact details. Click "Add Contact Detail" to get started.</p>
+                            <p className="text-muted-foreground">No contact details. Click &quot;Add Contact Detail&quot; to get started.</p>
                         </div>
                     )}
                 </div>

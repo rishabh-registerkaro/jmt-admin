@@ -43,10 +43,11 @@ export const CONTACT_PAGE = {
     tagline: "Labour contractor for civil and infrastructure sites, West Bengal",
     labels: { phone: "Business line", whatsapp: "WhatsApp", email: "Email", reply: "Reply time" },
     whatsappValue: "Chat with our team",
+    // Icon keys: "shield" | "users" | "file" (BusinessCard maps them to Lucide icons).
     proofs: [
-      { icon: "/contact/chip-shield.svg", label: "PF and ESIC compliant" },
-      { icon: "/contact/chip-users.svg", label: "Supervisor on every crew" },
-      { icon: "/contact/chip-file.svg", label: "Records every month" },
+      { icon: "shield", label: "PF and ESIC compliant" },
+      { icon: "users", label: "Supervisor on every crew" },
+      { icon: "file", label: "Records every month" },
     ],
     languages: { long: "English, Bengali, Hindi", short: "EN, বাং, हिं" },
   },

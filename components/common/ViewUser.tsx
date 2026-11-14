@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +29,13 @@ interface ViewUserProps {
   onDeleteRequest?: (user: User) => void;
 }
 
-const getRoleBadgeColor = (role: string) => {
+// API helpers reject with either an Error or a plain { message } object
+const getErrorMessage = (error: unknown): string | undefined =>
+  typeof error === "object" && error !== null && "message" in error
+    ? (error as { message?: string }).message
+    : undefined;
+
+const getRoleBadgeColor =(role: string) => {
   switch (role?.toLowerCase()) {
     case "superadmin":
       return "bg-brand/15 text-brand-link border-brand/40";
@@ -81,6 +87,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
 
   // Update displayedUser when user prop changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets local form state when a different user (or role) is passed in; parents do not remount via key
     setDisplayedUser(user);
     setSelectedRole(user.role);
     setShowRoleForm(false);
@@ -135,7 +142,9 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
     });
 
     try {
-      const payload: UpdateUserRolePayload = { role: selectedRole as any };
+      const payload: UpdateUserRolePayload = {
+        role: selectedRole as UpdateUserRolePayload["role"],
+      };
       const response = await updateUserRole(displayedUser.id, payload);
 
       toast.dismiss(loadingToastId);
@@ -165,9 +174,9 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
         });
         setSelectedRole(displayedUser.role);
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss(loadingToastId);
-      const errorMessage = error.message || "Failed to update user role";
+      const errorMessage = getErrorMessage(error) || "Failed to update user role";
       toast.error(errorMessage, {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
@@ -203,8 +212,8 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters long", {
+    if (passwordData.newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters long", {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
       });
@@ -269,9 +278,9 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss(loadingToastId);
-      const errorMessage = error.message || "Failed to update password";
+      const errorMessage = getErrorMessage(error) || "Failed to update password";
       toast.error(errorMessage, {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
@@ -328,7 +337,6 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
       {/* User Profile Section */}
       <div className="flex flex-col items-center text-center space-y-4 pb-6 border-b border-border">
         <Avatar className="h-24 w-24">
-          <AvatarImage src="/dummy-user.png" />
           <AvatarFallback className="bg-brand/15 text-brand-link text-2xl font-semibold">
             {displayedUser.username
               .split(" ")
@@ -451,7 +459,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                   <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
                     <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
                     <p className="text-xs text-destructive">
-                      You cannot change Super Admin's role. Only Super Admin can modify Super Admin roles.
+                      You cannot change Super Admin&apos;s role. Only Super Admin can modify Super Admin roles.
                     </p>
                   </div>
                 )}
@@ -563,7 +571,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                 <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
                   <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
                   <p className="text-xs text-destructive">
-                    You cannot change Super Admin's password. Only Super Admin can modify Super Admin passwords.
+                    You cannot change Super Admin&apos;s password. Only Super Admin can modify Super Admin passwords.
                   </p>
                 </div>
               )}
@@ -610,7 +618,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                       name="newPassword"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
-                      placeholder="Enter new password (min. 6 characters)"
+                      placeholder="Enter new password (min. 8 characters)"
                       className="w-full pr-10"
                     />
                     <button
@@ -625,9 +633,9 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                       )}
                     </button>
                   </div>
-                  {passwordData.newPassword && passwordData.newPassword.length < 6 && (
+                  {passwordData.newPassword && passwordData.newPassword.length < 8 && (
                     <p className="text-xs text-destructive">
-                      Password must be at least 6 characters long
+                      Password must be at least 8 characters long
                     </p>
                   )}
                 </div>
@@ -689,7 +697,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                       isChangingPassword ||
                       !passwordData.newPassword ||
                       !passwordData.confirmPassword ||
-                      passwordData.newPassword.length < 6 ||
+                      passwordData.newPassword.length < 8 ||
                       passwordData.newPassword !== passwordData.confirmPassword ||
                       (isUpdatingOwnPassword && !passwordData.currentPassword) ||
                       isAdminChangingSuperadminPassword

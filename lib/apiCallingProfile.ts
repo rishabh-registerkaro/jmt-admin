@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosInstance";
+import { getApiErrorBody } from "./apiError";
 
 // apiCalling for user profile
 export interface UserProfile {
@@ -123,11 +124,11 @@ export const getUserProfile = async (): Promise<GetUserProfileResponse> => {
     try {
         const response = await axiosInstance.get('/api/auth/profile');
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error fetching user profile:', error);
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to fetch user Profile'
+            message: getApiErrorBody(error)?.message || 'Failed to fetch user Profile'
         }
     }
 }
@@ -165,12 +166,12 @@ export const getUserPublishedContent = async (
         );
 
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error fetching user published content:", error);
         return {
             success: false,
             message:
-                error?.response?.data?.message ||
+                getApiErrorBody(error)?.message ||
                 "Failed to fetch user published content.",
         };
     }
@@ -190,11 +191,11 @@ export const updateUserProfile = async (
             `/api/auth/profile`, payload
         )
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error updating user profile:", error);
         return {
             success: false,
-            message: error.response?.data?.message || "Failed to update user Porilfe"
+            message: getApiErrorBody(error)?.message || "Failed to update user Porilfe"
         }
     }
 }
@@ -209,12 +210,12 @@ export const getUsers = async (): Promise<GetUsersResponse> =>{
     try {
         const response = await axiosInstance.get<GetUsersResponse>('/api/auth/users');
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error fetching users:", error);
         return {
             success: false,
             users: [],
-            message: error?.response?.data?.message || "Failed to fetch users.",
+            message: getApiErrorBody(error)?.message || "Failed to fetch users.",
         };
     }
 }

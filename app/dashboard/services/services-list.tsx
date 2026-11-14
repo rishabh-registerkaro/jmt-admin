@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { RevalidateButton } from "@/components/common/RevalidateButton";
+import { jmtServiceTags } from "@/app/lib/utils/cacheTags";
 import { Briefcase, Download, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -111,9 +113,16 @@ export default function ServicesList({ startWithNewForm = false }: { startWithNe
               Pages on the Joy Maa Tara site at /service/&lt;slug&gt;. Saving updates the live page within seconds.
             </p>
           </div>
-          <Button onClick={() => setShowNew((v) => !v)}>
-            <Plus className="mr-2 h-4 w-4" /> Add New Service
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* jmt-service-list + up to 49 pages keeps the request under the 50-tag cap */}
+            <RevalidateButton
+              label="all service pages"
+              tags={jmtServiceTags(...rows.filter((r) => r.status === "published").slice(0, 49).map((r) => r.slug))}
+            />
+            <Button onClick={() => setShowNew((v) => !v)}>
+              <Plus className="mr-2 h-4 w-4" /> Add New Service
+            </Button>
+          </div>
         </div>
 
         {builtIn.map((page) => (
@@ -235,6 +244,9 @@ export default function ServicesList({ startWithNewForm = false }: { startWithNe
                             <Pencil className="h-4 w-4" />
                           </Link>
                         </Button>
+                        {row.status === "published" && (
+                          <RevalidateButton variant="row" label={`/service/${row.slug}`} tags={jmtServiceTags(row.slug)} />
+                        )}
                         {row.status === "published" && (
                           <Button asChild variant="ghost" size="sm" title="View live">
                             <a href={`${FRONTEND_URL}/service/${row.slug}`} target="_blank" rel="noopener noreferrer">

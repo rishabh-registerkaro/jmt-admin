@@ -14,8 +14,17 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+interface NewLeadPayload {
+  name: string;
+  email: string;
+  phoneNo: string;
+  status: string;
+  leadSource: string;
+  formData?: Record<string, string>;
+}
+
 interface Props {
-  onCreate: (lead: any) => Promise<void>;
+  onCreate: (lead: NewLeadPayload) => Promise<void>;
 }
 
 export default function AddLeadForm({ onCreate }: Props) {

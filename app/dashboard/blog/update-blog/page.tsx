@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { updatePost, getPostById } from "@/lib/apiCalling";
 import { toast } from "sonner";
+import { toApiError } from "@/app/dashboard/_lib/api-error";
 import Editor from "@/components/common/Editor";
 import AdditionalFieldsBlog from "@/components/common/AdditionalFileldsBlog";
 
@@ -27,7 +28,7 @@ interface PostFormData {
   additionalFields: Record<string, {
     label: string;
     type: "text" | "image" | "file" | "editor";
-    value: any;
+    value: string;
     options?: string[];
   }>;
 }
@@ -84,18 +85,6 @@ function UpdatePostPageContent() {
     }
   }, [postId, router]);
 
-  // Fetch post data on mount
-  useEffect(() => {
-    if (postId) {
-      fetchPostData();
-    }
-  }, [postId]);
-
-  // Fetch categories on mount
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
   const fetchPostData = async () => {
     if (!postId) return;
 
@@ -115,8 +104,8 @@ function UpdatePostPageContent() {
 
         // Format category IDs
         const categoryIds = post.category
-          ? post.category.map((cat: any) => {
-            return cat._id ? cat._id.toString() : cat.toString();
+          ? post.category.map((cat) => {
+            return typeof cat === "object" && cat._id ? cat._id.toString() : cat.toString();
           })
           : [];
 
@@ -139,12 +128,12 @@ function UpdatePostPageContent() {
           status: post.status || "draft",
           publishedAt: publishedAtFormatted,
           faq_items: post.faq_items || [],
-          additionalFields: post.additionalFields || {},
+          additionalFields: (post.additionalFields || {}) as PostFormData["additionalFields"],
         });
 
         // Load schemas from post data (now schema is an array of objects)
         if (post.schema && Array.isArray(post.schema) && post.schema.length > 0) {
-          const schemaStrings = post.schema.map((obj: any) => JSON.stringify(obj, null, 2));
+          const schemaStrings = post.schema.map((obj: unknown) => JSON.stringify(obj, null, 2));
           setSchemas(schemaStrings);
         } else {
           setSchemas([""]);
@@ -153,9 +142,9 @@ function UpdatePostPageContent() {
         alert("Failed to fetch post data");
         router.push("/dashboard/blog");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching post:", error);
-      alert(error.message || "Failed to fetch post data");
+      alert(toApiError(error).message || "Failed to fetch post data");
       router.push("/dashboard/blog");
     } finally {
       setFetching(false);
@@ -181,6 +170,20 @@ function UpdatePostPageContent() {
       setCategoriesLoading(false);
     }
   };
+
+  // Fetch post data on mount
+  useEffect(() => {
+    if (postId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+      fetchPostData();
+    }
+  }, [postId]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchCategories();
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -303,9 +306,9 @@ function UpdatePostPageContent() {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss(loadingToastId);
-      toast.error(error.message || "Failed to upload image", {
+      toast.error(toApiError(error).message || "Failed to upload image", {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
       });
@@ -425,7 +428,7 @@ function UpdatePostPageContent() {
 
     try {
       // Parse all schemas from textareas
-      const parsedSchemas: Array<Record<string, any>> = [];
+      const parsedSchemas: Array<Record<string, unknown>> = [];
       for (const schemaStr of schemas) {
         if (schemaStr.trim()) {
           try {
@@ -436,9 +439,9 @@ function UpdatePostPageContent() {
             } else {
               parsedSchemas.push(parsed);
             }
-          } catch (error: any) {
+          } catch (error) {
             toast.dismiss(loadingToastId);
-            toast.error(`Invalid JSON in schema field: ${error.message}. Please check your JSON syntax.`, {
+            toast.error(`Invalid JSON in schema field: ${toApiError(error).message}. Please check your JSON syntax.`, {
               closeButton: true,
               duration: 5000,
             });
@@ -479,12 +482,12 @@ function UpdatePostPageContent() {
       } else {
         toast.error(data.message || "Failed to update post", { closeButton: true });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       // Dismiss loading toast
       toast.dismiss(loadingToastId);
 
-      const errorMessage = error.message || error.errors?.join(", ") || "Something went wrong. Please try again.";
+      const errorMessage = toApiError(error).message || toApiError(error).errors?.join(", ") || "Something went wrong. Please try again.";
       toast.error(errorMessage, { closeButton: true });
     } finally {
       setLoading(false);
@@ -508,7 +511,7 @@ function UpdatePostPageContent() {
 
     try {
       // Parse all schemas from textareas
-      const parsedSchemas: Array<Record<string, any>> = [];
+      const parsedSchemas: Array<Record<string, unknown>> = [];
       for (const schemaStr of schemas) {
         if (schemaStr.trim()) {
           try {
@@ -519,9 +522,9 @@ function UpdatePostPageContent() {
             } else {
               parsedSchemas.push(parsed);
             }
-          } catch (error: any) {
+          } catch (error) {
             toast.dismiss(loadingToastId);
-            toast.error(`Invalid JSON in schema field: ${error.message}. Please check your JSON syntax.`, {
+            toast.error(`Invalid JSON in schema field: ${toApiError(error).message}. Please check your JSON syntax.`, {
               closeButton: true,
               duration: 5000,
             });
@@ -570,11 +573,11 @@ function UpdatePostPageContent() {
       } else {
         toast.error(data.message || "Failed to publish post", { closeButton: true });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast.dismiss(loadingToastId);
 
-      const errorMessage = error.message || error.errors?.join(", ") || "Something went wrong. Please try again.";
+      const errorMessage = toApiError(error).message || toApiError(error).errors?.join(", ") || "Something went wrong. Please try again.";
       toast.error(errorMessage, { closeButton: true });
     } finally {
       setLoading(false);
@@ -915,7 +918,7 @@ function UpdatePostPageContent() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
                   <p className="text-sm">No FAQ items added yet</p>
-                  <p className="text-xs mt-1">Click "Add FAQ" to create FAQ items</p>
+                  <p className="text-xs mt-1">Click &quot;Add FAQ&quot; to create FAQ items</p>
                 </div>
               )}
             </div>

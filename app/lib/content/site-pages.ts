@@ -92,7 +92,7 @@ export const SITE_PAGES = {
       workers: { title: "Workers line", hint: "Strip above the footer for job seekers" },
     },
     options: {
-      "card.proofs[].icon": ["/contact/chip-shield.svg", "/contact/chip-users.svg", "/contact/chip-file.svg"],
+      "card.proofs[].icon": ["shield", "users", "file"],
     },
     hints: {
       "office.address": "Full street address. Leave empty to show the orange “to add” placeholder.",

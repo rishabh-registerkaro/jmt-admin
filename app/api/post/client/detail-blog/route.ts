@@ -1,5 +1,6 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 
 
@@ -111,13 +112,13 @@ export async function GET(req: NextRequest) {
             headers: getCorsHeaders(req.headers.get('origin'))
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error fetching blog detail:", error);
         return NextResponse.json(
             {
                 success: false,
                 message: "Failed to fetch blog post",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             {
                 status: 500,

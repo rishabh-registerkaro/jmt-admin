@@ -5,6 +5,8 @@
 import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { toApiError } from "@/app/dashboard/_lib/api-error";
+import { RevalidateButton } from "@/components/common/RevalidateButton";
 import { Asset } from "@/app/types/media";
 import { deleteFileFromMedia, uploadFileToMedia } from "@/app/lib/utils/media";
 
@@ -49,7 +51,7 @@ export default function MediaLibrary() {
       const data = await res.json();
       setAssets(data?.result?.resources || []);
       if (data?.result?.pagination) setPagination(data.result.pagination);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load media");
     } finally {
       setLoading(false);
@@ -68,8 +70,8 @@ export default function MediaLibrary() {
       // New uploads sort first — jump to page 1
       setPage(1);
       loadAssets(1);
-    } catch (err: any) {
-      toast.error(err.message || "Upload failed", { id: toastId });
+    } catch (err) {
+      toast.error(toApiError(err).message || "Upload failed", { id: toastId });
     }
   };
 
@@ -140,6 +142,7 @@ export default function MediaLibrary() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
     loadAssets(page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
@@ -150,10 +153,15 @@ export default function MediaLibrary() {
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
       <div className="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-8">
-        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Media Library</h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          Manage your uploaded images, videos, and documents.
-        </p>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Media Library</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your uploaded images, videos, and documents.
+            </p>
+          </div>
+          <RevalidateButton label="homepage images" tags={["homepage-media"]} className="shrink-0" />
+        </div>
 
         {/* UPLOAD */}
         <div className="rounded-lg border border-dashed border-border-strong bg-card p-6 sm:p-8 text-center mb-8">

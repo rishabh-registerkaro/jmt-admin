@@ -1,5 +1,6 @@
 
 import axiosInstance from "./axiosInstance";
+import { getApiErrorBody } from "./apiError";
 
 export interface Category {
     _id: string;
@@ -78,11 +79,11 @@ export const getCategoryById = async (categoryId: string): Promise<GetCategoryRe
     try {
         const response = await axiosInstance.get<GetCategoryResponse>(`/api/post/category/create-update-category?id=${categoryId}`)
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error fetching category:", error);
         throw {
             success: false,
-            message: error.response?.data?.message || "Failed to fetch category",
+            message: getApiErrorBody(error)?.message || "Failed to fetch category",
             category: null,
         };
     }
@@ -102,14 +103,14 @@ export const createCategory = async (payload: CreateCategoryPayload): Promise<Cr
         );
 
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error creating category:", error);
         throw {
             success: false,
             message:
-                error.response?.data?.message ||
+                getApiErrorBody(error)?.message ||
                 "Internal server error. Failed to create category.",
-            errors: error.response?.data?.errors,
+            errors: getApiErrorBody(error)?.errors,
         }
     }
 }
@@ -130,14 +131,14 @@ export const updateCategory = async (
         );
 
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error updating category:", error);
         throw {
             success: false,
             message:
-                error.response?.data?.message ||
+                getApiErrorBody(error)?.message ||
                 "Internal server error. Failed to update category.",
-            errors: error.response?.data?.errors,
+            errors: getApiErrorBody(error)?.errors,
         };
     }
 };
@@ -158,12 +159,12 @@ export const deleteCategory = async (categoryId: string): Promise<DeleteCategory
         )
 
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error deleting category:", error);
         throw {
             success: false,
             message:
-                error.response?.data?.message ||
+                getApiErrorBody(error)?.message ||
                 "Internal server error. Failed to delete category.",
         };
 

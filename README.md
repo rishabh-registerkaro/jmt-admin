@@ -14,7 +14,7 @@ Two public sites read content from it:
 | Site | Repo / location | How it talks to this API |
 |---|---|---|
 | Joy Maa Tara website | [`jmt-frontend`](../jmt-frontend), port 3002 | `GET /api/homepage/client`, `/api/homepage/version`, `/api/jmt-services/client/*`, `/api/site-pages/client/*`, and `POST /api/lead/{homepage,contact,join}` |
-| Global Elite website | `PRODUCTION_URL` | `/api/*/client/*` routes (CORS allows `PRODUCTION_URL`) |
+| Main website | `PRODUCTION_URL` | `/api/*/client/*` routes (CORS allows `PRODUCTION_URL`) |
 
 After every content save, `app/lib/utils/revalidateFrontend.ts` calls `POST /api/revalidate` on **both** sites, so edits show up right away.
 
@@ -31,8 +31,8 @@ After every content save, `app/lib/utils/revalidateFrontend.ts` calls `POST /api
 About Us, Contact and Join Our Crew are top-level sidebar items, next to Menus.
 
 > **Changes to the dashboard URLs**
-> - **Services** (`/dashboard/services`) now lists the Joy Maa Tara service pages: create a page, import a built-in one, edit, delete. "Add New Service" opens the same list with the new-page form open. The old `/dashboard/jmt-services` pages and the Global Elite service editor (`/dashboard/services/update-service`) were removed. The Global Elite service API routes are unchanged.
-> - The sidebar's **About Us** and **Contact** items used to open the **Global Elite** editors (`/dashboard/about`, `/dashboard/contact`, tables `about_pages` and `contact_pages`). They now open the Joy Maa Tara pages. The Global Elite editors and their data are unchanged and still reachable by URL.
+> - **Services** (`/dashboard/services`) now lists the Joy Maa Tara service pages: create a page, import a built-in one, edit, delete. "Add New Service" opens the same list with the new-page form open. The old `/dashboard/jmt-services` pages and the main website service editor (`/dashboard/services/update-service`) were removed. The main website service API routes are unchanged.
+> - The sidebar's **About Us** and **Contact** items used to open the **main website** editors (`/dashboard/about`, `/dashboard/contact`, tables `about_pages` and `contact_pages`). They now open the Joy Maa Tara pages. The main website editors and their data are unchanged and still reachable by URL.
 
 ### Preview (unsaved edits)
 
@@ -121,7 +121,7 @@ To see the public homepage too, run [`jmt-frontend`](../jmt-frontend) on port 30
 | `DATABASE_URL` | **yes** | MySQL connection string: `mysql://USER:PASSWORD@HOST:3306/DB?connection_limit=5`. URL-encode special characters in the password (`@` → `%40`, `#` → `%23`). |
 | `JWT_SECRET` | **yes** | Signs login tokens. Use a long random string (`openssl rand -hex 32`). |
 | `REVALIDATE_SECRET` | for the frontends | Shared secret. It must be the **same value** in `jmt-frontend/.env`. It guards cache refreshes and draft previews, and it lets the homepage lead form's per-visitor rate limit see real visitor IPs. |
-| `PRODUCTION_URL` | for Global Elite | Origin of the Global Elite website. Used for CORS and cache refreshes. |
+| `PRODUCTION_URL` | for main website | Origin of the main website. Used for CORS and cache refreshes. |
 | `JMT_FRONTEND_URL` | for jmt-frontend | Origin of jmt-frontend (default `http://localhost:3002`). Cache-refresh calls go here. |
 | `NEXT_PUBLIC_JMT_FRONTEND_URL` | for jmt-frontend | The same URL, for the editors' "View live" and **Preview** links. It's baked in at **build** time. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | for email | SMTP settings. Gmail: use `smtp.gmail.com:587` and an [App Password](https://myaccount.google.com/apppasswords), not the normal password. |
@@ -151,7 +151,7 @@ Check the SMTP settings before deploying with `npm run test:smtp` (auth only) or
 | `npm run seed:homepage` | Fills the homepage editor with default content. Add `-- --force` to overwrite. |
 | `npm run test:smtp` | Checks the SMTP credentials |
 
-Other one-off seeders live in `prisma/` (`seed-menus.ts`, `seed-about.ts`, `seed-service-pages.ts`, `seed-blog-posts.ts`). They **overwrite** live Global Elite content. Only run them (`npx tsx prisma/<file>.ts`) against an empty database.
+Other one-off seeders live in `prisma/` (`seed-menus.ts`, `seed-about.ts`, `seed-service-pages.ts`, `seed-blog-posts.ts`). They **overwrite** live main website content. Only run them (`npx tsx prisma/<file>.ts`) against an empty database.
 
 ### Schema changes
 

@@ -38,7 +38,7 @@ export default function proxy(req: NextRequest) {
     return NextResponse.next({
       request: { headers: requestHeaders },
     });
-  } catch (err) {
+  } catch {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 }
@@ -54,6 +54,6 @@ export const config = {
     // jmt-frontend/public), shown in the Website pages editor previews.
     // robots.txt must reach crawlers (app/robots.ts: Disallow /) instead of
     // being redirected to /login.
-    "/((?!_next|api|homepage/|service/|about/|join/|contact/|favicon.ico|icon.png|apple-icon.png|robots.txt).*)",
+    "/((?!_next|api|homepage/|service/|about/|join/|contact/|favicon.ico|icon.svg|icon.png|apple-icon.png|robots.txt).*)",
   ],
 };

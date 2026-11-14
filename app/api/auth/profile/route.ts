@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { intParam } from "@/app/lib/utils/pagination";
 import prisma from "@/app/lib/config/db"
 import jwt from "jsonwebtoken"
+import { errorFields } from "@/app/lib/utils/errorFields"
 
 export async function GET(req: NextRequest) {
     try {
@@ -39,8 +40,8 @@ export async function GET(req: NextRequest) {
                 updatedAt: user.updatedAt,
             }
         })
-    } catch (error: any) {
-        if (error.name === "JsonWebTokenError" || error.name === 'TokenExpiredError') {
+    } catch (error) {
+        if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === 'TokenExpiredError') {
             return NextResponse.json(
                 { success: false, message: "Invalid or expired token. Please login again." },
                 { status: 401 }
@@ -73,8 +74,8 @@ export async function POST(req: NextRequest) {
                 username: string;
                 role: string;
             };
-        } catch (error: any) {
-            if (error.name === "JsonWebTokenError" || error.name === 'TokenExpiredError') {
+        } catch (error) {
+            if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === 'TokenExpiredError') {
                 return NextResponse.json(
                     { success: false, message: "Invalid or expired token. Please login again." },
                     { status: 401 }
@@ -164,9 +165,9 @@ export async function POST(req: NextRequest) {
                     createdAt: post.createdAt,
                     updatedAt: post.updatedAt,
                 })),
-                pages: services.map((svc: any) => ({
+                pages: services.map((svc) => ({
                     _id: svc.id,
-                    pageTitle: svc.content?.badge || svc.slug,
+                    pageTitle: (svc.content as { badge?: unknown } | null)?.badge || svc.slug,
                     pageSlug: svc.slug,
                     status: svc.status,
                     createdAt: svc.createdAt,
@@ -192,7 +193,7 @@ export async function POST(req: NextRequest) {
                 },
             },
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Get user published content error:", error);
         return NextResponse.json(
             { success: false, message: "Failed to fetch user published content." },
@@ -218,8 +219,8 @@ export async function PUT(req: NextRequest) {
                 id: string;
                 username: string;
             };
-        } catch (error: any) {
-            if (error.name === "JsonWebTokenError" || error.name === 'TokenExpiredError') {
+        } catch (error) {
+            if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === 'TokenExpiredError') {
                 return NextResponse.json(
                     { success: false, message: "Invalid or expired token. Please login again." },
                     { status: 401 }
@@ -326,12 +327,12 @@ export async function PUT(req: NextRequest) {
                 updatedAt: updatedUser.updatedAt,
             }
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Update profile error:", error);
 
         // Handle duplicate key error (Prisma unique constraint violation)
-        if (error.code === "P2002") {
-            const target = String(error.meta?.target ?? "");
+        if (errorFields(error).code === "P2002") {
+            const target = String(errorFields(errorFields(error).meta).target ?? "");
             const field = target.includes("email") ? "email" : "username";
             return NextResponse.json({
                 success: false,

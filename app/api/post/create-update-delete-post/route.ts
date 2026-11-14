@@ -8,6 +8,7 @@ import { ensureDefaultCategory } from "@/app/lib/utils/DefaultCategory";
 import { requireRole } from "@/app/lib/utils/authorization";
 import { CONTENT_ROLES, EDITOR_ROLES } from "@/app/lib/constants/role";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 // Frontend cache tags for a blog post (mirrors app/lib/cms.ts on the frontend)
 const postTags = (slug: string) => ["post-list", `post-${slug}`];
@@ -172,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     // Add FAQ items if provided
     if (faq_items && Array.isArray(faq_items) && faq_items.length > 0) {
-      postData.faqItems = faq_items.map((faq: any) => ({
+      postData.faqItems = faq_items.map((faq: { question: string; answer: string }) => ({
         question: faq.question.trim(),
         answer: faq.answer.trim(),
       })) as Prisma.InputJsonValue;
@@ -189,7 +190,7 @@ export async function POST(req: NextRequest) {
         postData.schemaJson = Prisma.DbNull;
       } else if (Array.isArray(schema)) {
         // Filter out any null/undefined values and ensure all items are objects
-        postData.schemaJson = schema.filter((s: any) => s !== null && s !== undefined && typeof s === "object") as Prisma.InputJsonValue;
+        postData.schemaJson = schema.filter((s: unknown) => s !== null && s !== undefined && typeof s === "object") as Prisma.InputJsonValue;
       } else if (typeof schema === "object") {
         // If it's a single object, wrap it in an array
         postData.schemaJson = [schema] as Prisma.InputJsonValue;
@@ -231,11 +232,11 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating post:", error);
 
     // Handle duplicate key error (slug)
-    if (error.code === "P2002") {
+    if (errorFields(error).code === "P2002") {
       return NextResponse.json(
         {
           success: false,
@@ -249,7 +250,7 @@ export async function POST(req: NextRequest) {
       {
         success: false,
         message: "Internal server error. Failed to create post.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );
@@ -376,7 +377,7 @@ export async function GET(req: NextRequest) {
 
     // Transform posts to include all date fields
     const transformedPosts = posts.map((post) => {
-      const postData: any = {
+      const postData: Record<string, unknown> = {
         _id: post.id,
         title: post.title,
         slug: post.slug,
@@ -414,7 +415,7 @@ export async function GET(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching posts:", error);
 
     return NextResponse.json(
@@ -482,14 +483,14 @@ export async function DELETE(req: NextRequest) {
     );
 
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting post:", error);
 
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error. Failed to delete post.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );
@@ -689,7 +690,7 @@ export async function PUT(req: NextRequest) {
         }
       }
 
-      updateData.faqItems = faq_items.map((faq: any) => ({
+      updateData.faqItems = faq_items.map((faq: { question: string; answer: string }) => ({
         question: faq.question.trim(),
         answer: faq.answer.trim(),
       })) as Prisma.InputJsonValue;
@@ -709,9 +710,9 @@ export async function PUT(req: NextRequest) {
 
       // Deep merge additionalFields with existing ones
       // This allows updating specific fields in additionalFields without losing others
-      const existingFields: Record<string, any> =
-        (post.additionalFields as Record<string, any>) || {};
-      const mergedFields: Record<string, any> = {
+      const existingFields: Record<string, unknown> =
+        (post.additionalFields as Record<string, unknown>) || {};
+      const mergedFields: Record<string, unknown> = {
         ...existingFields,
         ...additionalFields,
       };
@@ -744,7 +745,7 @@ export async function PUT(req: NextRequest) {
         updateData.schemaJson = Prisma.DbNull;
       } else if (Array.isArray(schema)) {
         // Filter out any null/undefined values and ensure all items are objects
-        updateData.schemaJson = schema.filter((s: any) => s !== null && s !== undefined && typeof s === "object") as Prisma.InputJsonValue;
+        updateData.schemaJson = schema.filter((s: unknown) => s !== null && s !== undefined && typeof s === "object") as Prisma.InputJsonValue;
       } else if (typeof schema === "object") {
         // If it's a single object, wrap it in an array
         updateData.schemaJson = [schema] as Prisma.InputJsonValue;
@@ -810,11 +811,11 @@ export async function PUT(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating post:", error);
 
     // Handle duplicate key error (slug)
-    if (error.code === "P2002") {
+    if (errorFields(error).code === "P2002") {
       return NextResponse.json(
         {
           success: false,
@@ -828,7 +829,7 @@ export async function PUT(req: NextRequest) {
       {
         success: false,
         message: "Internal server error. Failed to update post.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );
