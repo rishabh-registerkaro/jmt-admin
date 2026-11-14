@@ -8,6 +8,8 @@ import { useCallback, useEffect, useMemo, useState, type ComponentType } from "r
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { RevalidateButton } from "@/components/common/RevalidateButton";
+import { jmtServiceTags } from "@/app/lib/utils/cacheTags";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -238,6 +240,7 @@ export default function JmtServiceEditorPage() {
                 Publish
               </Button>
             )}
+            {published && liveSlug && <RevalidateButton label={`/service/${liveSlug}`} tags={jmtServiceTags(liveSlug)} />}
             <Button onClick={() => save()} disabled={saving || !dirty} className="ml-auto px-6 sm:ml-0">
               {saving ? "Saving..." : "Save changes"}
             </Button>

@@ -134,13 +134,13 @@ export async function POST(req: NextRequest) {
         headers: corsHeaders,
       }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.log("Error while storing lead data in DB", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal Server Error - Storing Lead data",
-        error: error.message,
+        ...(process.env.NODE_ENV === "development" ? { error: error instanceof Error ? error.message : String(error) } : {}),
       },
       {
         status: 500,
@@ -180,9 +180,9 @@ export async function GET(req: NextRequest) {
     const LEAD_STATUSES = ["new", "contacted", "converted", "lost"];
     const noMatch = status !== null && !LEAD_STATUSES.includes(status);
 
-    const query: any = {};
+    const query: Prisma.LeadWhereInput = {};
     if (status) {
-      query.status = status;
+      query.status = status as LeadStatus;
     }
     // Exact source, as listed in `sources` below (Source filter in the dashboard).
     const source = searchParams.get("source");
@@ -236,13 +236,13 @@ export async function GET(req: NextRequest) {
       },
       { status: 200, headers: corsHeaders }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.log("Error fetching leads", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal Server Error - Fetching leads",
-        error: error.message,
+        ...(process.env.NODE_ENV === "development" ? { error: error instanceof Error ? error.message : String(error) } : {}),
       },
       { status: 500, headers: corsHeaders }
     );

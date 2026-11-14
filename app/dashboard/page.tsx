@@ -44,11 +44,6 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [userName, setUserName] = useState<string>("");
 
-  useEffect(() => {
-    fetchDashboardData();
-    fetchUserProfile();
-  }, []);
-
   const fetchUserProfile = async () => {
     try {
       const res = await fetch("/api/auth/profile");
@@ -69,6 +64,12 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchDashboardData();
+    fetchUserProfile();
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {

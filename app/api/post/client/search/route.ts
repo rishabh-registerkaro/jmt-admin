@@ -1,5 +1,6 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 const getCorsHeaders = (origin: string | null) => {
     const PRODUCTION_URL = process.env.PRODUCTION_URL || '';
@@ -70,14 +71,14 @@ export async function GET(req: NextRequest) {
             status: 200,
             headers: getCorsHeaders(origin)
         })
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error searching blogs:", error);
         const origin = req.headers.get('origin');
         return NextResponse.json(
             {
                 success: false,
                 message: "Failed to search blogs",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             {
                 status: 500,

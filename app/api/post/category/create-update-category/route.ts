@@ -4,6 +4,7 @@ import { withMongoId } from "@/app/lib/utils/serialize";
 import { requireRole } from "@/app/lib/utils/authorization";
 import { EDITOR_ROLES } from "@/app/lib/constants/role";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 // Palette that matches JMT frontend design system
 const CATEGORY_PALETTE = [
@@ -115,11 +116,11 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating category:", error);
 
     // Handle duplicate key error (slug)
-    if (error.code === "P2002") {
+    if (errorFields(error).code === "P2002") {
       return NextResponse.json(
         {
           success: false,
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
       {
         success: false,
         message: "Internal server error. Failed to create category.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );
@@ -292,11 +293,11 @@ export async function PUT(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating category:", error);
 
     // Handle duplicate key error (slug)
-    if (error.code === "P2002") {
+    if (errorFields(error).code === "P2002") {
       return NextResponse.json(
         {
           success: false,
@@ -310,7 +311,7 @@ export async function PUT(req: NextRequest) {
       {
         success: false,
         message: "Internal server error. Failed to update category.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );
@@ -405,11 +406,11 @@ export async function DELETE(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting category:", error);
 
     // Handle JWT verification errors
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+    if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === "TokenExpiredError") {
       return NextResponse.json(
         {
           success: false,
@@ -423,7 +424,7 @@ export async function DELETE(req: NextRequest) {
       {
         success: false,
         message: "Internal server error. Failed to delete category.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );
@@ -492,14 +493,14 @@ export async function GET(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching category:", error);
 
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error. Failed to fetch category.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );

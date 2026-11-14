@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import prisma from "@/app/lib/config/db";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 export const getCurrentUser = async (req: NextRequest) => {
   try {
@@ -41,9 +42,9 @@ export const getCurrentUser = async (req: NextRequest) => {
       username: user.username,
       role: user.role
     };
-  } catch (error: any) {
+  } catch (error) {
     // Handle JWT errors
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+    if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === "TokenExpiredError") {
       return NextResponse.json(
         {
           success: false,

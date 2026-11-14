@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosInstance";
+import { getApiErrorBody, getErrorMessage } from "./apiError";
 
 export interface LogoutResponse {
     message: string;
@@ -31,10 +32,10 @@ export const logout = async (): Promise<LogoutResponse> => {
         }
 
         throw new Error("Failed to logout");
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error logging out:", error);
         throw {
-            message: error.response?.data?.message || error.message || "Failed to logout",
+            message: getApiErrorBody(error)?.message || getErrorMessage(error) || "Failed to logout",
         };
     }
 };
@@ -55,10 +56,10 @@ export const changePassword = async (payload: ChangePasswordPayload): Promise<Ch
             return response.data;
         }
         throw new Error("Failed to change password");
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error changing password:", error);
         throw {
-            message: error.response?.data?.message || error.message || "Failed to change password",
+            message: getApiErrorBody(error)?.message || getErrorMessage(error) || "Failed to change password",
         };
     }
 }

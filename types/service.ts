@@ -1,4 +1,4 @@
-// View-model types for a public service page (app/[lang]/service/…).
+// View-model types for a public service page (app/service/…).
 // Content lives in data/services/*; components only ever see these shapes.
 
 import type { AccentHeading, HomeImage } from "@/types/homepage";

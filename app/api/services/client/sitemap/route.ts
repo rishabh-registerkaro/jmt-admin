@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
             { success: true, services: data },
             { status: 200, headers: getCorsHeaders(origin) }
         );
-    } catch (error: any) {
+    } catch {
         const origin = req.headers.get('origin');
         return NextResponse.json(
             { success: false, message: "Failed to fetch service slugs" },

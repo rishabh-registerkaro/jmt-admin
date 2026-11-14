@@ -1,5 +1,6 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 const getCorsHeaders = (origin: string | null) => {
     const PRODUCTION_URL = process.env.PRODUCTION_URL || "";
@@ -65,14 +66,14 @@ export async function GET(req: NextRequest) {
             { success: true, posts, count: posts.length },
             { status: 200, headers: getCorsHeaders(origin) }
         );
-    } catch (error: any) {
+    } catch (error) {
         console.error("GET /api/post/client/blog-meta error:", error);
         const origin = req.headers.get("origin");
         return NextResponse.json(
             {
                 success: false,
                 message: "Failed to fetch blog meta",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             { status: 500, headers: getCorsHeaders(origin) }
         );

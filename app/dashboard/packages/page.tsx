@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { revalidateTags } from "@/lib/revalidateClient";
 
 interface Author {
   _id: string;
@@ -99,6 +100,7 @@ export default function PackagesPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
     fetchBlocks(1);
   }, [fetchBlocks]);
 
@@ -187,25 +189,7 @@ export default function PackagesPage() {
   };
 
   const handleRevalidate = async (targetPages: string[] = []) => {
-    const toastId = toast.loading("Revalidating cache...");
-    try {
-      const res = await fetch("/api/revalidate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tags: ["package-list", ...targetPages.map((p) => `packages-${p}`)],
-        }),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Cache cleared — frontend will fetch fresh content", { id: toastId });
-      } else {
-        toast.error(data.message || "Revalidation failed", { id: toastId });
-      }
-    } catch {
-      toast.error("Revalidation failed", { id: toastId });
-    }
+    await revalidateTags(["package-list", ...targetPages.map((p) => `packages-${p}`)]);
   };
 
   const filteredBlocks = blocks.filter((block) => {

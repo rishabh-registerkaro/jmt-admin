@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/config/db";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 export async function GET(req: NextRequest) {
     const start = Date.now();
@@ -10,12 +11,12 @@ export async function GET(req: NextRequest) {
     try {
         await prisma.$queryRaw`SELECT 1`;
         dbStatus = "connected";
-    } catch (err: any) {
+    } catch (err) {
         dbStatus = "error";
         // Log details server-side only: Prisma connection errors can include
         // the DB host/user, and this endpoint is public.
         console.error("Health check DB error:", err);
-        dbError = err?.errorCode ? `Prisma ${err.errorCode}` : "Database query failed";
+        dbError = errorFields(err).errorCode ? `Prisma ${errorFields(err).errorCode}` : "Database query failed";
     }
 
     const healthy = dbStatus === "connected";

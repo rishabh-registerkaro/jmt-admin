@@ -8,6 +8,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { RevalidateButton } from "@/components/common/RevalidateButton";
+import { jmtSitePageTags } from "@/app/lib/utils/cacheTags";
 import { ExternalLink, Eye, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ContentEditor from "@/components/site-page-editor/ContentEditor";
@@ -174,6 +176,7 @@ export default function SitePageEditor() {
                 Discard
               </Button>
             )}
+            <RevalidateButton label={page.title} tags={jmtSitePageTags(key)} />
             <Button onClick={save} disabled={saveDisabled} className="ml-auto px-6 sm:ml-0">
               {saveLabel}
             </Button>

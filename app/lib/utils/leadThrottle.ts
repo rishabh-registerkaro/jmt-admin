@@ -1,5 +1,7 @@
 import type { NextRequest } from "next/server";
+import { createHash, timingSafeEqual } from "node:crypto";
 import prisma from "@/app/lib/config/db";
+import { normalizeSecret } from "@/app/lib/utils/revalidateFrontend";
 
 // Coarse anti-spam for public lead endpoints, in two layers:
 //
@@ -48,4 +50,22 @@ export async function identityOverLimit(email: string, phoneNo: string): Promise
   const since = new Date(Date.now() - WINDOW_MS);
   const recent = await prisma.lead.count({ where: { createdAt: { gte: since }, OR: or } });
   return recent >= IDENTITY_MAX;
+}
+
+/**
+ * True when the request carries the shared REVALIDATE_SECRET in
+ * "x-revalidate-secret" — i.e. it comes from jmt-frontend's server, not from a
+ * browser or a bot posting to jmt-admin directly. Fails closed when the secret
+ * is not configured here.
+ */
+export function hasSharedSecret(req: NextRequest): boolean {
+  const expected = normalizeSecret(process.env.REVALIDATE_SECRET);
+  if (!expected) {
+    console.error("[lead] REVALIDATE_SECRET is not set on jmt-admin — rejecting the form submission.");
+    return false;
+  }
+  // Hash both sides so the comparison is constant-time whatever their lengths.
+  const a = createHash("sha256").update(normalizeSecret(req.headers.get("x-revalidate-secret"))).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
 }

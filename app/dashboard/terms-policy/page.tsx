@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ChevronDown, ChevronRight, FileText, AlignLeft, ShieldCheck, RefreshCw } from "lucide-react";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import dynamic from "next/dynamic";
+import { revalidateTags } from "@/lib/revalidateClient";
 
 const Tiptap = dynamic(() => import("@/components/common/Editor"), { ssr: false });
 
@@ -125,23 +126,7 @@ export default function TermsPolicyDashboardPage() {
     }
 
     async function handleRevalidate() {
-        const toastId = toast.loading("Revalidating cache...");
-        try {
-            const res = await fetch("/api/revalidate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tags: ["terms-policy"] }),
-                credentials: "include",
-            });
-            const data = await res.json();
-            if (data.success) {
-                toast.success("Cache cleared — frontend will fetch fresh content", { id: toastId });
-            } else {
-                toast.error(data.message || "Revalidation failed", { id: toastId });
-            }
-        } catch {
-            toast.error("Revalidation failed", { id: toastId });
-        }
+        await revalidateTags(["terms-policy"]);
     }
 
     async function handleSave() {

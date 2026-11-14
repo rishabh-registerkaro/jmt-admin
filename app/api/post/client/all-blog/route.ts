@@ -1,6 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { intParam } from "@/app/lib/utils/pagination";
 import { NextRequest, NextResponse } from "next/server";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 function computeReadTimeMinutes(html: string): number {
     const text = html.replace(/<[^>]+>/g, ' ');
@@ -123,14 +124,14 @@ export async function GET(req: NextRequest) {
             },
             { status: 200, headers: getCorsHeaders(origin) }
         );
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error fetching top blogs:", error);
         const origin = req.headers.get("origin");
         return NextResponse.json(
             {
                 success: false,
                 message: "Failed to fetch blogs",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             { status: 500, headers: getCorsHeaders(origin) }
         );

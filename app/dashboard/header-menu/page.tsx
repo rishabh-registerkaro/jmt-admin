@@ -5,6 +5,7 @@ import { Plus, Trash2, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { revalidateTags } from "@/lib/revalidateClient";
 
 interface SubSubChildMenuItem {
   sub_sub_child_title: string;
@@ -57,11 +58,6 @@ export default function HeaderMenuPage() {
   const updateContact = (field: keyof HeaderContactDetails, value: string) =>
     setContactDetails((p) => ({ ...p, [field]: value }));
 
-  // Fetch header menu
-  useEffect(() => {
-    fetchHeaderMenu();
-  }, []);
-
   const fetchHeaderMenu = async () => {
     try {
       setLoading(true);
@@ -81,6 +77,12 @@ export default function HeaderMenuPage() {
       setLoading(false);
     }
   };
+
+  // Fetch header menu
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchHeaderMenu();
+  }, []);
 
   // Main Menu Functions
   const addMainMenu = () => {
@@ -270,23 +272,7 @@ export default function HeaderMenuPage() {
   };
 
   const handleRevalidate = async () => {
-    const toastId = toast.loading("Revalidating cache...");
-    try {
-      const res = await fetch("/api/revalidate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tags: ["header-menu"] }),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Cache cleared — frontend will fetch fresh content", { id: toastId });
-      } else {
-        toast.error(data.message || "Revalidation failed", { id: toastId });
-      }
-    } catch {
-      toast.error("Revalidation failed", { id: toastId });
-    }
+    await revalidateTags(["header-menu"]);
   };
 
   const handleSave = async () => {
@@ -314,7 +300,7 @@ export default function HeaderMenuPage() {
           closeButton: true,
         });
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to save header menu", {
         closeButton: true,
       });
@@ -745,7 +731,7 @@ export default function HeaderMenuPage() {
 
           {mainMenu.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No main menu items. Click "Add Main Menu" to get started.</p>
+              <p className="text-muted-foreground">No main menu items. Click &quot;Add Main Menu&quot; to get started.</p>
             </div>
           )}
         </div>

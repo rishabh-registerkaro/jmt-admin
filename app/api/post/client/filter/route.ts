@@ -1,6 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { intParam } from "@/app/lib/utils/pagination";
 import { NextRequest, NextResponse } from "next/server";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 // Helper function to get CORS headers based on origin
 const getCorsHeaders = (origin: string | null) => {
@@ -181,14 +182,14 @@ export async function GET(req: NextRequest) {
             headers: getCorsHeaders(origin)
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error in filter route:", error);
         const origin = req.headers.get('origin');
         return NextResponse.json(
             {
                 success: false,
                 message: "Failed to fetch data",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             {
                 status: 500,

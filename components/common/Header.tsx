@@ -10,6 +10,7 @@ export default function Header() {
 
   useEffect(() => {
     const tokenExists = typeof document !== "undefined" && document.cookie.includes("loggedIn=true");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-reads the loggedIn cookie after mount and on each navigation; must stay client-only to avoid a hydration mismatch
     setIsAuthenticated(tokenExists);
   }, [pathname]);
 

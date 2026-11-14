@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCategoryById, updateCategory } from "@/lib/apiCallingCategory";
 import { toast } from "sonner";
+import { toApiError } from "@/app/dashboard/_lib/api-error";
 
 const CATEGORY_PALETTE = [
   "#1e40af","#6d28d9","#0f766e","#b45309",
@@ -63,14 +64,6 @@ export default function UpdateCategoryPage() {
     }
   }, [categoryId, router]);
 
-  // Fetch category data on mount
-  useEffect(() => {
-    if (categoryId) {
-      fetchCategoryData();
-      fetchAllCategories();
-    }
-  }, [categoryId]);
-
   const fetchCategoryData = async () => {
     if (!categoryId) return;
 
@@ -101,9 +94,9 @@ export default function UpdateCategoryPage() {
         toast.error("Failed to fetch category data");
         router.push("/dashboard/blog/category");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching category:", error);
-      toast.error(error.message || "Failed to fetch category data");
+      toast.error(toApiError(error).message || "Failed to fetch category data");
       router.push("/dashboard/blog/category");
     } finally {
       setFetching(false);
@@ -133,6 +126,15 @@ export default function UpdateCategoryPage() {
       setCategoriesLoading(false);
     }
   };
+
+  // Fetch category data on mount
+  useEffect(() => {
+    if (categoryId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+      fetchCategoryData();
+      fetchAllCategories();
+    }
+  }, [categoryId]);
 
   const generateSlug = (name: string) => {
     return name
@@ -201,11 +203,11 @@ export default function UpdateCategoryPage() {
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast.dismiss(loadingToastId);
       
-      const errorMessage = error.message || error.errors?.join(", ") || "Something went wrong. Please try again.";
+      const errorMessage = toApiError(error).message || toApiError(error).errors?.join(", ") || "Something went wrong. Please try again.";
       toast.error(errorMessage, {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
@@ -297,7 +299,7 @@ export default function UpdateCategoryPage() {
                 )}
               />
               <p className="text-xs text-muted-foreground">
-                The "slug" is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.
+                The &quot;slug&quot; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.
               </p>
             </div>
 

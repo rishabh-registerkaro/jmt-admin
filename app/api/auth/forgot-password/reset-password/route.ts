@@ -2,6 +2,7 @@ import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 export async function POST(req: NextRequest) {
     try {
@@ -19,11 +20,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Password validation
-        if (newPassword.length < 6) {
+        if (newPassword.length < 8) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Password must be at least 6 characters",
+                    message: "Password must be at least 8 characters",
                 },
                 { status: 400 }
             );
@@ -42,10 +43,10 @@ export async function POST(req: NextRequest) {
         }
 
         // verfy and decode jwt token
-        let decoded: any;
+        let decoded: jwt.JwtPayload;
         try {
-            decoded = jwt.verify(resetToken, process.env.JWT_SECRET!)
-        } catch (error: any) {
+            decoded = jwt.verify(resetToken, process.env.JWT_SECRET!) as jwt.JwtPayload
+        } catch {
             return NextResponse.json(
                 {
                     success: false,
@@ -145,17 +146,16 @@ export async function POST(req: NextRequest) {
 
         response.cookies.delete("resetToken");
 
-        console.log(`Password reset successful for: ${email}`);
         return response;
 
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Reset password error:", error);
         return NextResponse.json(
             {
                 success: false,
                 message: "Internal server error",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             { status: 500 }
         );

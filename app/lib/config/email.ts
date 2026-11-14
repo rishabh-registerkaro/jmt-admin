@@ -1,5 +1,6 @@
 // All outbound mail goes through SMTP (Gmail) via nodemailer.
 import nodemailer from "nodemailer";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
@@ -288,13 +289,14 @@ export async function sendOTP(email: string, otp: string) {
         const info = await sendMail(mailOptions);
         console.log("OTP email sent to:", email, info.messageId);
         return info;
-    } catch (error: any) {
+    } catch (error) {
+        const fields = errorFields(error);
         console.error("SMTP send error:", {
-            message: error.message,
-            code: error.code,
-            command: error.command,
-            response: error.response,
-            stack: error.stack,
+            message: fields.message,
+            code: fields.code,
+            command: fields.command,
+            response: fields.response,
+            stack: fields.stack,
         });
         throw error;
     }

@@ -88,13 +88,13 @@ function stripQuotes(value: string): string {
   return value.trim().replace(/^['"]|['"]$/g, "");
 }
 
-/** Public marketing site origin (the separate Global Elite frontend), if configured. */
+/** Public marketing site origin (the separate main website), if configured. */
 const PUBLIC_SITE_URL = stripQuotes(process.env.PRODUCTION_URL ?? "").replace(/\/+$/, "");
 
 /**
  * Turns a CMS URL into something safe to link to from the homepage.
  * In-page anchors and absolute/tel/mailto URLs pass through. Other relative
- * paths (e.g. "/blog/x") belong to the Global Elite frontend, so they are
+ * paths (e.g. "/blog/x") belong to the main website, so they are
  * prefixed with PRODUCTION_URL, or dropped (null) when that isn't set.
  */
 export function resolveHref(raw: string): Href {

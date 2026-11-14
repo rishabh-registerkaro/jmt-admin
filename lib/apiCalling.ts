@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosInstance";
+import { getApiErrorBody } from "./apiError";
 
 // Types
 export interface Author {
@@ -31,9 +32,37 @@ export interface GetPostsResponse {
   message?: string;
 }
 
+export interface PostAdditionalField {
+  label: string;
+  type: "text" | "image" | "file" | "editor";
+  value: string;
+  options?: string[];
+}
+
+// Full post object with all fields (title, slug, content, category, faq_items, additionalFields, etc.)
+export interface PostDetail {
+  _id: string;
+  id?: string;
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  content: string;
+  featuredImage?: string | null;
+  category?: Array<{ _id?: string; id?: string; name?: string; slug?: string } | string>;
+  tags?: string[];
+  author?: Partial<Author> | null;
+  status: "draft" | "published";
+  publishedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  faq_items?: Array<{ question: string; answer: string }>;
+  additionalFields?: Record<string, PostAdditionalField>;
+  schema?: unknown;
+}
+
 export interface GetPostResponse {
   success: boolean;
-  post: any; // Full post object with all fields (title, slug, content, category, faq_items, additionalFields, etc.)
+  post: PostDetail;
   message?: string;
 }
 
@@ -49,7 +78,7 @@ export interface CreatePostPayload {
   status?: "draft" | "published";
   publishedAt?: string | null;
   faq_items?: Array<{ question: string; answer: string }>;
-  additionalFields?: Record<string, any>;
+  additionalFields?: Record<string, unknown>;
 }
 
 export interface CreatePostResponse {
@@ -76,7 +105,7 @@ export interface UpdatePostPayload {
   status?: "draft" | "published";
   publishedAt?: string | null;
   faq_items?: Array<{ question: string; answer: string }>;
-  additionalFields?: Record<string, any>;
+  additionalFields?: Record<string, unknown>;
 }
 
 export interface UpdatePostResponse {
@@ -127,11 +156,11 @@ export const getPosts = async (
     );
 
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching posts:", error);
     throw {
       success: false,
-      message: error.response?.data?.message || "Failed to fetch posts",
+      message: getApiErrorBody(error)?.message || "Failed to fetch posts",
       posts: [],
       pagination: {
         total: 0,
@@ -157,11 +186,11 @@ export const getPostById = async (
     );
 
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching post:", error);
     throw {
       success: false,
-      message: error.response?.data?.message || "Failed to fetch post",
+      message: getApiErrorBody(error)?.message || "Failed to fetch post",
       post: null,
     };
   }
@@ -182,14 +211,14 @@ export const createPost = async (
     );
 
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating post:", error);
     throw {
       success: false,
       message:
-        error.response?.data?.message ||
+        getApiErrorBody(error)?.message ||
         "Internal server error. Failed to create post.",
-      errors: error.response?.data?.errors,
+      errors: getApiErrorBody(error)?.errors,
     };
   }
 };
@@ -211,12 +240,12 @@ export const deletePost = async (
     );
 
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting post:", error);
     throw {
       success: false,
       message:
-        error.response?.data?.message ||
+        getApiErrorBody(error)?.message ||
         "Internal server error. Failed to delete post.",
     };
   }
@@ -237,14 +266,14 @@ export const updatePost = async (
     );
 
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating post:", error);
     throw {
       success: false,
       message:
-        error.response?.data?.message ||
+        getApiErrorBody(error)?.message ||
         "Internal server error. Failed to update post.",
-      errors: error.response?.data?.errors,
+      errors: getApiErrorBody(error)?.errors,
     };
   }
 }

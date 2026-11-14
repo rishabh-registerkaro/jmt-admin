@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Filter API Error:', error);
     return NextResponse.json(
       { success: false, message: "Server Error" },

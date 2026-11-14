@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getApiErrorBody, getErrorMessage, isRequestCancelled } from "./apiError";
 
 export interface RequestOTPPayload {
     email: string;
@@ -55,9 +56,9 @@ export const requestOTP = async (
             })
 
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         // Check if request was cancelled
-        if (axios.isCancel(error) || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+        if (isRequestCancelled(error)) {
             return {
                 success: false,
                 message: "Request cancelled",
@@ -68,10 +69,10 @@ export const requestOTP = async (
         return {
             success: false,
             message:
-                error.response?.data?.message ||
-                error.message ||
+                getApiErrorBody(error)?.message ||
+                getErrorMessage(error) ||
                 "Failed to send OTP. Please try again.",
-            error: error.response?.data?.error,
+            error: getApiErrorBody(error)?.error,
         };
     }
 }
@@ -102,9 +103,9 @@ export const verifyOTP = async (
         )
 
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         // Check if request was cancelled
-        if (axios.isCancel(error) || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+        if (isRequestCancelled(error)) {
             return {
                 success: false,
                 message: "Request cancelled",
@@ -115,10 +116,10 @@ export const verifyOTP = async (
         return {
             success: false,
             message:
-                error.response?.data?.message ||
-                error.message ||
+                getApiErrorBody(error)?.message ||
+                getErrorMessage(error) ||
                 "Failed to verify OTP. Please try again.",
-            error: error.response?.data?.error,
+            error: getApiErrorBody(error)?.error,
         };
     }
 }
@@ -149,9 +150,9 @@ export const resetPassword = async (
         );
 
         return response.data;
-    } catch (error:any) {
+    } catch (error) {
         // Check if request was cancelled
-        if (axios.isCancel(error) || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+        if (isRequestCancelled(error)) {
             return {
                 success: false,
                 message: "Request cancelled",
@@ -162,10 +163,10 @@ export const resetPassword = async (
         return {
             success: false,
             message:
-                error.response?.data?.message ||
-                error.message ||
+                getApiErrorBody(error)?.message ||
+                getErrorMessage(error) ||
                 "Failed to reset password. Please try again.",
-            error: error.response?.data?.error,
+            error: getApiErrorBody(error)?.error,
         };
     }
 }

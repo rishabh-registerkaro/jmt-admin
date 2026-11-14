@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { toApiError } from "@/app/dashboard/_lib/api-error";
 import axios from "axios";
 import ViewUser from "@/components/common/ViewUser";
 
@@ -132,7 +133,7 @@ export default function UsersPage() {
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users", {
         closeButton: true,
@@ -160,7 +161,7 @@ export default function UsersPage() {
           className: "!bg-transparent !text-foreground",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching user details:", error);
       toast.error("Failed to load user details", {
         closeButton: true,
@@ -172,6 +173,7 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
     fetchUsers(1);
     axios.get("/api/auth/profile", { withCredentials: true })
       .then((res) => {
@@ -186,6 +188,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     // Reset to page 1 when search or sort changes
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
     fetchUsers(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, sortBy, sortOrder]);
@@ -201,8 +204,8 @@ export default function UsersPage() {
         setCreateForm({ username: "", email: "", password: "", role: "" });
         fetchUsers(1);
       }
-    } catch (error: any) {
-      const msg = error.response?.data?.message || "Failed to create user";
+    } catch (error) {
+      const msg = toApiError(error).response?.data?.message || "Failed to create user";
       toast.error(msg, { closeButton: true, className: "!bg-transparent !text-foreground" });
     } finally {
       setCreateLoading(false);
@@ -696,7 +699,7 @@ export default function UsersPage() {
                     type={showPassword ? "text" : "password"}
                     value={createForm.password}
                     onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))}
-                    placeholder="Min 6 characters"
+                    placeholder="Min 8 characters"
                     required
                     className="pr-10"
                   />

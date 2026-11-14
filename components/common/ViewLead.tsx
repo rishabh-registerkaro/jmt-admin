@@ -1,7 +1,6 @@
 "use client";
 
 import { Lead } from "@/app/types/lead";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SERVICES_REQUESTED_LABEL } from "@/utils/leadForm";
 
 interface ViewLeadProps {
@@ -20,7 +19,6 @@ export default function ViewLead({ lead }: ViewLeadProps) {
     <div className="space-y-6 p-4 mt-4">
       <div className="flex flex-col items-center text-center space-y-3">
         {/* <Avatar className="h-20 w-20">
-          <AvatarImage src="/dummy-user.png" />
           <AvatarFallback>
             {lead.name
               .split(" ")

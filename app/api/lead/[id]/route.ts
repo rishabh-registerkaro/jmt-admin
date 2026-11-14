@@ -81,7 +81,7 @@ export async function PUT(
       "formData",
     ] as const;
 
-    const data: Record<string, any> = {};
+    const data: Record<string, unknown> = {};
     for (const field of ALLOWED_FIELDS) {
       if (body[field] !== undefined) {
         data[field] = body[field];
@@ -109,7 +109,7 @@ export async function PUT(
 
     const updatedLead = await prisma.lead.update({
       where: { id },
-      data,
+      data: data as Prisma.LeadUpdateInput,
     });
 
     return NextResponse.json(

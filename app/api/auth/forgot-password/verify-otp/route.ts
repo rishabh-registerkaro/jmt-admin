@@ -1,6 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 // Brute-force guard: a 6-digit code has only 900k values and lives 10 minutes.
 // After MAX_FAILED_ATTEMPTS wrong guesses for an email, every pending code for
@@ -109,16 +110,15 @@ export async function POST(req: NextRequest) {
         });
 
 
-        console.log(`OTP verified for: ${email}`);
         return response;
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Verify OTP error:", error);
         return NextResponse.json(
             {
                 success: false,
                 message: "Internal server error",
-                error: process.env.NODE_ENV === "development" ? error.message : undefined,
+                error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
             },
             { status: 500 }
         );

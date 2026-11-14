@@ -2,6 +2,7 @@ import prisma from "@/app/lib/config/db";
 import { intParam } from "@/app/lib/utils/pagination";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 export async function GET(req: NextRequest) {
   try {
@@ -109,14 +110,14 @@ export async function GET(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching categories:", error);
 
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error. Failed to fetch categories.",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        error: process.env.NODE_ENV === "development" ? errorFields(error).message : undefined,
       },
       { status: 500 }
     );

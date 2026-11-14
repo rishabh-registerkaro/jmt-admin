@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getUserProfile, UserProfile, updateUserProfile, getUserPublishedContent, UserContentPostSummary, UserContentPageSummary, UserContentPagination } from "@/lib/apiCallingProfile";
 import { toast } from "sonner";
+import { toApiError } from "@/app/dashboard/_lib/api-error";
 import { User, Shield, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,18 +30,6 @@ export default function Profile() {
   const [contentLoading, setContentLoading] = useState(false);
   const [pagination, setPagination] = useState<UserContentPagination | null>(null);
 
-  // Fetch user profile on mount
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  // Fetch published content when userData is available
-  useEffect(() => {
-    if (userData?.id) {
-      fetchUserPublishedContent();
-    }
-  }, [userData?.id]);
-
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
@@ -57,7 +46,7 @@ export default function Profile() {
           closeButton: true,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load profile data", {
         closeButton: true,
@@ -92,7 +81,7 @@ export default function Profile() {
           closeButton: true,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching published content:", error);
       toast.error("Failed to load published content", {
         closeButton: true,
@@ -101,6 +90,20 @@ export default function Profile() {
       setContentLoading(false);
     }
   };
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+    fetchUserProfile();
+  }, []);
+
+  // Fetch published content when userData is available
+  useEffect(() => {
+    if (userData?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
+      fetchUserPublishedContent();
+    }
+  }, [userData?.id]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -161,9 +164,9 @@ export default function Profile() {
       // Refresh profile data and exit edit mode
       await fetchUserProfile();
       setIsEditing(false);
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss(loadingToastId);
-      toast.error(error.message || "Failed to update profile", {
+      toast.error(toApiError(error).message || "Failed to update profile", {
         closeButton: true,
       });
     } finally {
@@ -259,7 +262,7 @@ export default function Profile() {
         )}
 
         {activeTab === "security" && (
-          <SecurityTab userData={userData} />
+          <SecurityTab />
         )}
       </div>
     </div>
@@ -289,11 +292,9 @@ interface ProfileTabProps {
 function ProfileTab({
   userData,
   formData,
-  setFormData,
   isEditing,
   setIsEditing,
   updating,
-  setUpdating,
   handleChange,
   handleCancel,
   handleSubmit,
@@ -592,10 +593,6 @@ function ProfileTab({
 }
 
 // Security Tab Component
-interface SecurityTabProps {
-  userData: UserProfile | null;
-}
-
 // function SecurityTab({ userData }: SecurityTabProps) {
 //   const [passwordData, setPasswordData] = useState({
 //     currentPassword: "",
@@ -729,7 +726,7 @@ interface SecurityTabProps {
 //   );
 // }
 
-function SecurityTab({ userData }: SecurityTabProps) {
+function SecurityTab() {
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -769,8 +766,8 @@ function SecurityTab({ userData }: SecurityTabProps) {
     }
 
     // Validate password length
-    if (passwordData.newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters long", {
+    if (passwordData.newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters long", {
         closeButton: true,
       });
       return;
@@ -805,9 +802,9 @@ function SecurityTab({ userData }: SecurityTabProps) {
           closeButton: true,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss(loadingToastId);
-      toast.error(error.message || "Failed to change password", {
+      toast.error(toApiError(error).message || "Failed to change password", {
         closeButton: true,
       });
     } finally {

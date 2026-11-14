@@ -75,13 +75,13 @@ export async function GET(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching dashboard statistics:", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal Server Error - Fetching dashboard statistics",
-        error: error.message,
+        ...(process.env.NODE_ENV === "development" ? { error: error instanceof Error ? error.message : String(error) } : {}),
       },
       { status: 500 }
     );
