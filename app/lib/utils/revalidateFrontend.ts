@@ -1,4 +1,5 @@
 import { revalidateTag } from "next/cache";
+import { isDeployed, isLocalUrl, resolveFrontendUrl } from "@/lib/frontendUrl";
 
 // Cache invalidation on the frontends.
 // Called automatically after content mutations so creates, edits and deletes
@@ -29,11 +30,18 @@ export const normalizeSecret = (v: string | null | undefined) =>
 
 const originOf = (v: string | null | undefined) => normalizeSecret(v).replace(/\/+$/, "");
 
-/** Origin of the main website. */
-export const productionUrl = () => originOf(process.env.PRODUCTION_URL) || "http://localhost:3001";
+/**
+ * Origin of the main website, or "" when there is none to notify (unset, or a
+ * localhost value on a deployed admin — that could never be reached).
+ */
+export const productionUrl = () => {
+  const url = originOf(process.env.PRODUCTION_URL);
+  if (!url) return isDeployed() ? "" : "http://localhost:3001";
+  return isDeployed() && isLocalUrl(url) ? "" : url;
+};
 
-/** Origin of the jmt-frontend project (Joy Maa Tara homepage). */
-export const jmtFrontendUrl = () => originOf(process.env.JMT_FRONTEND_URL) || "http://localhost:3002";
+/** Origin of the jmt-frontend project (Joy Maa Tara homepage). Never localhost when deployed. */
+export const jmtFrontendUrl = () => resolveFrontendUrl(process.env.JMT_FRONTEND_URL);
 
 export type SiteName = "main" | "jmt";
 
@@ -84,6 +92,7 @@ async function notifySite(site: SiteName, origin: string, tags: string[]): Promi
 export async function notifyFrontends(tags: string[]): Promise<SiteResult[]> {
   const main = productionUrl();
   const jmt = jmtFrontendUrl();
+  if (!main) return [await notifySite("jmt", jmt, tags)];
   if (main === jmt) return [await notifySite("main", main, tags)];
   return Promise.all([notifySite("main", main, tags), notifySite("jmt", jmt, tags)]);
 }
