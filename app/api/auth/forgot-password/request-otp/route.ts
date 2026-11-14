@@ -41,6 +41,26 @@ export async function POST(req: NextRequest) {
             })
         }
 
+        // Server-side resend cooldown. The UI waits 60s, but without this an
+        // attacker could call the API directly to get a fresh code (and a fresh
+        // set of verify attempts) as often as they like. Respond with the same
+        // generic message so the cooldown doesn't reveal that the email exists.
+        const RESEND_COOLDOWN_MS = 60 * 1000;
+        const recentOtp = await prisma.otp.findFirst({
+            where: {
+                email: email.toLowerCase(),
+                verified: false,
+                createdAt: { gt: new Date(Date.now() - RESEND_COOLDOWN_MS) },
+            },
+            select: { id: true },
+        });
+        if (recentOtp) {
+            return NextResponse.json({
+                success: true,
+                message: "If the email exists, an OTP has been sent."
+            })
+        }
+
         // Generate 6-digit OTP
         const otpCode = randomInt(100000, 1000000).toString(); // CSPRNG, not Math.random
 

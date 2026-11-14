@@ -72,10 +72,16 @@ export async function POST(req: NextRequest) {
 
         failedAttempts.delete(String(email).toLowerCase());
 
-        // mark otp as verified
+        // Mark OTP as verified and extend its expiry to match the reset token,
+        // so reset-password gets the full 15 minutes instead of whatever was
+        // left of the original 10-minute OTP window.
+        const RESET_WINDOW_MINUTES = 15;
         await prisma.otp.update({
             where: { id: otpRecord.id },
-            data: { verified: true },
+            data: {
+                verified: true,
+                expiresAt: new Date(Date.now() + RESET_WINDOW_MINUTES * 60 * 1000),
+            },
         });
 
         // Generate reset token (valid for 15 minutes)
