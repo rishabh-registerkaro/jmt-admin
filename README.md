@@ -22,7 +22,8 @@ After every content save, `app/lib/utils/revalidateFrontend.ts` calls `POST /api
 
 | Page on jmt-frontend | Dashboard | Table | API (dashboard / public) |
 |---|---|---|---|
-| `/` homepage, plus the navbar, footer and contact details on every page | **Homepage** | `home_pages` | `/api/homepage` / `/api/homepage/client` |
+| `/` homepage, plus the contact details on every page | **Homepage** | `home_pages` | `/api/homepage` / `/api/homepage/client` |
+| The navbar and footer on every page | **Menus → Header Menu / Footer Menu** (`/dashboard/site-menus/header`, `/dashboard/site-menus/footer`) | `home_pages` (`content.site`) | `/api/homepage` with `part: "header" \| "footer"` / `/api/homepage/client` |
 | `/service/<slug>` | **Services** (`/dashboard/services`, one editor per page at `/dashboard/services/<id>`) | `jmt_service_pages` | `/api/jmt-services` / `/api/jmt-services/client/<slug>` |
 | `/about` | **About Us** | `jmt_site_pages` (key `about`) | `/api/site-pages/about` / `/api/site-pages/client/about` |
 | `/contact` | **Contact** | `jmt_site_pages` (key `contact`) | `/api/site-pages/contact` / `/api/site-pages/client/contact` |
@@ -33,6 +34,7 @@ About Us, Contact and Join Our Crew are top-level sidebar items, next to Menus.
 > **Changes to the dashboard URLs**
 > - **Services** (`/dashboard/services`) now lists the Joy Maa Tara service pages: create a page, import a built-in one, edit, delete. "Add New Service" opens the same list with the new-page form open. The old `/dashboard/jmt-services` pages and the main website service editor (`/dashboard/services/update-service`) were removed. The main website service API routes are unchanged.
 > - The sidebar's **About Us** and **Contact** items used to open the **main website** editors (`/dashboard/about`, `/dashboard/contact`, tables `about_pages` and `contact_pages`). They now open the Joy Maa Tara pages. The main website editors and their data are unchanged and still reachable by URL.
+> - Likewise **Menus → Header Menu / Footer Menu** now open the Joy Maa Tara navbar and footer editors (`/dashboard/site-menus/*`). The main website menu editors (`/dashboard/header-menu`, `/dashboard/footer-menu`, tables `header_menus` and `footer_menus`) are unchanged and still reachable by URL. The navbar and footer fields left the Homepage editor; a homepage save keeps whatever the Menus pages saved.
 
 ### Preview (unsaved edits)
 

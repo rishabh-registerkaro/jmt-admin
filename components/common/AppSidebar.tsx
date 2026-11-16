@@ -143,20 +143,23 @@ const navigationItems = [
         url: "/dashboard/media",
         icon: Music2,
       },
+      // Joy Maa Tara navbar and footer (app/dashboard/site-menus/[part]). The
+      // main-website menu editors at /dashboard/header-menu and
+      // /dashboard/footer-menu are no longer linked but still work by URL.
       {
         title: "Menus",
-        url: "/dashboard/header-menu",
+        url: "/dashboard/site-menus/header",
         icon: List,
         hasSubmenu: true,
         submenuItems: [
           {
             title: "Header Menu",
-            url: "/dashboard/header-menu",
+            url: "/dashboard/site-menus/header",
             icon: ListStart,
           },
           {
             title: "Footer Menu",
-            url: "/dashboard/footer-menu",
+            url: "/dashboard/site-menus/footer",
             icon: ListEnd,
           },
         ],

@@ -9,6 +9,7 @@ import {
   HOME_META_DEFAULTS,
   defaultHomeContent,
   normalizeHomeContent,
+  type HomePageContent,
 } from "@/app/lib/content/home-content";
 
 // Homepage singleton (Joy Maa Tara public site, rendered by the jmt-frontend
@@ -47,6 +48,32 @@ function errorMessage(action: string, error: unknown): string {
   return process.env.NODE_ENV === "development" && detail
     ? `${action} failed: ${detail}`
     : `Internal Server Error - ${action}`;
+}
+
+/**
+ * The navbar ("header") and footer live in content.site but are edited on
+ * Dashboard → Menus (app/dashboard/site-menus/[part]), which save with
+ * `part`. Returns `target` with the given parts copied from `source`.
+ */
+type MenuPart = "header" | "footer";
+
+function withMenuParts(target: HomePageContent, source: HomePageContent, parts: MenuPart[]): HomePageContent {
+  const site = { ...target.site, brand: { ...target.site.brand }, labels: { ...target.site.labels } };
+  const from = source.site;
+  if (parts.includes("header")) {
+    site.brand.name = from.brand.name;
+    site.brand.headerLogo = from.brand.headerLogo;
+    site.nav = from.nav;
+  }
+  if (parts.includes("footer")) {
+    site.brand.footerLogo = from.brand.footerLogo;
+    site.footerDescription = from.footerDescription;
+    site.footerColumns = from.footerColumns;
+    site.labels.footerContactTitle = from.labels.footerContactTitle;
+    site.labels.whatsappDisplay = from.labels.whatsappDisplay;
+    site.copyright = from.copyright;
+  }
+  return { ...target, site };
 }
 
 function metaText(value: unknown, max: number): string | null {
@@ -95,18 +122,47 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = {
-      metaTitle: metaText(body.metaTitle, MAX_META_TITLE),
-      metaDescription: metaText(body.metaDescription, MAX_META_DESCRIPTION),
-      // Never trust the client shape: unknown keys are dropped, unsafe URLs
-      // reverted, lists capped.
-      content: normalizeHomeContent(body.content) as unknown as Prisma.InputJsonValue,
-    };
+    // Never trust the client shape: unknown keys are dropped, unsafe URLs
+    // reverted, lists capped.
+    const submitted = normalizeHomeContent(body.content);
+    const part: MenuPart | null = body.part === "header" || body.part === "footer" ? body.part : null;
 
-    const existing = await prisma.homePage.findFirst({ select: { id: true }, orderBy: { updatedAt: "desc" } });
-    const homePage = existing
-      ? await prisma.homePage.update({ where: { id: existing.id }, data })
-      : await prisma.homePage.create({ data });
+    // Read-modify-write guarded by updatedAt, so two saves landing together
+    // (homepage editor, Header Menu, Footer Menu) can't silently undo each other.
+    let homePage = null;
+    for (let attempt = 0; !homePage; attempt++) {
+      const existing = await prisma.homePage.findFirst({ orderBy: { updatedAt: "desc" } });
+      const saved = existing ? normalizeHomeContent(existing.content) : defaultHomeContent();
+      const data = part
+        ? // Header/Footer Menu: only that part changes; SEO fields stay as saved.
+          {
+            metaTitle: existing?.metaTitle ?? null,
+            metaDescription: existing?.metaDescription ?? null,
+            content: withMenuParts(saved, submitted, [part]) as unknown as Prisma.InputJsonValue,
+          }
+        : // Homepage editor: everything except the navbar and footer, which keep their saved values.
+          {
+            metaTitle: metaText(body.metaTitle, MAX_META_TITLE),
+            metaDescription: metaText(body.metaDescription, MAX_META_DESCRIPTION),
+            content: (existing ? withMenuParts(submitted, saved, ["header", "footer"]) : submitted) as unknown as Prisma.InputJsonValue,
+          };
+
+      if (!existing) {
+        homePage = await prisma.homePage.create({ data });
+      } else {
+        const { count } = await prisma.homePage.updateMany({
+          where: { id: existing.id, updatedAt: existing.updatedAt },
+          data,
+        });
+        if (count === 1) homePage = await prisma.homePage.findUniqueOrThrow({ where: { id: existing.id } });
+        else if (attempt >= 2) {
+          return NextResponse.json(
+            { success: false, message: "The homepage was being saved by someone else at the same moment. Please save again." },
+            { status: 409 },
+          );
+        }
+      }
+    }
 
     // Expire the cached DB read ("homepage" tag) here, then on jmt-frontend
     // (its cached fetch and the rendered "/" page), so the very next visit
