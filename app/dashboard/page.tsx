@@ -174,7 +174,7 @@ export default function Dashboard() {
     { href: "/dashboard/blog/create-blog", label: "New post", icon: FileText },
     { href: "/dashboard/leads", label: "Leads", icon: Users },
     { href: "/dashboard/about", label: "About page", icon: Info },
-    { href: "/dashboard/footer-menu", label: "Footer menu", icon: LayoutList },
+    { href: "/dashboard/site-menus/footer", label: "Footer menu", icon: LayoutList },
   ];
 
   return (

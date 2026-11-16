@@ -99,7 +99,8 @@ export default function HomepageDashboardPage() {
   const [open, setOpen] = useState<Record<string, boolean>>({ hero: true });
   const liveUrl = FRONTEND_URL;
 
-  const dirty = !loading && snapshot(state) !== saved;
+  // After a failed load nothing was loaded, so nothing can be unsaved.
+  const dirty = !loading && !loadError && saved !== "" && snapshot(state) !== saved;
 
   // Preview: the website with these unsaved edits, in a new tab (hooks/useDraftPreview.ts).
   const previewPayload = useMemo(

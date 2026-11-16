@@ -21,8 +21,8 @@ import {
   LinkOptionsList,
   NavItemsEditor,
   type LinkOption,
-} from "@/components/homepage-editor/SiteEditor";
-import { HOME_META_DEFAULTS, normalizeHomeContent, type HomePageContent } from "@/app/lib/content/home-content";
+} from "@/components/homepage-editor/MenuTree";
+import { HOME_META_DEFAULTS, isSafeHref, normalizeHomeContent, type HomePageContent } from "@/app/lib/content/home-content";
 import { BRAND_LOGOS } from "@/data/homepageFallback";
 import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
@@ -69,7 +69,8 @@ const FIXED_LINKS: LinkOption[] = [
   { href: "#how-we-work", label: "Homepage: How we work" },
   { href: "#about", label: "Homepage: Founder" },
   { href: "#faq", label: "Homepage: FAQ" },
-  { href: "#contact", label: "Homepage: Contact form" },
+  // "/#contact", not "#contact": the website keeps "#contact" in-page, and only some pages have that form.
+  { href: "/#contact", label: "Homepage: Contact form" },
 ];
 
 interface EditorState {
@@ -130,7 +131,8 @@ function SiteMenuEditor({ part }: { part: Part }) {
   const [open, setOpen] = useState<Record<string, boolean>>({ [config.sections[1].key]: true });
   const options = useLinkOptions();
 
-  const dirty = !loading && snapshot(state) !== saved;
+  // After a failed load nothing was loaded, so nothing can be unsaved.
+  const dirty = !loading && !loadError && saved !== "" && snapshot(state) !== saved;
   useUnsavedChangesWarning(dirty);
 
   // Preview: the website with these unsaved edits, in a new tab (hooks/useDraftPreview.ts).
@@ -180,6 +182,19 @@ function SiteMenuEditor({ part }: { part: Part }) {
   const handleSave = async () => {
     // Saving after a failed load would overwrite the real content with defaults.
     if (loadError) return;
+    // The server blanks links it does not accept (e.g. "www.x.com"); say so instead of losing them.
+    const links =
+      part === "header"
+        ? site.nav.flatMap((item) => [item, ...item.children])
+        : site.footerColumns.flatMap((column) => column.links);
+    const bad = links.find((l) => l.href.trim() && !isSafeHref(l.href.trim()));
+    if (bad) {
+      toast.error(`"${bad.label || bad.href}" has a link the website can't use: ${bad.href}`, {
+        description: "Start it with / (a page here), # (a homepage section), https://, mailto: or tel:.",
+        closeButton: true,
+      });
+      return;
+    }
     setSaving(true);
     const toastId = toast.loading("Saving...");
     const sent = snapshot(state);
