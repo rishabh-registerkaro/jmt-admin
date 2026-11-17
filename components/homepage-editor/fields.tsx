@@ -5,7 +5,7 @@
 
 import { useId, type ReactNode } from "react";
 import * as Collapsible from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HomeLinkValue } from "@/app/lib/content/home-content";
 
@@ -137,7 +137,7 @@ export function AddButton({ onClick, label, disabled }: { onClick: () => void; l
 }
 
 /**
- * Repeatable list of cards with a remove control.
+ * Repeatable list of cards with move up / move down / remove controls.
  * `render` receives the item plus an `update(patch)` helper.
  */
 export function ListEditor<T>({
@@ -159,6 +159,12 @@ export function ListEditor<T>({
 }) {
   const update = (index: number) => (patch: Partial<T>) =>
     onChange(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const move = (from: number, to: number) => {
+    const next = [...items];
+    next.splice(to, 0, ...next.splice(from, 1));
+    onChange(next);
+  };
+  const moveBtnCls = "h-8 w-8 p-0 text-muted-foreground hover:text-foreground";
 
   return (
     <div className="space-y-3">
@@ -167,6 +173,30 @@ export function ListEditor<T>({
           <div className="flex items-center justify-between gap-2">
             <span className="truncate text-sm font-medium text-foreground-light">{itemLabel(item, index)}</span>
             <div className="flex shrink-0 items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                title="Move up"
+                aria-label={`Move ${itemLabel(item, index)} up`}
+                className={moveBtnCls}
+                disabled={index === 0}
+                onClick={() => move(index, index - 1)}
+              >
+                <ArrowUp className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                title="Move down"
+                aria-label={`Move ${itemLabel(item, index)} down`}
+                className={moveBtnCls}
+                disabled={index === items.length - 1}
+                onClick={() => move(index, index + 1)}
+              >
+                <ArrowDown className="h-4 w-4" />
+              </Button>
               <Button
                 type="button"
                 variant="ghost"

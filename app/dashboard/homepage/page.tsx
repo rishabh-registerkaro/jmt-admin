@@ -46,6 +46,7 @@ import FaqEditor from "@/components/homepage-editor/FaqEditor";
 import ContactEditor from "@/components/homepage-editor/ContactEditor";
 import SiteEditor from "@/components/homepage-editor/SiteEditor";
 import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 // Must match HOMEPAGE_CHANNEL in jmt-frontend/components/homepage/LiveRefresh.tsx.
 // BroadcastChannel is same-origin only, so it reaches homepage tabs only when the
 // frontend is served from the same origin as this admin; otherwise open tabs
@@ -98,7 +99,8 @@ export default function HomepageDashboardPage() {
   const [open, setOpen] = useState<Record<string, boolean>>({ hero: true });
   const liveUrl = FRONTEND_URL;
 
-  const dirty = !loading && snapshot(state) !== saved;
+  // After a failed load nothing was loaded, so nothing can be unsaved.
+  const dirty = !loading && !loadError && saved !== "" && snapshot(state) !== saved;
 
   // Preview: the website with these unsaved edits, in a new tab (hooks/useDraftPreview.ts).
   const previewPayload = useMemo(
@@ -140,15 +142,8 @@ export default function HomepageDashboardPage() {
     })();
   }, [applyServerDoc]);
 
-  // Warn before leaving with unsaved edits.
-  useEffect(() => {
-    if (!dirty) return;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [dirty]);
+  // Warn before leaving with unsaved edits (closing the tab or clicking a dashboard link).
+  useUnsavedChangesWarning(dirty);
 
   const setSection = <K extends keyof HomePageContent>(key: K, value: HomePageContent[K]) =>
     setState((prev) => ({ ...prev, content: { ...prev.content, [key]: value } }));
@@ -312,8 +307,8 @@ export default function HomepageDashboardPage() {
 
         <SectionCard
           icon={Settings2}
-          title="Navbar, footer & contact details"
-          hint="Logos, phone, WhatsApp, email, button labels, menu links and footer"
+          title="Contact details"
+          hint="Phone, WhatsApp, email, hours and button labels (the navbar and footer have their own pages)"
           open={!!open.site}
           onToggle={() => toggle("site")}
         >
