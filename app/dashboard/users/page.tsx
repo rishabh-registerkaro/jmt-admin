@@ -19,6 +19,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  tableWrapCell,
 } from "@/components/ui/table";
 import {
   Sheet,
@@ -92,7 +93,7 @@ export default function UsersPage() {
   const [assignableRoles, setAssignableRoles] = useState<AdminRoleDTO[]>([]);
   const [rolesSeeded, setRolesSeeded] = useState(true);
 
-  // Delete user state — only users you outrank; Super Admins must be demoted first
+  // Delete user state — only users you outrank; the Super Admin can never be deleted
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const canDelete = (u: User) => !!u.canManage && u.id !== currentUserId && u.roleKey !== "superadmin";
@@ -414,10 +415,10 @@ export default function UsersPage() {
                       className="hover:bg-muted/40 transition-colors cursor-pointer"
                       onClick={() => handleViewUser(user.id)}
                     >
-                      <TableCell className="text-foreground-light font-medium">
+                      <TableCell className={`text-foreground-light font-medium ${tableWrapCell}`}>
                         {user.username}
                       </TableCell>
-                      <TableCell className="text-foreground-light">
+                      <TableCell className={`text-foreground-light ${tableWrapCell}`}>
                         {user.email}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
@@ -563,12 +564,12 @@ export default function UsersPage() {
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent
             side="right"
-            className="!max-w-[700px] !w-full overflow-y-auto"
+            className="!max-w-[600px] !w-full overflow-y-auto"
           >
             {viewUser && (
               <>
-                <SheetHeader>
-                  <SheetTitle className="text-2xl">
+                <SheetHeader className="pb-3">
+                  <SheetTitle className="text-lg">
                     User Details
                   </SheetTitle>
                   <SheetDescription className="">

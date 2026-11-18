@@ -3,10 +3,9 @@ import prisma from "@/app/lib/config/db";
 import bcrypt from "bcrypt";
 
 import { requirePermission } from "@/app/lib/utils/authorization";
-import { PERMISSIONS, SYSTEM_ROLE_KEYS } from "@/app/lib/constants/permissions";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import {
     canAssignRole,
-    countSuperAdmins,
     resolveRequestedRole,
     resolveUserAccess,
     userRoleView,
@@ -224,24 +223,12 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
                 }, { status: 403 })
             }
 
-            // Only a Super Admin can hand out Super Admin / Admin (users.manage) roles,
-            // and nobody can grant permissions they don't hold.
+            // Nobody can hand out Super Admin, only the Super Admin can hand out Admin
+            // (users.manage) roles, and nobody can grant permissions they don't hold.
             if (!canAssignRole(currentUser, newRole)) {
                 return NextResponse.json({
                     success: false,
                     message: `You don't have permission to assign the ${newRole.name} role`
-                }, { status: 403 })
-            }
-
-            // Never leave the dashboard without a Super Admin.
-            if (
-                targetAccess.roleKey === SYSTEM_ROLE_KEYS.SUPERADMIN &&
-                newRole.key !== SYSTEM_ROLE_KEYS.SUPERADMIN &&
-                (await countSuperAdmins()) <= 1
-            ) {
-                return NextResponse.json({
-                    success: false,
-                    message: "This is the last Super Admin — promote someone else first"
                 }, { status: 403 })
             }
 
@@ -276,7 +263,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 /**
  * DELETE /api/users/[id] — users.manage, and only users whose role the caller
  * could assign (an Admin can remove Editors / Leads Managers; only a Super
- * Admin can remove Admins). Super Admin accounts can't be deleted — demote first.
+ * Admin can remove Admins). The Super Admin account can never be deleted.
  * Content authored by the removed user (posts, service pages, package blocks,
  * JMT service pages) is reassigned to the user performing the delete,
  * so nothing is lost and the required author foreign keys stay valid.

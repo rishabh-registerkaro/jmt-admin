@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -16,14 +15,12 @@ import { toast } from "sonner";
 import { usePermissions } from "@/components/common/PermissionsProvider";
 import { roleBadgeClass, roleLabel } from "@/components/common/roleDisplay";
 import { listRoles, type AdminRoleDTO } from "@/lib/apiCallingRoles";
-import { 
-  updateUserRole, 
-  User, 
+import {
+  updateUserRole,
+  User,
   UpdateUserRolePayload,
-  changeUserPassword,
-  ChangeUserPasswordPayload
 } from "@/lib/apiCallingUser";
-import { Shield, AlertCircle, ChevronDown, ChevronUp, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Shield, Lock, Trash2 } from "lucide-react";
 
 interface ViewUserProps {
   user: User;
@@ -45,38 +42,15 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
   const { user: currentUser } = usePermissions();
   const currentUserId = currentUser?.id ?? null;
   const [assignableRoles, setAssignableRoles] = useState<AdminRoleDTO[]>([]);
-  const [showRoleForm, setShowRoleForm] = useState(false);
-  
-  // Password change states
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    newPassword: "",
-    confirmPassword: "",
-    currentPassword: "",
-  });
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
 
   // Update displayedUser when user prop changes
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resets local form state when a different user (or role) is passed in; parents do not remount via key
     setDisplayedUser(user);
     setSelectedRole(user.roleId ?? "");
-    setShowRoleForm(false);
-    // Reset password form when user changes
-    setPasswordData({
-      newPassword: "",
-      confirmPassword: "",
-      currentPassword: "",
-    });
-    setShowPasswordForm(false);
   }, [user.id, user.roleId]);
 
-  // Roles the signed-in user may assign (Admin / Super Admin only for Super Admins)
+  // Roles the signed-in user may assign (never Super Admin; Admin only for the Super Admin)
   useEffect(() => {
     let alive = true;
     listRoles({ assignable: true }).then((res) => {
@@ -134,9 +108,6 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
         if (onRoleUpdate) {
           onRoleUpdate(response.user);
         }
-        
-        // Close form after successful update
-        setShowRoleForm(false);
       } else {
         toast.error(response.message || "Failed to update user role", {
           closeButton: true,
@@ -157,112 +128,8 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
     }
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
-    setShowPasswords((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-  };
-
-  const handlePasswordUpdate = async () => {
-    // Frontend validation matching backend
-    if (!passwordData.newPassword) {
-      toast.error("New password is required", {
-        closeButton: true,
-        className: "!bg-transparent !text-foreground",
-      });
-      return;
-    }
-
-    if (passwordData.newPassword.length < 8) {
-      toast.error("New password must be at least 8 characters long", {
-        closeButton: true,
-        className: "!bg-transparent !text-foreground",
-      });
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("New password and confirm password do not match", {
-        closeButton: true,
-        className: "!bg-transparent !text-foreground",
-      });
-      return;
-    }
-
-    const isUpdatingOwnPassword = currentUserId === displayedUser.id;
-
-    // If changing own password, require current password
-    if (isUpdatingOwnPassword && !passwordData.currentPassword) {
-      toast.error("Current password is required when changing your own password", {
-        closeButton: true,
-        className: "!bg-transparent !text-foreground",
-      });
-      return;
-    }
-
-    setIsChangingPassword(true);
-    const loadingToastId = toast.loading("Updating password...", {
-      closeButton: true,
-      className: "!bg-transparent !text-foreground",
-    });
-
-    try {
-      const payload: ChangeUserPasswordPayload = {
-        newPassword: passwordData.newPassword,
-      };
-
-      // Add current password only if changing own password
-      if (isUpdatingOwnPassword) {
-        payload.currentPassword = passwordData.currentPassword;
-      }
-
-      const response = await changeUserPassword(displayedUser.id, payload);
-
-      toast.dismiss(loadingToastId);
-
-      if (response.success) {
-        toast.success("Password updated successfully!", {
-          closeButton: true,
-          className: "!bg-transparent !text-foreground",
-        });
-
-        // Reset form
-        setPasswordData({
-          newPassword: "",
-          confirmPassword: "",
-          currentPassword: "",
-        });
-        setShowPasswordForm(false);
-      } else {
-        toast.error(response.message || "Failed to update password", {
-          closeButton: true,
-          className: "!bg-transparent !text-foreground",
-        });
-      }
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      const errorMessage = getErrorMessage(error) || "Failed to update password";
-      toast.error(errorMessage, {
-        closeButton: true,
-        className: "!bg-transparent !text-foreground",
-      });
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
-
   // This screen is only reachable with users.manage; the API repeats every check.
   const canUpdateRole = true;
-  const canChangePassword = canUpdateRole;
 
   // Role update validations. `canManage` comes from the API: false when the
   // target holds a role the signed-in user couldn't assign (e.g. an Admin
@@ -270,107 +137,73 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
   const isUpdatingOwnRole = currentUserId === displayedUser.id;
   const cannotManageTarget = !isUpdatingOwnRole && !displayedUser.canManage;
 
-  // Password update validations
-  const isUpdatingOwnPassword = currentUserId === displayedUser.id;
-  const isAdminChangingSuperadminPassword = !isUpdatingOwnPassword && !displayedUser.canManage;
-
   const isRoleChangeDisabled = !canUpdateRole || isUpdating || cannotManageTarget;
+  const hasRoleChange = !!selectedRole && selectedRole !== displayedUser.roleId;
 
   return (
-    <div className="space-y-6 p-4 mt-4">
-      {/* User Profile Section */}
-      <div className="flex flex-col items-center text-center space-y-4 pb-6 border-b border-border">
-        <Avatar className="h-24 w-24">
-          <AvatarFallback className="bg-brand/15 text-brand-link text-2xl font-semibold">
-            {displayedUser.username
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .substring(0, 2)}
-          </AvatarFallback>
-        </Avatar>
+    <div className="space-y-3 px-4 pb-4">
+      {/* Profile + account dates */}
+      <div className="rounded-lg border bg-card">
+        <div className="flex items-center gap-3 p-4">
+          <Avatar className="h-12 w-12 shrink-0">
+            <AvatarFallback className="bg-brand/15 text-brand-link text-base font-semibold">
+              {displayedUser.username
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .substring(0, 2)}
+            </AvatarFallback>
+          </Avatar>
 
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-foreground break-words">{displayedUser.username}</h2>
-          <p className="text-sm text-muted-foreground break-all">{displayedUser.email}</p>
-          <div className="flex justify-center mt-3">
-            <span
-              className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${roleBadgeClass(displayedUser.roleKey ?? displayedUser.role)}`}
-            >
-              {roleLabel(displayedUser)}
-            </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-foreground break-words">{displayedUser.username}</h2>
+            <p className="text-sm text-muted-foreground break-all">{displayedUser.email}</p>
           </div>
-        </div>
-      </div>
 
-      {/* User Information Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground mb-4">User Information</h3>
-        
-        <div className="space-y-4">
-          <Item label="Username" value={displayedUser.username} />
-          <Item label="Email" value={displayedUser.email} />
-          <Item
-            label="Role"
-            value={roleLabel(displayedUser)}
-          />
-          <Item
-            label="Created At"
-            value={formatDate(displayedUser.createdAt || "")}
-          />
-          <Item
-            label="Last Updated"
-            value={formatDate(displayedUser.updatedAt || "")}
-          />
+          <span
+            className={`inline-flex shrink-0 items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${roleBadgeClass(displayedUser.roleKey ?? displayedUser.role)}`}
+          >
+            {roleLabel(displayedUser)}
+          </span>
         </div>
+
+        <dl className="grid grid-cols-2 divide-x divide-border border-t border-border">
+          <Item label="Created At" value={formatDate(displayedUser.createdAt || "")} />
+          <Item label="Last Updated" value={formatDate(displayedUser.updatedAt || "")} />
+        </dl>
       </div>
 
       {/* Role Management Section - Only for Admin/SuperAdmin */}
       {canUpdateRole && (
-        <div className="rounded-lg border bg-card p-4 sm:p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-muted-foreground" />
-              <h3 className="text-lg font-semibold text-foreground">Role Management</h3>
-            </div>
-            <Button
-              onClick={() => setShowRoleForm(!showRoleForm)}
-              variant="outline"
-              size="sm"
-              className="cursor-pointer"
-            >
-              {showRoleForm ? (
-                <>
-                  <ChevronUp className="h-4 w-4 mr-1" />
-                  Hide Form
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                  Update Role
-                </>
-              )}
-            </Button>
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Role Management</h3>
           </div>
 
-          {showRoleForm && (
-            <div className="space-y-4 pt-4 border-t border-border">
+          {isUpdatingOwnRole || cannotManageTarget ? (
+            <div className="flex items-start gap-2 rounded-md bg-muted/50 p-3">
+              <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
-                Select a new role for this user. Changes will take effect immediately.
+                {isUpdatingOwnRole
+                  ? "You cannot change your own role."
+                  : "You cannot change this user's role. Only the Super Admin can manage Admins, and the Super Admin role can't be changed."}
               </p>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-foreground text-sm font-medium">
-                    Select New Role <span className="text-destructive">*</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="min-w-0 flex-1">
+                  <Label htmlFor="user-role-select" className="sr-only">
+                    Select New Role
                   </Label>
                   <Select
-                    value={selectedRole}
+                    value={assignableRoles.length > 0 ? selectedRole : ""}
                     onValueChange={setSelectedRole}
                     disabled={isRoleChangeDisabled}
                   >
-                    <SelectTrigger className="w-full h-10">
+                    <SelectTrigger id="user-role-select" className="w-full h-10">
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -383,303 +216,68 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                   </Select>
                 </div>
 
-                {/* Error Messages */}
-                {cannotManageTarget && (
-                  <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
-                    <p className="text-xs text-destructive">
-                      You cannot change this user&apos;s role. Only a Super Admin can manage Admins and Super Admins.
-                    </p>
-                  </div>
-                )}
-
-                {isUpdatingOwnRole && (
-                  <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-warning">
-                      You cannot change your own role. Please ask another administrator to update your role.
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap justify-end gap-3 pt-2">
+                {hasRoleChange && (
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      setShowRoleForm(false);
-                      setSelectedRole(displayedUser.roleId ?? "");
-                    }}
+                    onClick={() => setSelectedRole(displayedUser.roleId ?? "")}
                     disabled={isUpdating}
-                    className="disabled:opacity-50 cursor-pointer"
+                    className="h-10 disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleRoleUpdate}
-                    disabled={
-                      isRoleChangeDisabled ||
-                      !selectedRole ||
-                      selectedRole === displayedUser.roleId ||
-                      isUpdating ||
-                      isUpdatingOwnRole
-                    }
-                    className="disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] cursor-pointer"
-                  >
-                    {isUpdating ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        Updating...
-                      </span>
-                    ) : (
-                      "Update Role"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Password Management Section - Only for Admin/SuperAdmin */}
-      {canChangePassword && (
-        <div className="rounded-lg border bg-card p-4 sm:p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-muted-foreground" />
-              <h3 className="text-lg font-semibold text-foreground">Password Management</h3>
-            </div>
-            <Button
-              onClick={() => setShowPasswordForm(!showPasswordForm)}
-              variant="outline"
-              size="sm"
-              className="cursor-pointer"
-            >
-              {showPasswordForm ? (
-                <>
-                  <ChevronUp className="h-4 w-4 mr-1" />
-                  Hide Form
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                  Change Password
-                </>
-              )}
-            </Button>
-          </div>
-
-          {showPasswordForm && (
-            <div className="space-y-4 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground">
-                {isUpdatingOwnPassword
-                  ? "Change your password. You'll need to provide your current password."
-                  : "Set a new password for this user. The user will need to use this password to login."}
-              </p>
-
-              {/* Error Messages */}
-              {isAdminChangingSuperadminPassword && (
-                <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
-                  <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
-                  <p className="text-xs text-destructive">
-                    You cannot change this user&apos;s password. Only a Super Admin can manage Admins and Super Admins.
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {/* Current Password - Only required when changing own password */}
-                {isUpdatingOwnPassword && (
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm font-medium">
-                      Current Password <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        type={showPasswords.current ? "text" : "password"}
-                        name="currentPassword"
-                        value={passwordData.currentPassword}
-                        onChange={handlePasswordChange}
-                        placeholder="Enter current password"
-                        className="w-full pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => togglePasswordVisibility("current")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                      >
-                        {showPasswords.current ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
                 )}
-
-                {/* New Password */}
-                <div className="space-y-2">
-                  <Label className="text-foreground text-sm font-medium">
-                    New Password <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showPasswords.new ? "text" : "password"}
-                      name="newPassword"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      placeholder="Enter new password (min. 8 characters)"
-                      className="w-full pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("new")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    >
-                      {showPasswords.new ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  {passwordData.newPassword && passwordData.newPassword.length < 8 && (
-                    <p className="text-xs text-destructive">
-                      Password must be at least 8 characters long
-                    </p>
+                <Button
+                  onClick={handleRoleUpdate}
+                  disabled={isRoleChangeDisabled || !hasRoleChange}
+                  className="h-10 disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] cursor-pointer"
+                >
+                  {isUpdating ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                      Updating...
+                    </span>
+                  ) : (
+                    "Update Role"
                   )}
-                </div>
-
-                {/* Confirm Password */}
-                <div className="space-y-2">
-                  <Label className="text-foreground text-sm font-medium">
-                    Confirm New Password <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showPasswords.confirm ? "text" : "password"}
-                      name="confirmPassword"
-                      value={passwordData.confirmPassword}
-                      onChange={handlePasswordChange}
-                      placeholder="Confirm new password"
-                      className="w-full pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("confirm")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    >
-                      {showPasswords.confirm ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  {passwordData.confirmPassword && 
-                   passwordData.newPassword !== passwordData.confirmPassword && (
-                    <p className="text-xs text-destructive">
-                      Passwords do not match
-                    </p>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap justify-end gap-3 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowPasswordForm(false);
-                      setPasswordData({
-                        newPassword: "",
-                        confirmPassword: "",
-                        currentPassword: "",
-                      });
-                    }}
-                    disabled={isChangingPassword}
-                    className="disabled:opacity-50 cursor-pointer"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handlePasswordUpdate}
-                    disabled={
-                      isChangingPassword ||
-                      !passwordData.newPassword ||
-                      !passwordData.confirmPassword ||
-                      passwordData.newPassword.length < 8 ||
-                      passwordData.newPassword !== passwordData.confirmPassword ||
-                      (isUpdatingOwnPassword && !passwordData.currentPassword) ||
-                      isAdminChangingSuperadminPassword
-                    }
-                    className="disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] cursor-pointer"
-                  >
-                    {isChangingPassword ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        Updating...
-                      </span>
-                    ) : (
-                      "Update Password"
-                    )}
-                  </Button>
-                </div>
+                </Button>
               </div>
-            </div>
+              <p className="text-xs text-muted-foreground">Changes take effect immediately.</p>
+            </>
           )}
         </div>
       )}
 
-      {/* Delete User - only users you outrank; never yourself or a Super Admin (demote first) */}
+      {/* Delete User - only users you outrank; never yourself or the Super Admin */}
       {displayedUser.canManage &&
         onDeleteRequest &&
         currentUserId !== displayedUser.id &&
         displayedUser.roleKey !== "superadmin" && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:p-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-destructive" />
-              <h3 className="text-lg font-semibold text-foreground">Delete User</h3>
+          <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Delete User</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Permanently removes this account. Any content they authored will be reassigned to you.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Permanently removes this account. Any content they authored will be reassigned to you.
-            </p>
-            <div className="flex justify-end">
-              <Button
-                variant="destructive"
-                onClick={() => onDeleteRequest(displayedUser)}
-                className="cursor-pointer"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete User
-              </Button>
-            </div>
+            <Button
+              variant="destructive"
+              onClick={() => onDeleteRequest(displayedUser)}
+              className="shrink-0 cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete User
+            </Button>
           </div>
         )}
     </div>
   );
 }
 
-function Item({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
+function Item({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-center border-b border-border py-3">
-      <span className={`text-muted-foreground font-medium ${className || "text-sm"}`}>
-        {label}
-      </span>
-      <span
-        className={`text-foreground font-medium text-right max-w-[60%] break-words ${className || "text-sm"}`}
-      >
-        {value}
-      </span>
+    <div className="min-w-0 px-4 py-3">
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 text-sm font-medium text-foreground">{value}</dd>
     </div>
   );
 }

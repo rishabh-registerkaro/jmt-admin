@@ -24,7 +24,7 @@ import {
 } from "@/components/homepage-editor/MenuTree";
 import { HOME_META_DEFAULTS, isSafeHref, normalizeHomeContent, type HomePageContent } from "@/app/lib/content/home-content";
 import { BRAND_LOGOS } from "@/data/homepageFallback";
-import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
+import { liveSiteUrl, useDraftPreview } from "@/hooks/useDraftPreview";
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 
 // Must match HOMEPAGE_CHANNEL in jmt-frontend/components/homepage/LiveRefresh.tsx.
@@ -363,7 +363,7 @@ function SiteMenuEditor({ part }: { part: Part }) {
               <span className="hidden sm:inline">{previewOpening ? "Opening..." : "Preview"}</span>
             </Button>
             <Button asChild variant="outline">
-              <a href={FRONTEND_URL} target="_blank" rel="noopener noreferrer" aria-label="View live">
+              <a href={liveSiteUrl()} target="_blank" rel="noopener noreferrer" aria-label="View live">
                 <ExternalLink className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">View live</span>
               </a>

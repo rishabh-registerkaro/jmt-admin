@@ -4,6 +4,9 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/** For long-text cells: wraps on phones so one value doesn't fill the whole screen. */
+export const tableWrapCell = "max-sm:min-w-40 max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]"
+
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div

@@ -256,8 +256,8 @@ function MenuEntry({
   if (current === "page") {
     return (
       <div className="space-y-1.5">
-        <div className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2">
-          <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border bg-background px-3 py-2">
+          <div className="min-w-0 flex-1 max-sm:basis-full">
             {renaming ? (
               <input
                 autoFocus
@@ -278,7 +278,7 @@ function MenuEntry({
               {value.href}
             </p>
           </div>
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title="Rename this entry in the menu" aria-label="Rename this entry in the menu" onClick={() => setRenaming((r) => !r)}>
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 max-sm:ml-auto" title="Rename this entry in the menu" aria-label="Rename this entry in the menu" onClick={() => setRenaming((r) => !r)}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <PagePicker

@@ -220,7 +220,7 @@ function slotImage(
   if (value.src) {
     return { ...FALLBACK_IMAGES[slot], src: value.src, alt: value.alt || base.alt, focus: value.focus };
   }
-  return { ...base, alt: value.alt || base.alt };
+  return { ...base, alt: value.alt || base.alt, focus: value.focus };
 }
 
 /** A card photo, or null when the field is empty. Size is nominal — Photo uses `fill`. */

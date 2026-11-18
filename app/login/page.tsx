@@ -138,7 +138,7 @@ export default function LoginPage() {
               placeholder="••••••••"
               className="w-full rounded-lg border border-border-strong bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
             />
-            <button type="button" className="absolute right-3 top-[53%] cursor-pointer text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none" onClick={togglePasswordVisibility}>
+            <button type="button" className="absolute right-3 top-[53%] -m-2 cursor-pointer p-2 text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none" onClick={togglePasswordVisibility}>
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>

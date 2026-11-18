@@ -308,7 +308,7 @@ export default function UpdateCategoryPage() {
               <label className="block text-sm font-medium text-foreground-light">
                 Badge Color
               </label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div
                   className="h-8 w-8 shrink-0 rounded-full border-2 border-border"
                   style={{ background: formData.color.trim() || generateCategoryColor(formData.name || "") }}
@@ -333,7 +333,7 @@ export default function UpdateCategoryPage() {
                   value={formData.color}
                   onChange={handleChange}
                   placeholder="Custom hex e.g. #1e40af"
-                  className="flex-1 rounded-lg border font-mono text-xs"
+                  className="min-w-40 flex-1 rounded-lg border font-mono text-xs"
                 />
               </div>
               <p className="text-xs text-muted-foreground">

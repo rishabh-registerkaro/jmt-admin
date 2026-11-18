@@ -217,7 +217,7 @@ export default function MediaLibrary() {
                       />
                       <button
                         onClick={handleCopyUrl}
-                        className="absolute top-2 right-2 p-2 border bg-background/90 text-foreground hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 cursor-pointer"
+                        className="absolute top-2 right-2 p-2 border bg-background/90 text-foreground hover:bg-muted rounded-md md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-10 cursor-pointer"
                         title="Copy URL"
                       >
                         <Copy className="h-4 w-4 text-foreground" />
@@ -277,7 +277,8 @@ export default function MediaLibrary() {
                     {selectedAsset.filename}
                   </h2>
                   <button
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    className="-mr-2 size-10 shrink-0 text-muted-foreground hover:text-foreground"
+                    aria-label="Close"
                     onClick={() => setIsModalOpen(false)}
                   >
                     ✕

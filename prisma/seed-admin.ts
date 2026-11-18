@@ -27,6 +27,16 @@ async function main() {
   }
   if (password.length < 8) throw new Error("Password must be at least 8 characters.");
 
+  // There can only ever be one Super Admin.
+  const superAdmin = await prisma.user.findFirst({
+    where: { OR: [{ role: "superadmin" }, { adminRole: { key: "superadmin" } }] },
+    select: { username: true },
+  });
+  if (superAdmin) {
+    console.log(`• The Super Admin already exists (${superAdmin.username}) — nothing changed.`);
+    return;
+  }
+
   const existing = await prisma.user.findFirst({
     where: { OR: [{ email }, { username }] },
     select: { username: true, email: true },

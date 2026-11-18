@@ -43,7 +43,7 @@ import {
   type PartProps,
 } from "@/components/jmt-service-editor/sections";
 import type { ServicePageContent, ServiceSectionKey } from "@/types/service";
-import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
+import { liveSiteUrl, useDraftPreview } from "@/hooks/useDraftPreview";
 
 type Status = "draft" | "published";
 interface EditorState {
@@ -188,7 +188,7 @@ export default function JmtServiceEditorPage() {
   };
 
   const published = state.status === "published";
-  const liveUrl = `${FRONTEND_URL}/service/${liveSlug}`;
+  const liveUrl = liveSiteUrl(`/service/${liveSlug}`);
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
