@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import ContentEditor from "@/components/site-page-editor/ContentEditor";
 import { SITE_PAGES, isSitePageKey } from "@/app/lib/content/site-pages";
 import type { PlainObject } from "@/lib/sitePages/mergeContent";
-import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
+import { liveSiteUrl, useDraftPreview } from "@/hooks/useDraftPreview";
 
 interface ServerDoc {
   success?: boolean;
@@ -117,7 +117,7 @@ export default function SitePageEditor() {
     );
   }
 
-  const liveUrl = `${FRONTEND_URL}${page.path}`;
+  const liveUrl = liveSiteUrl(page.path);
   const save = () => send("PUT", "Saving...", `${page.title} saved — the website is updated`);
   const saveDisabled = busy || Boolean(loadError) || content === null || (!dirty && exists);
   const saveLabel = busy ? "Saving..." : exists ? "Save changes" : "Publish page";
@@ -208,7 +208,7 @@ export default function SitePageEditor() {
               open={open}
               onToggle={(k) => setOpen((prev) => ({ ...prev, [k]: !prev[k] }))}
             />
-            <div className="flex items-center justify-between gap-3 pb-10">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-10">
               {exists ? (
                 <Button
                   variant="ghost"

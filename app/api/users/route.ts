@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Anti-escalation: only a Super Admin can create admins / super admins,
-        // and nobody can hand out permissions they don't have themselves.
+        // Anti-escalation: nobody can create a Super Admin, only the Super Admin can
+        // create admins, and nobody can hand out permissions they don't have themselves.
         if (!canAssignRole(currentUser, role)) {
             return NextResponse.json(
                 { success: false, message: `You don't have permission to create ${role.name} accounts` },

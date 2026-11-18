@@ -528,7 +528,9 @@ function ActivityCard({
               <span>{formatDay(days[Math.floor(days.length / 2)].date)}</span>
               <span>Today</span>
             </div>
-            <table className="sr-only">
+            {/* The wrapper clips the table: sr-only alone leaves it wide enough to stretch the phone viewport. */}
+            <div className="sr-only">
+            <table>
               <caption>{noun} received per day, last 30 days</caption>
               <thead>
                 <tr>
@@ -547,6 +549,7 @@ function ActivityCard({
                 ))}
               </tbody>
             </table>
+            </div>
           </>
         )}
       </CardContent>

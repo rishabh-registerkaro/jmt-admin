@@ -45,7 +45,7 @@ import BannerEditor from "@/components/homepage-editor/BannerEditor";
 import FaqEditor from "@/components/homepage-editor/FaqEditor";
 import ContactEditor from "@/components/homepage-editor/ContactEditor";
 import SiteEditor from "@/components/homepage-editor/SiteEditor";
-import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
+import { liveSiteUrl, useDraftPreview } from "@/hooks/useDraftPreview";
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 // Must match HOMEPAGE_CHANNEL in jmt-frontend/components/homepage/LiveRefresh.tsx.
 // BroadcastChannel is same-origin only, so it reaches homepage tabs only when the
@@ -97,7 +97,7 @@ export default function HomepageDashboardPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ hero: true });
-  const liveUrl = FRONTEND_URL;
+  const liveUrl = liveSiteUrl();
 
   // After a failed load nothing was loaded, so nothing can be unsaved.
   const dirty = !loading && !loadError && saved !== "" && snapshot(state) !== saved;

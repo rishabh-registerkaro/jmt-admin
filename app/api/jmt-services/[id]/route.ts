@@ -9,6 +9,7 @@ import {
   normalizeContent,
   revalidatePages,
   serialize,
+  serializeAutosave,
   staleClientResponse,
   validSlug,
   validTitle,
@@ -28,8 +29,16 @@ export async function GET(req: NextRequest, { params }: Context) {
 
   try {
     const { id } = await params;
-    const page = await prisma.jmtServicePage.findUnique({ where: { id } });
-    return page ? NextResponse.json({ success: true, page: serialize(page) }) : notFound();
+    const [page, autosave] = await Promise.all([
+      prisma.jmtServicePage.findUnique({ where: { id } }),
+      prisma.jmtServiceAutosave.findUnique({ where: { pageId_userId: { pageId: id, userId: auth.id } } }),
+    ]);
+    if (!page) return notFound();
+    return NextResponse.json({
+      success: true,
+      page: serialize(page),
+      autosave: autosave ? serializeAutosave(autosave, page.slug) : null,
+    });
   } catch (error) {
     return errorResponse("Loading the service page", error);
   }
@@ -88,6 +97,8 @@ export async function PUT(req: NextRequest, { params }: Context) {
     }
 
     const page = await prisma.jmtServicePage.update({ where: { id }, data });
+    // These edits are saved now, so the autosave of them is done with.
+    if (body.content !== undefined) await prisma.jmtServiceAutosave.deleteMany({ where: { pageId: id, userId: auth.id } });
 
     // Old and (if renamed) new URL both change on the live site.
     await revalidatePages(existing.slug, page.slug);

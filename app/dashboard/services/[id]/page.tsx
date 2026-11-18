@@ -18,6 +18,7 @@ import {
   Eye,
   FileText,
   HelpCircle,
+  History,
   Layers,
   ListChecks,
   Mail,
@@ -43,7 +44,8 @@ import {
   type PartProps,
 } from "@/components/jmt-service-editor/sections";
 import type { ServicePageContent, ServiceSectionKey } from "@/types/service";
-import { FRONTEND_URL, useDraftPreview } from "@/hooks/useDraftPreview";
+import { liveSiteUrl, useDraftPreview } from "@/hooks/useDraftPreview";
+import { useServiceAutosave } from "@/hooks/useServiceAutosave";
 
 type Status = "draft" | "published";
 interface EditorState {
@@ -52,6 +54,19 @@ interface EditorState {
   status: Status;
   content: ServicePageContent;
 }
+
+/** Unfinished edits stored on the server, waiting for Restore or Discard. */
+interface StoredAutosave {
+  title: string;
+  slug: string;
+  content: ServicePageContent;
+  baseUpdatedAt: string;
+  transferredFrom: string | null;
+  updatedAt: string;
+}
+
+const clockTime = (value: Date | string) =>
+  new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
 type Part = keyof Pick<
   ServicePageContent,
@@ -91,16 +106,32 @@ export default function JmtServiceEditorPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ settings: true });
+  // Version of the saved page these edits start from.
+  const [pageUpdatedAt, setPageUpdatedAt] = useState("");
+  const [baseUpdatedAt, setBaseUpdatedAt] = useState("");
+  const [storedAutosave, setStoredAutosave] = useState<StoredAutosave | null>(null);
 
   const dirty = state !== null && snapshot(state) !== saved;
 
-  const apply = useCallback((page: EditorState) => {
+  const apply = useCallback((page: EditorState & { updatedAt: string }) => {
     const next: EditorState = { title: page.title, slug: page.slug, status: page.status, content: page.content };
     setState(next);
     setSaved(snapshot(next));
     setLiveSlug(page.slug);
     setIsLive(page.status === "published");
+    setPageUpdatedAt(page.updatedAt);
+    setBaseUpdatedAt(page.updatedAt);
   }, []);
+
+  // Paused while saving and while a stored autosave waits for a decision, so it isn't overwritten.
+  const autosaveDraft = useMemo(
+    () =>
+      state && dirty && !saving && !storedAutosave
+        ? { title: state.title, slug: state.slug, content: allVisible(state.content), baseUpdatedAt }
+        : null,
+    [state, dirty, saving, storedAutosave, baseUpdatedAt],
+  );
+  const autosave = useServiceAutosave({ pageId: id, draft: autosaveDraft });
 
   useEffect(() => {
     (async () => {
@@ -109,6 +140,7 @@ export default function JmtServiceEditorPage() {
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "Failed to load the page");
         apply(data.page);
+        setStoredAutosave(data.autosave);
       } catch (error) {
         const message = (error as Error).message;
         setLoadError(message);
@@ -167,6 +199,7 @@ export default function JmtServiceEditorPage() {
     setSaving(true);
     const toastId = toast.loading("Saving...");
     try {
+      await autosave.settle();
       const res = await fetch(`/api/jmt-services/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -187,8 +220,33 @@ export default function JmtServiceEditorPage() {
     }
   };
 
+  const restoreAutosave = () => {
+    if (!storedAutosave) return;
+    const { title, slug, content: restored, baseUpdatedAt: base } = storedAutosave;
+    setState({ ...state, title, slug, content: restored });
+    setBaseUpdatedAt(base);
+    setStoredAutosave(null);
+  };
+  const discardAutosave = async () => {
+    setStoredAutosave(null);
+    await autosave.discard();
+  };
+  const discardEdits = async () => {
+    if (!window.confirm("Discard your unsaved changes?")) return;
+    setState(JSON.parse(saved));
+    await autosave.discard();
+  };
+
   const published = state.status === "published";
-  const liveUrl = `${FRONTEND_URL}/service/${liveSlug}`;
+  const liveUrl = liveSiteUrl(`/service/${liveSlug}`);
+  const autosaveLabel =
+    autosave.status === "stopped"
+      ? " · Autosave stopped"
+      : autosave.status === "failed"
+        ? " · Autosave failed, will retry on your next edit"
+        : autosave.savedAt
+          ? ` · Draft autosaved at ${clockTime(autosave.savedAt)}`
+          : "";
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
@@ -201,7 +259,7 @@ export default function JmtServiceEditorPage() {
             <h1 className="truncate text-xl sm:text-2xl font-bold text-foreground">{state.title || "Untitled page"}</h1>
             <p className="truncate text-xs sm:text-sm text-muted-foreground">
               {dirty ? (
-                <span className="text-warning">Unsaved changes</span>
+                <span className="text-warning">Unsaved changes{autosaveLabel}</span>
               ) : published ? (
                 `Published at /service/${liveSlug}`
               ) : (
@@ -235,22 +293,49 @@ export default function JmtServiceEditorPage() {
             {dirty && (
               <Button
                 variant="outline"
-                onClick={() => window.confirm("Discard your unsaved changes?") && setState(JSON.parse(saved))}
+                onClick={discardEdits}
               >
                 Discard
               </Button>
             )}
             {!published && (
-              <Button variant="outline" disabled={saving} onClick={() => save({ status: "published" })}>
+              <Button variant="outline" disabled={saving || !!storedAutosave} onClick={() => save({ status: "published" })}>
                 Publish
               </Button>
             )}
             {published && liveSlug && <RevalidateButton label={`/service/${liveSlug}`} tags={jmtServiceTags(liveSlug)} />}
-            <Button onClick={() => save()} disabled={saving || !dirty} className="ml-auto px-6 sm:ml-0">
+            <Button onClick={() => save()} disabled={saving || !dirty || !!storedAutosave} className="ml-auto px-6 sm:ml-0">
               {saving ? "Saving..." : "Save changes"}
             </Button>
           </div>
         </div>
+
+        {storedAutosave && (
+          <div className="flex flex-col gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <History className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+              <div className="min-w-0 text-sm">
+                <p className="font-medium text-foreground">
+                  {storedAutosave.transferredFrom
+                    ? `Unfinished work transferred from ${storedAutosave.transferredFrom}`
+                    : "You have unfinished work on this page"}
+                </p>
+                <p className="text-muted-foreground">
+                  Autosaved {new Date(storedAutosave.updatedAt).toLocaleString()}. It isn&apos;t on the website until you save it.
+                </p>
+                {new Date(pageUpdatedAt) > new Date(storedAutosave.baseUpdatedAt) && (
+                  <p className="mt-1 text-warning">
+                    This page was saved after these edits began. Restoring and saving replaces that newer version.
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Button variant="outline" onClick={discardAutosave}>Discard</Button>
+              <Button onClick={restoreAutosave}>Restore</Button>
+            </div>
+          </div>
+        )}
 
         <SectionCard icon={Settings2} title="Page settings & SEO" hint="Name, URL, status, browser title and Google description" open={!!open.settings} onToggle={() => toggle("settings")}>
           <Grid cols={3}>
@@ -319,7 +404,7 @@ export default function JmtServiceEditorPage() {
         </SectionCard>
 
         <div className="flex justify-end pb-10">
-          <Button onClick={() => save()} disabled={saving || !dirty} className="px-8">
+          <Button onClick={() => save()} disabled={saving || !dirty || !!storedAutosave} className="px-8">
             {saving ? "Saving..." : "Save changes"}
           </Button>
         </div>

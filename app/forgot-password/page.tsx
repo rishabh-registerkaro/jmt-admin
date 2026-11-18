@@ -561,7 +561,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[53%] cursor-pointer text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none"
+                className="absolute right-3 top-[53%] -m-2 cursor-pointer p-2 text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -580,7 +580,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-[53%] cursor-pointer text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none"
+                className="absolute right-3 top-[53%] -m-2 cursor-pointer p-2 text-muted-foreground hover:text-foreground-light transition-colors focus:outline-none"
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>

@@ -26,6 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  tableWrapCell,
 } from "@/components/ui/table";
 import { revalidateTags } from "@/lib/revalidateClient";
 
@@ -295,7 +296,7 @@ export default function PackagesPage() {
                       key={block._id}
                       className="hover:bg-muted/40 transition-colors"
                     >
-                      <TableCell className="text-foreground-light font-medium">
+                      <TableCell className={`text-foreground-light font-medium ${tableWrapCell}`}>
                         <div>
                           {block.title || "(no title)"}
                           {block.status === "draft" && (
@@ -304,7 +305,7 @@ export default function PackagesPage() {
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">{block.slug}</div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={tableWrapCell}>
                         {targets.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {targets.map((p) => (

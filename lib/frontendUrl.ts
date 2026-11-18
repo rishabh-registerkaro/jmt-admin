@@ -35,3 +35,10 @@ export function resolveFrontendUrl(value: string | null | undefined): string {
  * NEXT_PUBLIC_* must be referenced literally so Next inlines it at build time.
  */
 export const FRONTEND_URL = resolveFrontendUrl(process.env.NEXT_PUBLIC_JMT_FRONTEND_URL);
+
+/**
+ * "View live" link: leaves preview first, because Preview's Draft Mode cookie
+ * applies to the whole browser and would otherwise show the unsaved draft here too.
+ */
+export const liveSiteUrl = (path = "/") =>
+  `${FRONTEND_URL}/api/preview?exit=1&path=${encodeURIComponent(path)}`;

@@ -63,12 +63,38 @@ export const updateUserRole = async (userId: string, payload: UpdateUserRolePayl
 }
 
 
+export interface UserTransferInfo {
+    success: boolean;
+    message?: string;
+    owned?: { posts: number; servicePages: number; packageBlocks: number; jmtServicePages: number; autosaves: number };
+    ownsWork?: boolean;
+    /** Users with the same access or more, who may take over this user's work. */
+    candidates?: { id: string; username: string; roleName: string }[];
+}
+
 /**
- * Delete a user (users.manage, only users the caller outranks). Their content is reassigned to the caller.
+ * What a user owns and who may take it over, for the delete dialog.
  */
-export const deleteUser = async (userId: string): Promise<{ success: boolean; message?: string }> => {
+export const getUserTransferInfo = async (userId: string): Promise<UserTransferInfo> => {
     try {
-        const response = await axiosInstance.delete(`/api/users/${userId}`);
+        const response = await axiosInstance.get<UserTransferInfo>(`/api/users/${userId}/transfer-info`);
+        return response.data;
+    } catch (error) {
+        console.error("Error loading user transfer info:", error);
+        return {
+            success: false,
+            message: getApiErrorBody(error)?.message || "Failed to load this user's work",
+        };
+    }
+}
+
+
+/**
+ * Delete a user (users.manage, only users the caller outranks). Their work moves to `transferTo`.
+ */
+export const deleteUser = async (userId: string, transferTo?: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+        const response = await axiosInstance.delete(`/api/users/${userId}`, { params: transferTo ? { transferTo } : undefined });
         return response.data;
     } catch (error) {
         console.error("Error deleting user:", error);

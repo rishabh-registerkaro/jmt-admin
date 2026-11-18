@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, tableWrapCell } from "@/components/ui/table";
 import axios from "axios";
 import { revalidateTags } from "@/lib/revalidateClient";
 
@@ -305,13 +305,13 @@ export default function BlogPage() {
                     key={post._id}
                     className="hover:bg-muted/40 transition-colors"
                   >
-                    <TableCell className="text-foreground-light font-medium">
+                    <TableCell className={`text-foreground-light font-medium ${tableWrapCell}`}>
                       {post.title || "(no title)"}
                       {post.status === "draft" && (
                         <span className="ml-2 text-xs text-muted-foreground">- Draft</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-foreground-light">
+                    <TableCell className={`text-foreground-light ${tableWrapCell}`}>
                       {post.author?.username || "Unknown"}
                     </TableCell>
                     <TableCell>

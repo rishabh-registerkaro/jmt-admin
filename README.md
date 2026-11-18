@@ -165,11 +165,12 @@ The built-in roles are created by `npm run seed:roles`:
 You can add your own roles, such as "Recruiter" with only the applications permissions.
 
 **Rules enforced by the API** (`app/lib/server/rbac.ts`):
-- Only a Super Admin can give someone the Super Admin role, or any role that includes `users.manage` (such as Admin). So only a Super Admin can create admins.
+- There is exactly one Super Admin account. Nobody can give someone the Super Admin role.
+- Only the Super Admin can give someone a role that includes `users.manage` (such as Admin). So only the Super Admin can create admins.
 - Anyone else can only assign roles whose permissions they hold themselves.
 - You can only change the role or password of, or delete, users whose role you could assign yourself.
 - Nobody can change their own role.
-- Super Admin accounts can't be deleted; demote them first. The last Super Admin can't be demoted.
+- The Super Admin account can't be deleted or demoted, and only its owner can change its password.
 - A built-in role can't be deleted. A custom role can be deleted only once no users have it.
 
 **Legacy `users.role` column.** The `users` table is shared with the Global Elite site, so its `role` enum column stays. It is kept in sync: `superadmin`, `admin`, or `editor` for every other role. If a user has no `roleId` (for example, an account created by the Global Elite site), their access comes from that column: superadmin → Super Admin, admin → Admin, editor or contributor → Editor.
@@ -234,7 +235,7 @@ A dashboard page not listed in `routeAccess.ts` is open to any signed-in user.
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript checks |
 | `npm run db:push` | Syncs `prisma/schema.prisma` to the database. It refuses changes that would lose data unless you confirm. |
 | `npm run db:studio` | Prisma Studio, a GUI to browse the data |
-| `npm run seed:admin -- --email … --username … --password …` | Creates the first Super Admin, and the built-in roles if they're missing. It never overwrites an existing user. |
+| `npm run seed:admin -- --email … --username … --password …` | Creates the Super Admin, and the built-in roles if they're missing. It does nothing if a Super Admin already exists, and never overwrites an existing user. |
 | `npm run seed:roles` | Creates the built-in roles and links existing users to them. Safe to run again. |
 | `npm run seed:homepage` | Fills the homepage editor with default content. Add `-- --force` to overwrite. |
 | `npm run test:smtp` | Checks the SMTP credentials |

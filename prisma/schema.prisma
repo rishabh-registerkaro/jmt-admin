@@ -48,6 +48,7 @@ model User {
   servicePages    ServicePage[]
   packageBlocks   PackageBlock[]
   jmtServicePages JmtServicePage[]
+  serviceAutosaves JmtServiceAutosave[]
 
   @@index([roleId])
   @@map("users")
@@ -319,6 +320,7 @@ model JmtServicePage {
   status   PublishStatus @default(draft)
   authorId String
   author   User          @relation(fields: [authorId], references: [id])
+  autosaves JmtServiceAutosave[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -326,6 +328,30 @@ model JmtServicePage {
   @@index([status])
   @@index([updatedAt])
   @@map("jmt_service_pages")
+}
+
+// Unfinished edits from the service editor, one per page and user. Never read
+// by the public API: only Save / Publish in the editor changes the real page.
+// When a user is removed, their autosaves move to the new owner of their work.
+model JmtServiceAutosave {
+  id              String         @id @default(cuid())
+  pageId          String
+  page            JmtServicePage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  title           String         @db.VarChar(200)
+  slug            String         @db.VarChar(80)
+  content         Json
+  // Page version the edits started from, to warn if the page changed since.
+  baseUpdatedAt   DateTime
+  // Username of the removed author, shown to the new owner.
+  transferredFrom String?        @db.VarChar(191)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([pageId, userId])
+  @@index([userId])
+  @@map("jmt_service_autosaves")
 }
 
 // Copy of the Joy Maa Tara site's fixed pages (jmt-frontend /about, /contact,

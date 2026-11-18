@@ -88,30 +88,29 @@ export interface AccessActor {
 
 /**
  * Can `actor` give `target` role to someone (or manage a user who holds it)?
- * - Super Admin: any role.
- * - Others: never Super Admin, never a role that can manage users (so only a
- *   Super Admin can create admins), and only roles whose permissions are all
- *   ones the actor has.
+ * - Super Admin role: nobody. There is exactly one Super Admin account, so the
+ *   role can't be handed out and its holder can't be demoted, deleted or reset.
+ * - Super Admin: any other role.
+ * - Others: never a role that can manage users (so only the Super Admin can
+ *   create admins), and only roles whose permissions are all ones the actor has.
  */
 export function canAssignRole(actor: AccessActor, target: { key: string; permissions: readonly string[] }): boolean {
-  if (actor.isSuperAdmin) return true;
   if (target.key === SYSTEM_ROLE_KEYS.SUPERADMIN) return false;
+  if (actor.isSuperAdmin) return true;
   if (target.permissions.includes(PERMISSIONS.USERS_MANAGE)) return false;
   if (target.permissions.includes(PERMISSIONS.ROLES_MANAGE)) return false;
   return target.permissions.every((p) => actor.permissions.includes(p));
 }
 
-/** Count of users whose effective role is Super Admin (by roleId or legacy fallback). */
-export async function countSuperAdmins(): Promise<number> {
-  const superRole = await prisma.adminRole.findUnique({
-    where: { key: SYSTEM_ROLE_KEYS.SUPERADMIN },
-    select: { id: true },
-  });
-  return prisma.user.count({
-    where: superRole
-      ? { OR: [{ roleId: superRole.id }, { roleId: null, role: "superadmin" }] }
-      : { role: "superadmin" },
-  });
+/**
+ * Can `candidate` take over the work of a removed user? They need the same
+ * access or more: every permission `source` has. The Super Admin always can.
+ */
+export function canReceiveWorkFrom(
+  source: Pick<AccessInfo, "permissions">,
+  candidate: Pick<AccessInfo, "permissions" | "isSuperAdmin">,
+): boolean {
+  return candidate.isSuperAdmin || source.permissions.every((p) => candidate.permissions.includes(p));
 }
 
 /** Loads a role by id with its effective permissions, or null. */

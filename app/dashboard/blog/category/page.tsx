@@ -4,7 +4,7 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, tableWrapCell } from "@/components/ui/table";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -339,7 +339,7 @@ export default function CategoryPage() {
                   <label className="block text-sm font-medium text-foreground-light mb-1">
                     Badge Color
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     {/* Live preview swatch */}
                     <div
                       className="h-8 w-8 shrink-0 rounded-full border-2 border-border"
@@ -367,7 +367,7 @@ export default function CategoryPage() {
                       value={formData.color}
                       onChange={handleChange}
                       placeholder="Custom hex e.g. #1e40af"
-                      className="flex-1 rounded-lg border font-mono text-xs"
+                      className="min-w-40 flex-1 rounded-lg border font-mono text-xs"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -495,7 +495,7 @@ export default function CategoryPage() {
                             className="rounded"
                           />
                         </TableCell>
-                        <TableCell className="text-foreground-light font-medium">
+                        <TableCell className={`text-foreground-light font-medium ${tableWrapCell}`}>
                           <div className="cursor-pointer" onClick={() => router.push(`/dashboard/blog/category/${cat._id}`)}>
                             {cat.name}
                           </div>
@@ -511,7 +511,7 @@ export default function CategoryPage() {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground font-mono text-sm">
+                        <TableCell className={`text-muted-foreground font-mono text-sm ${tableWrapCell}`}>
                           {cat.slug}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">

@@ -121,7 +121,8 @@ export const SITE_PAGES = {
       "hiring.steps[].icon": ["file", "phone", "hammer", "hat"],
       "hiring.keepReady.items[].icon": ["id", "bank", "phone"],
     },
-    locked: ["form.trades", "form.experience", "form.start", "form.languages[].value"],
+    // hero.alsoIn and apply.introShort are not shown anywhere on the page.
+    locked: ["hero.alsoIn", "apply.introShort", "form.trades", "form.experience", "form.start", "form.languages[].value"],
     hints: {
       "form.languages": "How each language is written on the form. The choices themselves are fixed.",
     },

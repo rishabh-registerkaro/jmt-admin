@@ -11,11 +11,11 @@ import { RevalidateButton } from "@/components/common/RevalidateButton";
 import { jmtServiceTags } from "@/app/lib/utils/cacheTags";
 import { Briefcase, Download, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, tableWrapCell } from "@/components/ui/table";
 import { inputCls, selectCls } from "@/components/homepage-editor/fields";
 import { slugify } from "@/lib/service/normalizeServicePage";
 
-import { FRONTEND_URL } from "@/lib/frontendUrl";
+import { liveSiteUrl } from "@/lib/frontendUrl";
 
 interface Row {
   id: string;
@@ -23,6 +23,8 @@ interface Row {
   title: string;
   status: "draft" | "published";
   updatedAt: string;
+  /** The signed-in user has unfinished edits on this page (their own, or transferred to them). */
+  hasAutosave?: boolean;
 }
 interface BuiltIn {
   slug: string;
@@ -223,12 +225,12 @@ export default function ServicesList({ startWithNewForm = false }: { startWithNe
               ) : (
                 rows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className={`font-medium text-foreground ${tableWrapCell}`}>
                       <Link href={`/dashboard/services/${row.id}`} className="hover:underline">
                         {row.title}
                       </Link>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">/service/{row.slug}</TableCell>
+                    <TableCell className={`text-muted-foreground ${tableWrapCell}`}>/service/{row.slug}</TableCell>
                     <TableCell>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -237,6 +239,11 @@ export default function ServicesList({ startWithNewForm = false }: { startWithNe
                       >
                         {row.status === "published" ? "Published" : "Draft"}
                       </span>
+                      {row.hasAutosave && (
+                        <span className="ml-2 rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning">
+                          Autosaved work
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{new Date(row.updatedAt).toLocaleString()}</TableCell>
                     <TableCell>
@@ -251,7 +258,7 @@ export default function ServicesList({ startWithNewForm = false }: { startWithNe
                         )}
                         {row.status === "published" && (
                           <Button asChild variant="ghost" size="sm" title="View live">
-                            <a href={`${FRONTEND_URL}/service/${row.slug}`} target="_blank" rel="noopener noreferrer">
+                            <a href={liveSiteUrl(`/service/${row.slug}`)} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-4 w-4" />
                             </a>
                           </Button>
