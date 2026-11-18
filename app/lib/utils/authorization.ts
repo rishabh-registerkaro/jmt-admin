@@ -1,90 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "./getCurrentUser";
-import { ADMIN_ROLES } from "../constants/role"
+import { getCurrentUser, type CurrentUser } from "./getCurrentUser";
+import type { Permission } from "@/app/lib/constants/permissions";
 
-export interface UserWithRole {
-    id: string;
-    username: string;
-    role: string;
+export type { CurrentUser };
+
+/** True if the user has the permission (or, for a list, any of them). */
+export function hasPermission(
+  user: Pick<CurrentUser, "permissions"> | null | undefined,
+  perm: Permission | readonly Permission[],
+): boolean {
+  if (!user) return false;
+  const wanted = Array.isArray(perm) ? perm : [perm as Permission];
+  return wanted.some((p) => user.permissions.includes(p));
 }
 
 /**
- * Check if user has one of the allowed roles
+ * Require a signed-in user holding the permission.
+ * Pass an array to accept ANY of them, or `{ all: true }` to require all.
+ * Returns the user if allowed, otherwise a 401/403 NextResponse.
  */
-export function hasRole(userRole: string, allowedRoles: string[]): boolean {
-    return allowedRoles.includes(userRole);
-}
+export async function requirePermission(
+  req: NextRequest,
+  perm: Permission | readonly Permission[],
+  opts: { all?: boolean } = {},
+): Promise<CurrentUser | NextResponse> {
+  const user = await getCurrentUser(req);
+  if (user instanceof NextResponse) return user;
 
+  const wanted = Array.isArray(perm) ? perm : [perm as Permission];
+  const ok = opts.all
+    ? wanted.every((p) => user.permissions.includes(p))
+    : wanted.some((p) => user.permissions.includes(p));
 
-/**
- * Check if user is admin (superadmin or admin)
- */
-export function isAdmin(userRole: string): boolean {
-    return ADMIN_ROLES.includes(userRole as "admin");
-}
-
-/**
- * Check if user is superadmin
- */
-export function isSuperAdmin(userRole: string): boolean {
-    return userRole === "superadmin";
-}
-
-/**
- * Require user to have one of the allowed roles
- * Returns user object if authorized, NextResponse error if not
- */
-export async function requireRole(req: NextRequest, allowedRoles: string[]): Promise<UserWithRole | NextResponse> {
-    const userResult = await getCurrentUser(req);
-    if (userResult instanceof NextResponse) {
-        return userResult; // Already an error response
-    }
-
-    const user = userResult as UserWithRole;
-
-    if (!hasRole(user.role, allowedRoles)) {
-        return NextResponse.json({
-            success: false,
-            message: "Access denied. You don't have permission to access this resource."
-        }, { status: 403 })
-    }
-
-
-    return user;
-}
-
-/**
- * Get user role from request
- */
-export async function getUserRole(req: NextRequest): Promise<string | null>{
-    const userResult = await getCurrentUser(req);
-
-    if (userResult instanceof NextResponse) {
-        return null;
-      }
-    
-      return (userResult as UserWithRole).role;
-}
-
-/**
- * Check if user can access a specific route
- */
-export function canAccessRoute(userRole: string, route: string): boolean {
-  const contentRoutes = [
-    "/api/post",
-    "/api/media",
-    "/api/header-menu",
-    "/api/footer-menu",
-    "/api/about",
-  ];
-
-  if (isAdmin(userRole)) {
-    return true;
+  if (!ok) {
+    return NextResponse.json(
+      { success: false, message: "Access denied. You don't have permission to access this resource." },
+      { status: 403 },
+    );
   }
+  return user;
+}
 
-  if (userRole === "editor" || userRole === "contributor") {
-    return contentRoutes.some((r) => route.startsWith(r));
-  }
-
-  return false;
+/** Require any signed-in user (no particular permission). */
+export async function requireUser(req: NextRequest): Promise<CurrentUser | NextResponse> {
+  return getCurrentUser(req);
 }

@@ -4,8 +4,8 @@ import { withMongoId, withMongoIds } from "@/app/lib/utils/serialize";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma, PublishStatus } from "@prisma/client";
 
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import { revalidateFrontendTags, packageTags } from "@/app/lib/utils/revalidateFrontend";
 import { normalizeTargetPages } from "@/app/lib/content/package-content";
 
@@ -14,7 +14,7 @@ import { normalizeTargetPages } from "@/app/lib/content/package-content";
 
 export async function POST(req: NextRequest) {
   try {
-    const authorResult = await requireRole(req, ADMIN_ROLES);
+    const authorResult = await requirePermission(req, PERMISSIONS.PACKAGES_MANAGE);
     if (authorResult instanceof NextResponse) {
       return authorResult;
     }
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES);
+    const userResult = await requirePermission(req, CONTENT_PERMISSIONS);
     if (userResult instanceof NextResponse) {
       return userResult;
     }

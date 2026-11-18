@@ -3,8 +3,8 @@ import { withMongoId } from "@/app/lib/utils/serialize";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 
 // CORS headers helper
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 // POST — create or update the singleton about page (admin dashboard)
 export async function POST(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 // but only touches the provided fields)
 export async function PATCH(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
     if (userResult instanceof NextResponse) {
       return userResult;
     }

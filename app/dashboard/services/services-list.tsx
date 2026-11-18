@@ -162,10 +162,12 @@ export default function ServicesList({ startWithNewForm = false }: { startWithNe
                   className={inputCls}
                   required
                   pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                  maxLength={80}
+                  title="Lower-case letters, numbers and single hyphens, e.g. supervision-and-compliance"
                   value={slug}
                   onChange={(e) => {
                     setSlugTouched(true);
-                    setSlug(e.target.value);
+                    setSlug(e.target.value.toLowerCase());
                   }}
                 />
                 <span className="block text-xs font-normal text-muted-foreground">/service/{slug || "…"}</span>

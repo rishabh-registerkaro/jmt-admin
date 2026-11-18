@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { intParam } from "@/app/lib/utils/pagination";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { CONTENT_PERMISSIONS, PERMISSIONS } from "@/app/lib/constants/permissions";
 import prisma from "@/app/lib/config/db";
 import * as ftp from "basic-ftp";
 import { Readable } from "stream";
@@ -149,7 +149,7 @@ async function deleteFromHostinger(filename: string): Promise<void> {
 
 export async function POST(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, CONTENT_PERMISSIONS);
     if (userResult instanceof NextResponse) return userResult;
     if (!userResult.id) {
       return NextResponse.json({ message: "Unauthorized. Please login." }, { status: 401 });
@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
     await prisma.mediaAsset.create({
       data: {
         key: safeFilename,
-        filename: file.name,
+        filename: file.name.slice(0, 191), // media_assets.filename is VARCHAR(191)
         format,
         resourceType,
         bytes: file.size,
@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, CONTENT_PERMISSIONS);
     if (userResult instanceof NextResponse) return userResult;
     if (!userResult.id) {
       return NextResponse.json({ message: "Unauthorized. Please login." }, { status: 401 });
@@ -280,7 +280,7 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.MEDIA_MANAGE);
     if (userResult instanceof NextResponse) return userResult;
     if (!userResult.id) {
       return NextResponse.json({ message: "Unauthorized. Please login." }, { status: 401 });

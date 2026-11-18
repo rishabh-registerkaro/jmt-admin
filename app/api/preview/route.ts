@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import { normalizeHomeContent } from "@/app/lib/content/home-content";
 import { isSitePageKey, normalizeSitePage } from "@/app/lib/server/jmtSitePages";
 import { normalizeContent, validSlug } from "@/app/lib/server/jmtServicePages";
@@ -26,7 +26,7 @@ const metaText = (value: unknown, max: number) =>
 const bad = (message: string) => NextResponse.json({ success: false, message }, { status: 400 });
 
 export async function POST(req: NextRequest) {
-  const auth = await requireRole(req, CONTENT_ROLES);
+  const auth = await requirePermission(req, CONTENT_PERMISSIONS);
   if (auth instanceof NextResponse) return auth;
 
   const text = await req.text().catch(() => "");

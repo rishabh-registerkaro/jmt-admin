@@ -13,7 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { getUserProfile } from "@/lib/apiCallingProfile";
+import { usePermissions } from "@/components/common/PermissionsProvider";
+import { roleBadgeClass, roleLabel } from "@/components/common/roleDisplay";
+import { listRoles, type AdminRoleDTO } from "@/lib/apiCallingRoles";
 import { 
   updateUserRole, 
   User, 
@@ -35,40 +37,14 @@ const getErrorMessage = (error: unknown): string | undefined =>
     ? (error as { message?: string }).message
     : undefined;
 
-const getRoleBadgeColor =(role: string) => {
-  switch (role?.toLowerCase()) {
-    case "superadmin":
-      return "bg-brand/15 text-brand-link border-brand/40";
-    case "admin":
-      return "bg-brand/10 text-brand-link border-brand/30";
-    case "editor":
-      return "bg-secondary text-foreground border-border-strong";
-    case "contributor":
-      return "bg-warning/10 text-warning border-warning/30";
-    default:
-      return "bg-muted text-muted-foreground border-border";
-  }
-};
-
-const formatRole = (role: string) => {
-  if (!role) return "N/A";
-  return role === "superadmin"
-    ? "Super Admin"
-    : role === "admin"
-      ? "Admin"
-      : role === "editor"
-        ? "Editor"
-        : role === "contributor"
-          ? "Contributor"
-          : "N/A";
-};
-
 export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUserProps) {
   const [displayedUser, setDisplayedUser] = useState<User>(user);
-  const [selectedRole, setSelectedRole] = useState(user.role);
+  // selectedRole holds a role id (from /api/roles)
+  const [selectedRole, setSelectedRole] = useState(user.roleId ?? "");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { user: currentUser } = usePermissions();
+  const currentUserId = currentUser?.id ?? null;
+  const [assignableRoles, setAssignableRoles] = useState<AdminRoleDTO[]>([]);
   const [showRoleForm, setShowRoleForm] = useState(false);
   
   // Password change states
@@ -89,7 +65,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resets local form state when a different user (or role) is passed in; parents do not remount via key
     setDisplayedUser(user);
-    setSelectedRole(user.role);
+    setSelectedRole(user.roleId ?? "");
     setShowRoleForm(false);
     // Reset password form when user changes
     setPasswordData({
@@ -98,21 +74,17 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
       currentPassword: "",
     });
     setShowPasswordForm(false);
-  }, [user.id, user.role]);
+  }, [user.id, user.roleId]);
 
+  // Roles the signed-in user may assign (Admin / Super Admin only for Super Admins)
   useEffect(() => {
-    const checkUserRole = async () => {
-      try {
-        const response = await getUserProfile();
-        if (response.success && response.user) {
-          setCurrentUserRole(response.user.role);
-          setCurrentUserId(response.user.id);
-        }
-      } catch (error) {
-        console.error("Error fetching current user role:", error);
-      }
+    let alive = true;
+    listRoles({ assignable: true }).then((res) => {
+      if (alive && res.success && res.roles) setAssignableRoles(res.roles);
+    });
+    return () => {
+      alive = false;
     };
-    checkUserRole();
   }, []);
 
   const formatDate = (dateString: string) => {
@@ -127,7 +99,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
   };
 
   const handleRoleUpdate = async () => {
-    if (selectedRole === displayedUser.role) {
+    if (!selectedRole || selectedRole === displayedUser.roleId) {
       toast.info("Role is already set to this value", {
         closeButton: true,
         className: "!bg-transparent !text-foreground",
@@ -142,9 +114,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
     });
 
     try {
-      const payload: UpdateUserRolePayload = {
-        role: selectedRole as UpdateUserRolePayload["role"],
-      };
+      const payload: UpdateUserRolePayload = { roleId: selectedRole };
       const response = await updateUserRole(displayedUser.id, payload);
 
       toast.dismiss(loadingToastId);
@@ -158,7 +128,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
         // Update local displayed user immediately
         // API returns only id/username/email/role — keep createdAt/updatedAt
         setDisplayedUser((prev) => ({ ...prev, ...response.user }));
-        setSelectedRole(response.user.role);
+        setSelectedRole(response.user.roleId ?? "");
 
         // Call callback to refresh user list in parent
         if (onRoleUpdate) {
@@ -172,7 +142,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
           closeButton: true,
           className: "!bg-transparent !text-foreground",
         });
-        setSelectedRole(displayedUser.role);
+        setSelectedRole(displayedUser.roleId ?? "");
       }
     } catch (error) {
       toast.dismiss(loadingToastId);
@@ -181,7 +151,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
         closeButton: true,
         className: "!bg-transparent !text-foreground",
       });
-      setSelectedRole(displayedUser.role);
+      setSelectedRole(displayedUser.roleId ?? "");
     } finally {
       setIsUpdating(false);
     }
@@ -290,47 +260,21 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
     }
   };
 
-  const canUpdateRole =
-    currentUserRole === "admin" || currentUserRole === "superadmin";
-
+  // This screen is only reachable with users.manage; the API repeats every check.
+  const canUpdateRole = true;
   const canChangePassword = canUpdateRole;
 
-  // Role update validations
+  // Role update validations. `canManage` comes from the API: false when the
+  // target holds a role the signed-in user couldn't assign (e.g. an Admin
+  // looking at another Admin or a Super Admin).
   const isUpdatingOwnRole = currentUserId === displayedUser.id;
-  const isAdminChangingSuperadmin =
-    currentUserRole === "admin" && displayedUser.role === "superadmin";
-  const isAdminAssigningSuperadmin =
-    currentUserRole === "admin" && selectedRole === "superadmin";
-  const isAdminAssigningAdmin =
-    currentUserRole === "admin" && selectedRole === "admin";
+  const cannotManageTarget = !isUpdatingOwnRole && !displayedUser.canManage;
 
   // Password update validations
   const isUpdatingOwnPassword = currentUserId === displayedUser.id;
-  const isAdminChangingSuperadminPassword =
-    currentUserRole === "admin" && displayedUser.role === "superadmin";
+  const isAdminChangingSuperadminPassword = !isUpdatingOwnPassword && !displayedUser.canManage;
 
-  // Determine which roles should be shown as disabled in the dropdown
-  const isRoleDisabled = (roleValue: string) => {
-    if (currentUserRole === "superadmin") {
-      return false;
-    }
-
-    if (currentUserRole === "admin") {
-      // Admin cannot assign superadmin or admin role
-      if (roleValue === "superadmin" || roleValue === "admin") {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  const isRoleChangeDisabled =
-    !canUpdateRole ||
-    isUpdating ||
-    isAdminChangingSuperadmin ||
-    isAdminAssigningSuperadmin ||
-    isAdminAssigningAdmin;
+  const isRoleChangeDisabled = !canUpdateRole || isUpdating || cannotManageTarget;
 
   return (
     <div className="space-y-6 p-4 mt-4">
@@ -352,9 +296,9 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
           <p className="text-sm text-muted-foreground break-all">{displayedUser.email}</p>
           <div className="flex justify-center mt-3">
             <span
-              className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${getRoleBadgeColor(displayedUser.role)}`}
+              className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${roleBadgeClass(displayedUser.roleKey ?? displayedUser.role)}`}
             >
-              {formatRole(displayedUser.role)}
+              {roleLabel(displayedUser)}
             </span>
           </div>
         </div>
@@ -369,7 +313,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
           <Item label="Email" value={displayedUser.email} />
           <Item
             label="Role"
-            value={formatRole(displayedUser.role)}
+            value={roleLabel(displayedUser)}
           />
           <Item
             label="Created At"
@@ -430,54 +374,21 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent>
-                      {currentUserRole === "superadmin" && (
-                        <SelectItem
-                          value="admin"
-                          disabled={isRoleDisabled("admin")}
-                        >
-                          Admin
+                      {assignableRoles.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
                         </SelectItem>
-                      )}
-                      <SelectItem
-                        value="editor"
-                        disabled={isRoleDisabled("editor")}
-                      >
-                        Editor
-                      </SelectItem>
-                      <SelectItem
-                        value="contributor"
-                        disabled={isRoleDisabled("contributor")}
-                      >
-                        Contributor
-                      </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Error Messages */}
-                {isAdminChangingSuperadmin && (
+                {cannotManageTarget && (
                   <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
                     <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
                     <p className="text-xs text-destructive">
-                      You cannot change Super Admin&apos;s role. Only Super Admin can modify Super Admin roles.
-                    </p>
-                  </div>
-                )}
-
-                {isAdminAssigningSuperadmin && (
-                  <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
-                    <p className="text-xs text-destructive">
-                      You cannot assign Super Admin role. Only Super Admin can create Super Admin accounts.
-                    </p>
-                  </div>
-                )}
-
-                {isAdminAssigningAdmin && (
-                  <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
-                    <p className="text-xs text-destructive">
-                      You cannot assign Admin role. Only Super Admin can promote users to Admin.
+                      You cannot change this user&apos;s role. Only a Super Admin can manage Admins and Super Admins.
                     </p>
                   </div>
                 )}
@@ -497,7 +408,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                     variant="outline"
                     onClick={() => {
                       setShowRoleForm(false);
-                      setSelectedRole(displayedUser.role);
+                      setSelectedRole(displayedUser.roleId ?? "");
                     }}
                     disabled={isUpdating}
                     className="disabled:opacity-50 cursor-pointer"
@@ -508,7 +419,8 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                     onClick={handleRoleUpdate}
                     disabled={
                       isRoleChangeDisabled ||
-                      selectedRole === displayedUser.role ||
+                      !selectedRole ||
+                      selectedRole === displayedUser.roleId ||
                       isUpdating ||
                       isUpdatingOwnRole
                     }
@@ -571,7 +483,7 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
                 <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
                   <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
                   <p className="text-xs text-destructive">
-                    You cannot change Super Admin&apos;s password. Only Super Admin can modify Super Admin passwords.
+                    You cannot change this user&apos;s password. Only a Super Admin can manage Admins and Super Admins.
                   </p>
                 </div>
               )}
@@ -720,11 +632,11 @@ export default function ViewUser({ user, onRoleUpdate, onDeleteRequest }: ViewUs
         </div>
       )}
 
-      {/* Delete User - Super Admin only; cannot delete self or another Super Admin */}
-      {currentUserRole === "superadmin" &&
+      {/* Delete User - only users you outrank; never yourself or a Super Admin (demote first) */}
+      {displayedUser.canManage &&
         onDeleteRequest &&
         currentUserId !== displayedUser.id &&
-        displayedUser.role !== "superadmin" && (
+        displayedUser.roleKey !== "superadmin" && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-destructive" />

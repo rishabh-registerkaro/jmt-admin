@@ -35,7 +35,12 @@ model User {
   email     String   @unique
   username  String   @unique
   password  String
+  // Legacy role column — kept (and kept in sync) because the users table is
+  // shared with the Global Elite site. JMT access is decided by `adminRole`;
+  // when roleId is null, access falls back to this value (app/lib/server/rbac.ts).
   role      Role     @default(contributor)
+  roleId    String?
+  adminRole AdminRole? @relation(fields: [roleId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -44,7 +49,26 @@ model User {
   packageBlocks   PackageBlock[]
   jmtServicePages JmtServicePage[]
 
+  @@index([roleId])
   @@map("users")
+}
+
+// Dashboard roles (RBAC). Permission keys live in app/lib/constants/permissions.ts.
+// System roles (superadmin, admin, editor, leads) are created by `npm run seed:roles`.
+model AdminRole {
+  id          String   @id @default(cuid())
+  key         String   @unique @db.VarChar(60)
+  name        String   @db.VarChar(80)
+  description String?  @db.VarChar(255)
+  // string[] of permission keys
+  permissions Json
+  // System roles can't be deleted; the superadmin role can't be edited either.
+  isSystem    Boolean  @default(false)
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("jmt_admin_roles")
 }
 
 model Post {

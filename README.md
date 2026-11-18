@@ -70,7 +70,7 @@ Per-page settings (section titles and hints, icon choices, and **locked** fields
 ## Requirements
 
 - **Node.js 20.9 or newer** (Next.js 16 needs it) and npm
-- **MySQL 8** (local, Docker or Hostinger)
+- **MySQL 8** (local or Hostinger)
 - Optional: a Gmail account with an App Password (password-reset codes and new-lead emails)
 - Optional: Hostinger FTP access (image uploads in the dashboard)
 
@@ -90,10 +90,7 @@ cp .env.example .env        # then fill it in (see "Environment variables" below
 **If you're starting with a new, empty database:**
 
 ```bash
-# Throwaway local MySQL, if you don't have one:
-docker run -d --name jmt-mysql -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=dev -e MYSQL_DATABASE=jmt_cms mysql:8
-# .env → DATABASE_URL="mysql://root:dev@localhost:3306/jmt_cms"
+# .env → DATABASE_URL="mysql://user:password@localhost:3306/jmt_cms"
 
 npm run db:push             # creates every table from prisma/schema.prisma
 npm run seed:admin -- --email you@example.com --username admin --password "a-strong-password"
@@ -139,6 +136,94 @@ Check the SMTP settings before deploying with `npm run test:smtp` (auth only) or
 
 ---
 
+## Roles and permissions
+
+Access depends on the user's **role**. A role is a named set of **permissions**. Permissions are listed in `app/lib/constants/permissions.ts`, and roles are stored in the `jmt_admin_roles` table. A Super Admin manages roles at **Administration → Roles** and assigns them at **Administration → Users**.
+
+| Permission | Allows |
+|---|---|
+| `content.edit` | Homepage, About / Contact / Join Our Crew pages, header and footer menus, Terms & Policy |
+| `posts.manage` | Posts and categories |
+| `services.manage` | Service pages |
+| `packages.manage` | Packages |
+| `media.manage` | Media library (anyone with a content permission can still upload images from inside an editor) |
+| `leads.view` / `leads.manage` | See client enquiries / change status, edit, add and delete them |
+| `applications.view` / `applications.manage` | See Join Our Crew worker applications / change status and delete them |
+| `users.manage` | Users: create, change role, reset password, delete |
+| `cache.reset` | The "Reset all cache" button |
+| `roles.manage` | The Roles page. Only the Super Admin role has it, and it can't be given to any other role. |
+
+The built-in roles are created by `npm run seed:roles`:
+
+| Role | Permissions | Notes |
+|---|---|---|
+| **Super Admin** | everything | Locked. Can't be edited or deleted. |
+| **Admin** | everything except `roles.manage` | Permissions can be edited; can't be deleted |
+| **Editor** | content, posts, services, packages, media | Contributors were merged into this role |
+| **Leads Manager** | leads and applications (view and manage) | |
+
+You can add your own roles, such as "Recruiter" with only the applications permissions.
+
+**Rules enforced by the API** (`app/lib/server/rbac.ts`):
+- Only a Super Admin can give someone the Super Admin role, or any role that includes `users.manage` (such as Admin). So only a Super Admin can create admins.
+- Anyone else can only assign roles whose permissions they hold themselves.
+- You can only change the role or password of, or delete, users whose role you could assign yourself.
+- Nobody can change their own role.
+- Super Admin accounts can't be deleted; demote them first. The last Super Admin can't be demoted.
+- A built-in role can't be deleted. A custom role can be deleted only once no users have it.
+
+**Legacy `users.role` column.** The `users` table is shared with the Global Elite site, so its `role` enum column stays. It is kept in sync: `superadmin`, `admin`, or `editor` for every other role. If a user has no `roleId` (for example, an account created by the Global Elite site), their access comes from that column: superadmin → Super Admin, admin → Admin, editor or contributor → Editor.
+
+### Admin site map
+
+Each page is listed in `app/lib/constants/routeAccess.ts` and each sidebar item in `components/common/AppSidebar.tsx`. Sidebar items, and the items inside each menu, only appear for users with the permission. The API behind each page checks the permission again on the server.
+
+```
+Dashboard                      /dashboard                               signed in (cards filtered per permission)
+CONTENT
+├─ Homepage                    /dashboard/homepage                      content.edit
+├─ Services ▸ All / Add        /dashboard/services[/create-service]     services.manage
+├─ Media Library               /dashboard/media                         media.manage
+├─ Menus ▸ Header / Footer     /dashboard/site-menus/{header|footer}    content.edit
+├─ About Us                    /dashboard/site-pages/about              content.edit
+├─ Contact                     /dashboard/site-pages/contact            content.edit
+├─ Join Our Crew               /dashboard/site-pages/join-our-crew      content.edit
+└─ Terms & Policy              /dashboard/terms-policy                  content.edit
+LEADS
+├─ Leads                       /dashboard/leads                         leads.view
+└─ Applications                /dashboard/applications                  applications.view
+ADMINISTRATION
+├─ Users                       /dashboard/users                         users.manage
+└─ Roles                       /dashboard/roles                         roles.manage
+ACCOUNT
+└─ Profile                     /dashboard/profile                       signed in
+Sidebar footer: Reset all cache                                         cache.reset
+```
+
+These pages work by URL but have no sidebar link. Posts and Packages only feed the main website, not Joy Maa Tara, so they are left out of the sidebar, the dashboard home and the Roles screen. Their pages and APIs still exist because the main website reads its blog and package blocks from this backend.
+
+| Page | Permission |
+|---|---|
+| `/dashboard/blog/*` (Posts and categories, main website only) | `posts.manage` |
+| `/dashboard/services/[id]` | `services.manage` |
+| `/dashboard/packages/*` (package blocks, main website only) | `packages.manage` |
+| `/dashboard/site-pages/[key]` | `content.edit` |
+| `/dashboard/header-menu`, `/dashboard/footer-menu`, `/dashboard/about`, `/dashboard/contact` (older main-website editors) | `content.edit` |
+
+A dashboard page not listed in `routeAccess.ts` is open to any signed-in user.
+
+**API permissions.** Admin APIs use `requirePermission(req, …)` from `app/lib/utils/authorization.ts`. A GET on a content API (used by pickers in other editors) accepts any content permission. Writes need the specific permission. Public endpoints are unaffected: `*/client/*`, sitemaps, `/api/lead/{homepage,contact,join}`, public `POST /api/lead`, `/api/preview/[token]`, login, forgot-password, and the public GETs of header-menu, footer-menu, about and contact.
+
+**Applications.** Join Our Crew applications are stored as leads with `leadSource = JOIN_LEAD_SOURCE` (`utils/joinForm.ts`). `/api/applications` lists them; `/api/lead` and the Leads page leave them out. On the Applications page, the statuses `converted` and `lost` are shown as **Hired** and **Rejected**.
+
+### Turning RBAC on (first deploy)
+
+1. `npx prisma db push` adds the `jmt_admin_roles` table and a nullable `users.roleId` column, and changes nothing else. Run it **before** starting the new code. The old code ignores the new column, but the new code needs it.
+2. `npm run seed:roles` creates the four built-in roles and links every existing user to the one matching their old role (contributors become Editors). You can run it again safely.
+3. Deploy or restart the admin.
+
+---
+
 ## Scripts
 
 | Command | What it does |
@@ -149,7 +234,8 @@ Check the SMTP settings before deploying with `npm run test:smtp` (auth only) or
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript checks |
 | `npm run db:push` | Syncs `prisma/schema.prisma` to the database. It refuses changes that would lose data unless you confirm. |
 | `npm run db:studio` | Prisma Studio, a GUI to browse the data |
-| `npm run seed:admin -- --email … --username … --password …` | Creates the first superadmin. It never overwrites an existing user. |
+| `npm run seed:admin -- --email … --username … --password …` | Creates the first Super Admin, and the built-in roles if they're missing. It never overwrites an existing user. |
+| `npm run seed:roles` | Creates the built-in roles and links existing users to them. Safe to run again. |
 | `npm run seed:homepage` | Fills the homepage editor with default content. Add `-- --force` to overwrite. |
 | `npm run test:smtp` | Checks the SMTP credentials |
 
@@ -176,7 +262,10 @@ app/
     homepage/          homepage CMS: admin CRUD, /client bundle, /version
     jmt-services/      JMT service pages: admin CRUD, /client/<slug>
     site-pages/        JMT About / Contact / Join our crew: [key] (GET, PUT, DELETE = reset), /client/[key]
-    lead/              form endpoints for jmt-frontend (homepage, contact, join)
+    lead/              form endpoints for jmt-frontend (homepage, contact, join); admin list of enquiries
+    applications/      Join Our Crew worker applications (list, status, delete)
+    roles/             roles CRUD (Super Admin)
+    users/             users CRUD
     preview/           POST: store an unsaved draft; [token]: draft read by jmt-frontend (shared secret)
   dashboard/           admin UI pages (one folder per section)
     services/          JMT service pages: list (services-list.tsx) and editor ([id])
@@ -185,10 +274,10 @@ app/
   login/ forgot-password/ signup/
   lib/
     config/            Prisma client (db.ts), email (SMTP)
-    constants/         roles
+    constants/         permissions.ts (permissions + built-in roles), routeAccess.ts (page → permission)
     content/           default content and templates for each CMS section
                        (site-pages.ts: registry of the About / Contact / Join pages)
-    server/            shared helpers for the JMT service and site page routes, previewStore.ts (drafts)
+    server/            shared helpers for the JMT service and site page routes, previewStore.ts (drafts), rbac.ts (roles)
     utils/             auth, CORS, revalidation, serialization, media helpers, leadThrottle.ts (spam limits)
   types/               dashboard types
 components/
@@ -197,7 +286,7 @@ components/
   homepage-editor/     section editors for /dashboard/homepage (their field components are reused)
   jmt-service-editor/  section editors for the service pages
   site-page-editor/    generic editor for About Us, Contact and Join Our Crew
-hooks/                 React hooks (route permissions, mobile, useDraftPreview for the Preview button)
+hooks/                 React hooks (route permissions via PermissionsProvider, mobile, useDraftPreview for the Preview button)
 lib/                   axios API clients used by the dashboard
 lib/homepage/          homepage view-model builder (shared with jmt-frontend)
 lib/service/           service page normalizer (shared with jmt-frontend)
@@ -274,27 +363,13 @@ npm start          # listens on port 3000
 - The database must accept connections from outside (Hostinger → **Remote MySQL**). Vercel's IPs change, so that usually means allowing any host (`%`). Keep `connection_limit=5`.
 - The lead IP limit and draft previews are in memory, so on Vercel they are per function instance (best effort). The per-email/phone lead limit is in MySQL and always applies.
 
-### Docker
-
-```bash
-docker build \
-  --build-arg NEXT_PUBLIC_JMT_FRONTEND_URL=https://jmt.example.com \
-  -t jmt-admin .
-
-docker run -d --name jmt-admin -p 3000:3000 --env-file .env --restart unless-stopped jmt-admin
-```
-
-`.env` is excluded by `.dockerignore`, so secrets are never baked into the image; pass them at runtime with `--env-file`. `NEXT_PUBLIC_JMT_FRONTEND_URL` is the only build-time value, so it goes in as a `--build-arg`. The container runs as the unprivileged `node` user.
-
-Put a TLS-terminating reverse proxy in front of it (Nginx, Caddy, Traefik, or the host's own proxy). The proxy is what gives you HTTPS, which the login cookie needs (checklist step 3).
-
 ### Updating a running deployment
 
 ```bash
 git pull
 npm ci
 npm run build
-# restart the process (pm2 restart jmt-admin / host's "Restart" button / docker rebuild + run)
+# restart the process (pm2 restart jmt-admin / host's "Restart" button)
 ```
 
 If `prisma/schema.prisma` changed, preview the change and apply it with `npm run db:push` **before** restarting.

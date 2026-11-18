@@ -3,8 +3,8 @@ import { withMongoId } from "@/app/lib/utils/serialize";
 import { Prisma, HeaderMenu } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 
 const getCorsHeaders = (origin: string | null) => {
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     // Authenticate user
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
     if (userResult instanceof NextResponse) {
       return userResult;
     }

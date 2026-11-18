@@ -46,9 +46,9 @@ export interface JoinSectionCopy {
 
 export const JOIN_PAGE = {
   meta: {
-    title: "Join our crew | Construction jobs in West Bengal — JMT",
+    title: "Construction jobs in West Bengal | Join Joy Maa Tara",
     description:
-      "Masons, bar benders, welders, helpers and supervisors for bridge, metro and building sites in West Bengal. Wages on time, PF and ESIC, free safety gear. No joining fee.",
+      "Masons, bar benders, welders, helpers and supervisors for bridge, metro and building sites in West Bengal. Wages on time, PF and ESIC. No joining fee.",
   },
 
   hero: {

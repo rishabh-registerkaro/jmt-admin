@@ -21,7 +21,7 @@ export interface AccentHeading {
 
 export const CONTACT_PAGE = {
   meta: {
-    title: "Contact JMT | Site labour supply for contractors",
+    title: "Contact Joy Maa Tara | Site labour supply for contractors",
     description:
       "Send your site details once. The JMT team replies within 2 working hours with next steps, and a written crew plan follows the site visit.",
   },

@@ -46,7 +46,8 @@ export function slugify(value: string): string {
     .normalize("NFKD")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
+    .slice(0, 80)
+    .replace(/-+$/, ""); // the cut can land right after a hyphen
 }
 
 export function isSafeImageSrc(src: string): boolean {

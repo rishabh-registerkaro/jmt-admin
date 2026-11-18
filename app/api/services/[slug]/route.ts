@@ -1,7 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma, PublishStatus } from "@prisma/client";
 import { revalidateFrontendTags, serviceTags } from "@/app/lib/utils/revalidateFrontend";
@@ -11,7 +11,7 @@ export async function GET(
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
+    const userResult = await requirePermission(req, CONTENT_PERMISSIONS); // admin-only, same as the list/create routes
         if (userResult instanceof NextResponse) {
           return userResult;
         }
@@ -60,7 +60,7 @@ export async function PUT(
 ) {
   const { slug } = await context.params;
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
+    const userResult = await requirePermission(req, PERMISSIONS.SERVICES_MANAGE); // admin-only, same as the list/create routes
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -142,7 +142,7 @@ export async function DELETE(
 ) {
   const { slug } = await context.params;
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
+    const userResult = await requirePermission(req, PERMISSIONS.SERVICES_MANAGE); // admin-only, same as the list/create routes
         if (userResult instanceof NextResponse) {
           return userResult;
         }

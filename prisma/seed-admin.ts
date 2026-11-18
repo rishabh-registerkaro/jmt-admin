@@ -6,6 +6,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { seedRoles } from "./seed-roles";
 
 const prisma = new PrismaClient();
 
@@ -35,8 +36,16 @@ async function main() {
     return;
   }
 
+  // Make sure the built-in roles exist, then attach Super Admin.
+  const { ids } = await seedRoles(prisma);
   await prisma.user.create({
-    data: { email, username, password: await bcrypt.hash(password, 10), role: "superadmin" },
+    data: {
+      email,
+      username,
+      password: await bcrypt.hash(password, 10),
+      role: "superadmin",
+      roleId: ids.get("superadmin"),
+    },
   });
   console.log(`✓ Created superadmin "${username}" (${email}). Log in at /login.`);
 }

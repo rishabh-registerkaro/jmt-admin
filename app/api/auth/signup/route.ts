@@ -1,15 +1,16 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
+import { canAssignRole, resolveRequestedRole } from "@/app/lib/server/rbac";
 import { errorFields } from "@/app/lib/utils/errorFields";
 
 // Public self-signup is disabled: accounts are created by admins only.
-// Without this guard anyone could POST here, get a "contributor" account and
-// log in to the dashboard.
+// Without this guard anyone could POST here, get an account and log in to the
+// dashboard. New accounts get the Editor role (or `roleId`, if given and allowed).
 export async function POST(req: NextRequest) {
-  const auth = await requireRole(req, ADMIN_ROLES);
+  const auth = await requirePermission(req, PERMISSIONS.USERS_MANAGE);
   if (auth instanceof NextResponse) return auth;
 
   try {
@@ -41,6 +42,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const role = await resolveRequestedRole(body.roleId ? { roleId: body.roleId } : { role: "editor" });
+    if (!role) {
+      return NextResponse.json({ message: "Invalid role" }, { status: 400 });
+    }
+    if (!canAssignRole(auth, role)) {
+      return NextResponse.json(
+        { message: `You don't have permission to create ${role.name} accounts` },
+        { status: 403 }
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
@@ -48,6 +60,8 @@ export async function POST(req: NextRequest) {
         username: username,
         email: email,
         password: hashedPassword,
+        role: role.legacy,
+        roleId: role.id,
       },
       select: { id: true },
     });

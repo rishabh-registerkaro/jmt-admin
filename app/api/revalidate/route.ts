@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import { MAX_TAGS_PER_REQUEST } from "@/app/lib/utils/cacheTags";
 import { revalidateFrontendTags, statusForResults } from "@/app/lib/utils/revalidateFrontend";
 
@@ -13,7 +13,7 @@ const TAG_PATTERN = /^[a-z0-9_-]{1,100}$/i;
 // Expires the tags locally and on both frontends, and reports each site
 // separately in `sites` so the dashboard can say which one failed.
 export async function POST(req: NextRequest) {
-  const auth = await requireRole(req, CONTENT_ROLES);
+  const auth = await requirePermission(req, CONTENT_PERMISSIONS);
   if (auth instanceof NextResponse) return auth;
 
   try {

@@ -5,8 +5,10 @@ import { sendLeadNotification } from "@/app/lib/config/email";
 import { withMongoId } from "@/app/lib/utils/serialize";
 import { getCorsHeaders } from "@/app/lib/utils/corsHeader";
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
+import { JOIN_LEAD_SOURCE } from "@/utils/joinForm";
+import { isJoinSource } from "@/app/lib/utils/leadSource";
 import { identityOverLimit, ipOverLimit, requestIp } from "@/app/lib/utils/leadThrottle";
 
 export async function OPTIONS(req: NextRequest) {
@@ -25,7 +27,7 @@ function validateLead(name: unknown, email: unknown, phone: unknown): string | n
   }
   if (name.trim().length > 100) return "Name is too long (max 100 characters).";
 
-  if (typeof email !== "string" || !EMAIL_RE.test(email.trim()) || email.trim().length > 254) {
+  if (typeof email !== "string" || !EMAIL_RE.test(email.trim()) || email.trim().length > 191) {
     return "Please enter a valid email address.";
   }
 
@@ -71,8 +73,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Dashboard "Add Lead" (a signed-in admin) is exempt from the spam limits.
-    const admin = req.cookies.has("authToken") ? await requireRole(req, ADMIN_ROLES) : null;
+    // Dashboard "Add Lead" (a signed-in user who can manage leads) is exempt from the spam limits.
+    const admin = req.cookies.has("authToken") ? await requirePermission(req, PERMISSIONS.LEADS_MANAGE) : null;
     const isAdmin = admin !== null && !(admin instanceof NextResponse);
 
     if (!isAdmin) {
@@ -100,8 +102,9 @@ export async function POST(req: NextRequest) {
         name: String(body.name).trim(),
         email: String(body.email).trim().toLowerCase(),
         phoneNo: String(body.phoneNo).trim(),
-        leadSource: (typeof body.leadSource === "string" && body.leadSource.trim()
-          ? body.leadSource.trim().slice(0, 200)
+        // The Join Our Crew source is reserved for the verified /api/lead/join route.
+        leadSource: (typeof body.leadSource === "string" && body.leadSource.trim() && !isJoinSource(body.leadSource)
+          ? body.leadSource.trim().slice(0, 191)
           : "Website"),
         formData: sanitizeFormData(body.formData) as Prisma.InputJsonValue | undefined,
         status,
@@ -150,12 +153,13 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET - Fetch Leads (Admin Only)
+// GET - Fetch Leads (leads.view). Join Our Crew worker applications are listed
+// separately by /api/applications, so they are excluded here.
 export async function GET(req: NextRequest) {
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.LEADS_VIEW);
     if (userResult instanceof NextResponse) {
       return userResult; // Unauthorized response
     }
@@ -178,16 +182,17 @@ export async function GET(req: NextRequest) {
     // the enum, so treat it as matching nothing instead.
     const status = searchParams.get("status");
     const LEAD_STATUSES = ["new", "contacted", "converted", "lost"];
-    const noMatch = status !== null && !LEAD_STATUSES.includes(status);
+    const source = searchParams.get("source");
+    const noMatch = (status !== null && !LEAD_STATUSES.includes(status)) || isJoinSource(source);
 
-    const query: Prisma.LeadWhereInput = {};
+    const query: Prisma.LeadWhereInput = { leadSource: { not: JOIN_LEAD_SOURCE } };
     if (status) {
       query.status = status as LeadStatus;
     }
     // Exact source, as listed in `sources` below (Source filter in the dashboard).
-    const source = searchParams.get("source");
     if (source) {
-      query.leadSource = source;
+      // AND keeps the exclusion above: MySQL matches sources case-insensitively.
+      query.AND = [{ leadSource: source }];
     }
 
     // Get total count for pagination
@@ -208,6 +213,7 @@ export async function GET(req: NextRequest) {
     // Every source with its lead count, for the dashboard's Source filter.
     const sourceGroups = await prisma.lead.groupBy({
       by: ["leadSource"],
+      where: { leadSource: { not: JOIN_LEAD_SOURCE } },
       _count: { _all: true },
       orderBy: { _count: { leadSource: "desc" } },
     });

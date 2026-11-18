@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { withMongoId } from "@/app/lib/utils/serialize";
 import { ensureDefaultCategory } from "@/app/lib/utils/DefaultCategory";
 
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES, EDITOR_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 import { errorFields } from "@/app/lib/utils/errorFields";
 
@@ -17,7 +17,7 @@ const postTags = (slug: string) => ["post-list", `post-${slug}`];
 export async function POST(req: NextRequest) {
   try {
     // Get current user (for authentication and fallback author)
-    const authorResult = await requireRole(req, EDITOR_ROLES);
+    const authorResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE);
     if (authorResult instanceof NextResponse) {
       return authorResult;
     }
@@ -261,7 +261,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     // Validate user authentication
-    const userResult = await requireRole(req, CONTENT_ROLES);
+    const userResult = await requirePermission(req, CONTENT_PERMISSIONS);
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -431,7 +431,7 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     // get current user
-    const userResult = await requireRole(req, EDITOR_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE);
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -501,7 +501,7 @@ export async function DELETE(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     // Get current user (author)
-    const userResult = await requireRole(req, EDITOR_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE);
     if (userResult instanceof NextResponse) {
       return userResult;
     }

@@ -66,7 +66,7 @@ const LIMITS: Record<LeadField, number> = {
   companyName: 150,
   name: 100,
   phone: 20,
-  email: 254,
+  email: 191, // leads.email is VARCHAR(191)
   siteLocation: 200,
   headcount: 6,
   startDate: 10,
@@ -157,7 +157,7 @@ const EMAIL_RE = /^[^\s@]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63
 export function validateEmail(input: string): string | null {
   const value = input.trim();
   if (!value) return EMAIL_ERRORS.required;
-  if (value.length > 254) return EMAIL_ERRORS.tooLong;
+  if (value.length > 191) return EMAIL_ERRORS.tooLong;
   if (/\s/.test(value)) return EMAIL_ERRORS.spaces;
 
   const parts = value.split("@");

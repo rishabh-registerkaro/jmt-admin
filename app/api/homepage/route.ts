@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 import {
   HOME_META_DEFAULTS,
@@ -20,7 +20,7 @@ import {
 /** Cache tag the public homepage reads are tagged with (server/homepage.ts). */
 const HOMEPAGE_TAG = "homepage";
 
-const MAX_META_TITLE = 200;
+const MAX_META_TITLE = 191; // home_pages.metaTitle is VARCHAR(191)
 const MAX_META_DESCRIPTION = 500;
 
 /**
@@ -83,7 +83,7 @@ function metaText(value: unknown, max: number): string | null {
 }
 
 export async function GET(req: NextRequest) {
-  const userResult = await requireRole(req, CONTENT_ROLES);
+  const userResult = await requirePermission(req, CONTENT_PERMISSIONS);
   if (userResult instanceof NextResponse) return userResult;
   const stale = staleClientResponse();
   if (stale) return stale;
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
 
 // POST — create or replace the singleton homepage document.
 export async function POST(req: NextRequest) {
-  const userResult = await requireRole(req, CONTENT_ROLES);
+  const userResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
   if (userResult instanceof NextResponse) return userResult;
   const stale = staleClientResponse();
   if (stale) return stale;

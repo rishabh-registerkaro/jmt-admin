@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/app/lib/config/db";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES, EDITOR_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import {
   STATUSES,
   builtInPages,
@@ -20,7 +20,7 @@ import {
 // GET — every page (drafts included), newest edit first, plus built-in pages
 // that have not been imported into the CMS yet.
 export async function GET(req: NextRequest) {
-  const auth = await requireRole(req, CONTENT_ROLES);
+  const auth = await requirePermission(req, CONTENT_PERMISSIONS);
   if (auth instanceof NextResponse) return auth;
   const stale = staleClientResponse();
   if (stale) return stale;
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 // `copyFrom` (a slug) starts the new page from that page's content; without
 // it the page starts from the built-in design content.
 export async function POST(req: NextRequest) {
-  const auth = await requireRole(req, EDITOR_ROLES);
+  const auth = await requirePermission(req, PERMISSIONS.SERVICES_MANAGE);
   if (auth instanceof NextResponse) return auth;
   const stale = staleClientResponse();
   if (stale) return stale;
