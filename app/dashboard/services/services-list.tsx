@@ -23,6 +23,8 @@ interface Row {
   title: string;
   status: "draft" | "published";
   updatedAt: string;
+  /** The signed-in user has unfinished edits on this page (their own, or transferred to them). */
+  hasAutosave?: boolean;
 }
 interface BuiltIn {
   slug: string;
@@ -237,6 +239,11 @@ export default function ServicesList({ startWithNewForm = false }: { startWithNe
                       >
                         {row.status === "published" ? "Published" : "Draft"}
                       </span>
+                      {row.hasAutosave && (
+                        <span className="ml-2 rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning">
+                          Autosaved work
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{new Date(row.updatedAt).toLocaleString()}</TableCell>
                     <TableCell>

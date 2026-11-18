@@ -26,15 +26,20 @@ export async function GET(req: NextRequest) {
   if (stale) return stale;
 
   try {
-    const rows = await prisma.jmtServicePage.findMany({
-      select: { id: true, slug: true, title: true, status: true, updatedAt: true },
-      orderBy: { updatedAt: "desc" },
-    });
+    const [rows, autosaves] = await Promise.all([
+      prisma.jmtServicePage.findMany({
+        select: { id: true, slug: true, title: true, status: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+      }),
+      prisma.jmtServiceAutosave.findMany({ where: { userId: auth.id }, select: { pageId: true } }),
+    ]);
+    const autosaved = new Set(autosaves.map((a) => a.pageId));
     const saved = new Set(rows.map((r) => r.slug));
     const builtIn = builtInPages()
       .filter((p) => !saved.has(p.slug))
       .map((p) => ({ slug: p.slug, title: p.hero.breadcrumb.current }));
-    return NextResponse.json({ success: true, pages: rows, builtIn });
+    const pages = rows.map((r) => ({ ...r, hasAutosave: autosaved.has(r.id) }));
+    return NextResponse.json({ success: true, pages, builtIn });
   } catch (error) {
     return errorResponse("Loading service pages", error);
   }

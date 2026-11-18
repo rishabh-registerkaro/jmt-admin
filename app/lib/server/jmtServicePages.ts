@@ -1,7 +1,7 @@
 // Shared helpers for the JMT service page API routes (app/api/jmt-services).
 
 import { NextResponse } from "next/server";
-import type { JmtServicePage, PublishStatus } from "@prisma/client";
+import type { JmtServiceAutosave, JmtServicePage, PublishStatus } from "@prisma/client";
 import prisma from "@/app/lib/config/db";
 import { SERVICE_SLUG_PATTERN, normalizeServicePage } from "@/lib/service/normalizeServicePage";
 import { SITE_LABOUR_SUPPLY } from "@/data/services/siteLabourSupply";
@@ -41,6 +41,18 @@ export function serialize(row: JmtServicePage) {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     content: normalizeContent(row.content, row.slug),
+  };
+}
+
+/** Autosave row → JSON for the editor. `pageSlug` is the saved page's slug (the draft's may be unfinished). */
+export function serializeAutosave(row: JmtServiceAutosave, pageSlug: string) {
+  return {
+    title: row.title,
+    slug: row.slug,
+    content: normalizeContent(row.content, pageSlug),
+    baseUpdatedAt: row.baseUpdatedAt,
+    transferredFrom: row.transferredFrom,
+    updatedAt: row.updatedAt,
   };
 }
 

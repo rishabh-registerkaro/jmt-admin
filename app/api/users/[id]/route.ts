@@ -6,10 +6,14 @@ import { requirePermission } from "@/app/lib/utils/authorization";
 import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import {
     canAssignRole,
+    canReceiveWorkFrom,
     resolveRequestedRole,
     resolveUserAccess,
+    userAccessSelect,
     userRoleView,
 } from "@/app/lib/server/rbac";
+import { countOwnedWork, ownsWork } from "@/app/lib/server/userWork";
+import { errorFields } from "@/app/lib/utils/errorFields";
 
 const roleSelect = { select: { id: true, key: true, name: true, permissions: true } } as const;
 
@@ -264,8 +268,9 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
  * DELETE /api/users/[id] — users.manage, and only users whose role the caller
  * could assign (an Admin can remove Editors / Leads Managers; only a Super
  * Admin can remove Admins). The Super Admin account can never be deleted.
- * Content authored by the removed user (posts, service pages, package blocks,
- * JMT service pages) is reassigned to the user performing the delete,
+ * A user who owns work needs `?transferTo=<userId>`: their posts, service pages,
+ * package blocks, JMT service pages and service autosaves move to that user,
+ * who must have the same access or more. Everything happens in one transaction,
  * so nothing is lost and the required author foreign keys stay valid.
  */
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -294,7 +299,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
         const targetUser = await prisma.user.findUnique({
             where: { id },
-            select: { id: true, role: true, roleId: true, adminRole: roleSelect },
+            select: { id: true, username: true, role: true, roleId: true, adminRole: roleSelect },
         });
 
         if (!targetUser) {
@@ -320,14 +325,50 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
             }, { status: 403 });
         }
 
-        const reassign = { where: { authorId: id }, data: { authorId: currentUser.id } };
-        await prisma.$transaction([
-            prisma.post.updateMany(reassign),
-            prisma.servicePage.updateMany(reassign),
-            prisma.packageBlock.updateMany(reassign),
-            prisma.jmtServicePage.updateMany(reassign),
-            prisma.user.delete({ where: { id } }),
-        ]);
+        const transferTo = new URL(req.url).searchParams.get("transferTo");
+        const recipient = transferTo && transferTo !== id
+            ? await prisma.user.findUnique({ where: { id: transferTo }, select: userAccessSelect })
+            : null;
+
+        if (ownsWork(await countOwnedWork(id))) {
+            if (!recipient) {
+                return NextResponse.json({
+                    success: false,
+                    message: "Choose who will take over this user's work"
+                }, { status: 400 });
+            }
+            if (!canReceiveWorkFrom(targetAccess, await resolveUserAccess(recipient))) {
+                return NextResponse.json({
+                    success: false,
+                    message: `${recipient.username} doesn't have enough access to take over this user's work`
+                }, { status: 400 });
+            }
+        }
+
+        await prisma.$transaction(async (tx) => {
+            if (recipient) {
+                const reassign = { where: { authorId: id }, data: { authorId: recipient.id } };
+                await tx.post.updateMany(reassign);
+                await tx.servicePage.updateMany(reassign);
+                await tx.packageBlock.updateMany(reassign);
+                // Raw so updatedAt stays: a new owner isn't a content edit, and autosaves compare against it.
+                await tx.$executeRaw`UPDATE jmt_service_pages SET authorId = ${recipient.id} WHERE authorId = ${id}`;
+
+                // One autosave per page and user: if both have one, the newer edits win.
+                const incoming = await tx.jmtServiceAutosave.findMany({ where: { userId: id }, select: { id: true, pageId: true, updatedAt: true } });
+                const existing = await tx.jmtServiceAutosave.findMany({
+                    where: { userId: recipient.id, pageId: { in: incoming.map((a) => a.pageId) } },
+                    select: { id: true, pageId: true, updatedAt: true },
+                });
+                const older = existing.map((own) => {
+                    const other = incoming.find((a) => a.pageId === own.pageId)!;
+                    return own.updatedAt > other.updatedAt ? other.id : own.id;
+                });
+                await tx.jmtServiceAutosave.deleteMany({ where: { id: { in: older } } });
+                await tx.$executeRaw`UPDATE jmt_service_autosaves SET userId = ${recipient.id}, transferredFrom = ${targetUser.username} WHERE userId = ${id}`;
+            }
+            await tx.user.delete({ where: { id } });
+        }, { maxWait: 10000, timeout: 20000 });
 
         return NextResponse.json({
             success: true,
@@ -335,6 +376,14 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
         }, { status: 200 });
     } catch (error) {
         console.error("Delete user error:", error);
+
+        // New work appeared mid-delete, or the recipient was just removed. The transaction rolled back.
+        if (errorFields(error).code === "P2003") {
+            return NextResponse.json(
+                { success: false, message: "This user's work changed while deleting. Nothing was deleted, please try again." },
+                { status: 409 }
+            );
+        }
 
         return NextResponse.json(
             { success: false, message: "Failed to delete user." },

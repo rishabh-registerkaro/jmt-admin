@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown, UserPlus, Eye, EyeOff, Trash2 } from "lucide-react";
-import { deleteUser } from "@/lib/apiCallingUser";
+import { deleteUser, getUserTransferInfo, type UserTransferInfo } from "@/lib/apiCallingUser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +58,19 @@ interface User {
   canManage?: boolean;
 }
 
+const OWNED_LABELS: { key: keyof NonNullable<UserTransferInfo["owned"]>; label: string }[] = [
+  { key: "jmtServicePages", label: "service page" },
+  { key: "autosaves", label: "autosaved draft" },
+  { key: "posts", label: "blog post" },
+  { key: "servicePages", label: "main-site page" },
+  { key: "packageBlocks", label: "package block" },
+];
+
+const ownedSummary = (owned: UserTransferInfo["owned"]) =>
+  OWNED_LABELS.filter(({ key }) => owned?.[key])
+    .map(({ key, label }) => `${owned![key]} ${label}${owned![key] === 1 ? "" : "s"}`)
+    .join(", ");
+
 interface PaginationInfo {
   currentPage: number;
   totalPages: number;
@@ -97,6 +110,22 @@ export default function UsersPage() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const canDelete = (u: User) => !!u.canManage && u.id !== currentUserId && u.roleKey !== "superadmin";
+
+  // Who takes over the work of the user being deleted
+  const [transferInfo, setTransferInfo] = useState<UserTransferInfo | null>(null);
+  const [transferTo, setTransferTo] = useState("");
+  const transferRequest = useRef("");
+
+  const requestDelete = async (user: User) => {
+    setUserToDelete(user);
+    setTransferInfo(null);
+    setTransferTo("");
+    transferRequest.current = user.id;
+    const info = await getUserTransferInfo(user.id);
+    // Ignore the answer if the dialog moved on to someone else meanwhile
+    if (transferRequest.current === user.id) setTransferInfo(info);
+  };
+  const needsRecipient = !transferInfo?.success || (!!transferInfo.ownsWork && !transferTo);
 
   // Create user dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -225,7 +254,7 @@ export default function UsersPage() {
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
     setDeleteLoading(true);
-    const res = await deleteUser(userToDelete.id);
+    const res = await deleteUser(userToDelete.id, transferInfo?.ownsWork ? transferTo : undefined);
     setDeleteLoading(false);
     if (res.success) {
       toast.success(`${userToDelete.username} was deleted`, { closeButton: true, className: "!bg-transparent !text-foreground" });
@@ -443,7 +472,7 @@ export default function UsersPage() {
                               className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setUserToDelete(user);
+                                requestDelete(user);
                               }}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -585,7 +614,7 @@ export default function UsersPage() {
                   <ViewUser
                     user={viewUser}
                     onRoleUpdate={() => fetchUsers(pagination.currentPage)}
-                    onDeleteRequest={(u) => setUserToDelete(u as User)}
+                    onDeleteRequest={(u) => requestDelete(u as User)}
                   />
                 )}
               </>
@@ -606,10 +635,38 @@ export default function UsersPage() {
               <DialogDescription>
                 This permanently deletes{" "}
                 <span className="font-semibold text-foreground">{userToDelete?.username}</span>{" "}
-                ({userToDelete?.email}). Any posts or pages they authored will be reassigned to you.
-                This cannot be undone.
+                ({userToDelete?.email}). This cannot be undone.
               </DialogDescription>
             </DialogHeader>
+            {!transferInfo ? (
+              <p className="text-sm text-muted-foreground">Checking this user&apos;s work...</p>
+            ) : !transferInfo.success ? (
+              <p className="text-sm text-destructive">{transferInfo.message}</p>
+            ) : transferInfo.ownsWork && (
+              <div className="space-y-2">
+                <p className="text-sm text-foreground-light">
+                  They own {ownedSummary(transferInfo.owned)}. Choose who takes over this work.
+                </p>
+                <Label htmlFor="transfer-to" className="text-sm">New owner</Label>
+                <Select value={transferTo} onValueChange={setTransferTo}>
+                  <SelectTrigger id="transfer-to" className="w-full">
+                    <SelectValue placeholder="Select a user" />
+                  </SelectTrigger>
+                  <SelectContent className="">
+                    {transferInfo.candidates?.map((c) => (
+                      <SelectItem key={c.id} value={c.id} className="text-foreground! cursor-pointer">
+                        {c.username} ({c.roleName})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {transferInfo.candidates?.length
+                    ? "Only users with the same access or more are listed."
+                    : "No other user has enough access. Give someone the same role first."}
+                </p>
+              </div>
+            )}
             <div className="flex gap-3 pt-2">
               <Button
                 type="button"
@@ -624,7 +681,7 @@ export default function UsersPage() {
                 type="button"
                 variant="destructive"
                 onClick={handleDeleteUser}
-                disabled={deleteLoading}
+                disabled={deleteLoading || needsRecipient}
                 className="flex-1 cursor-pointer disabled:opacity-50"
               >
                 {deleteLoading ? "Deleting..." : "Delete User"}

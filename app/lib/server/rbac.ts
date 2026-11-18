@@ -102,6 +102,17 @@ export function canAssignRole(actor: AccessActor, target: { key: string; permiss
   return target.permissions.every((p) => actor.permissions.includes(p));
 }
 
+/**
+ * Can `candidate` take over the work of a removed user? They need the same
+ * access or more: every permission `source` has. The Super Admin always can.
+ */
+export function canReceiveWorkFrom(
+  source: Pick<AccessInfo, "permissions">,
+  candidate: Pick<AccessInfo, "permissions" | "isSuperAdmin">,
+): boolean {
+  return candidate.isSuperAdmin || source.permissions.every((p) => candidate.permissions.includes(p));
+}
+
 /** Loads a role by id with its effective permissions, or null. */
 export async function findRole(id: string) {
   const role = await prisma.adminRole.findUnique({
