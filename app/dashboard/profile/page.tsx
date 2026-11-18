@@ -3,8 +3,7 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getUserProfile, UserProfile, updateUserProfile, getUserPublishedContent, UserContentPostSummary, UserContentPageSummary, UserContentPagination } from "@/lib/apiCallingProfile";
+import { getUserProfile, UserProfile, updateUserProfile } from "@/lib/apiCallingProfile";
 import { toast } from "sonner";
 import { toApiError } from "@/app/dashboard/_lib/api-error";
 import { User, Shield, Eye, EyeOff } from "lucide-react";
@@ -12,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 // update password api 
 import { changePassword } from "@/lib/apiCallingAuth";
+import { roleBadgeClass, roleLabel } from "@/components/common/roleDisplay";
 
 type TabType = "profile" | "security";
 
@@ -25,10 +25,6 @@ export default function Profile() {
     email: "",
     username: "",
   });
-  const [posts, setPosts] = useState<UserContentPostSummary[]>([]);
-  const [pages, setPages] = useState<UserContentPageSummary[]>([]);
-  const [contentLoading, setContentLoading] = useState(false);
-  const [pagination, setPagination] = useState<UserContentPagination | null>(null);
 
   const fetchUserProfile = async () => {
     try {
@@ -56,54 +52,11 @@ export default function Profile() {
     }
   };
 
-  const fetchUserPublishedContent = async (
-    postsPage: number = 1,
-    pagesPage: number = 1
-  ) => {
-    if (!userData?.id) return;
-
-    try {
-      setContentLoading(true);
-      const response = await getUserPublishedContent({
-        userId: userData.id,
-        postsPage,
-        pagesPage,
-        postsLimit: 10,
-        pagesLimit: 10,
-      });
-
-      if (response.success && response.data) {
-        setPosts(response.data.posts || []);
-        setPages(response.data.pages || []);
-        setPagination(response.data.pagination);
-      } else {
-        toast.error(response.message || "Failed to fetch published content", {
-          closeButton: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching published content:", error);
-      toast.error("Failed to load published content", {
-        closeButton: true,
-      });
-    } finally {
-      setContentLoading(false);
-    }
-  };
-
   // Fetch user profile on mount
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
     fetchUserProfile();
   }, []);
-
-  // Fetch published content when userData is available
-  useEffect(() => {
-    if (userData?.id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
-      fetchUserPublishedContent();
-    }
-  }, [userData?.id]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -174,18 +127,6 @@ export default function Profile() {
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen w-full p-6 sm:p-10 bg-background text-foreground flex items-center justify-center">
@@ -252,12 +193,6 @@ export default function Profile() {
             handleChange={handleChange}
             handleCancel={handleCancel}
             handleSubmit={handleSubmit}
-            posts={posts}
-            pages={pages}
-            contentLoading={contentLoading}
-            pagination={pagination}
-            fetchUserPublishedContent={fetchUserPublishedContent}
-            formatDate={formatDate}
           />
         )}
 
@@ -281,12 +216,6 @@ interface ProfileTabProps {
   handleChange: (e: ChangeEvent<HTMLInputElement>) => void;
   handleCancel: () => void;
   handleSubmit: (e: FormEvent) => Promise<void>;
-  posts: UserContentPostSummary[];
-  pages: UserContentPageSummary[];
-  contentLoading: boolean;
-  pagination: UserContentPagination | null;
-  fetchUserPublishedContent: (postsPage?: number, pagesPage?: number) => Promise<void>;
-  formatDate: (dateString?: string) => string;
 }
 
 function ProfileTab({
@@ -298,34 +227,8 @@ function ProfileTab({
   handleChange,
   handleCancel,
   handleSubmit,
-  posts,
-  pages,
-  contentLoading,
-  pagination,
-  fetchUserPublishedContent,
-  formatDate,
 }: ProfileTabProps) {
 
-
-  const getRoleInputColor = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "superadmin":
-        return "bg-brand/10 text-brand-link border-brand/30";
-      case "admin":
-        return "bg-secondary text-foreground border-border-strong";
-      case "editor":
-        return "bg-brand/10 text-brand-link border-brand/30";
-      case "contributor":
-        return "bg-warning/10 text-warning border-warning/30";
-      default:
-        return "bg-muted text-muted-foreground border-border";
-    }
-  };
-
-  const formatRole = (role: string) => {
-    if (!role) return "N/A";
-    return role === "superadmin" ? "Super Admin" : role === "admin" ? "Admin" : role === "editor" ? "Editor" : role === "contributor" ? "Contributor" : "N/A";
-  };
 
   return (
     <>
@@ -375,12 +278,12 @@ function ProfileTab({
                 Role
               </label>
               {/* <Input
-                value={formatRole(userData?.role || "N/A")}
+                value={roleLabel(userData)}
                 disabled
-                className={`w-full rounded-lg border font-semibold cursor-not-allowed ${getRoleInputColor(userData?.role || "")}`}
+                className={`w-full rounded-lg border font-semibold cursor-not-allowed ${roleBadgeClass(userData?.roleKey ?? userData?.role)}`}
               /> */}
-              <div className={`inline-flex w-full items-center px-3 py-2 rounded-lg text-sm font-medium border ${getRoleInputColor(userData?.role || "")}`}>
-                {formatRole(userData?.role || "N/A")}
+              <div className={`inline-flex w-full items-center px-3 py-2 rounded-lg text-sm font-medium border ${roleBadgeClass(userData?.roleKey ?? userData?.role)}`}>
+                {roleLabel(userData)}
               </div>
             </div>
 
@@ -442,152 +345,6 @@ function ProfileTab({
         </div>
       </form>
 
-      {/* Published Posts Section */}
-      <div className="">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-foreground mb-2">Published Posts</h2>
-        </div>
-
-        {contentLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading posts...</div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">No published posts found</div>
-        ) : (
-          <>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-muted/40">
-                    <TableHead className="text-xs font-medium text-muted-foreground">Title</TableHead>
-
-                    <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">Published At</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">Created At</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {posts.map((post) => (
-                    <TableRow key={post._id} className="hover:bg-muted/40">
-                      <TableCell className="text-foreground font-medium">{post.title}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${post.status === 'published' ? 'border border-brand/30 bg-brand/10 text-brand-link' : 'border border-warning/30 bg-warning/10 text-warning' }`}>
-                          {post.status}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-foreground-light">{formatDate(post.publishedAt)}</TableCell>
-                      <TableCell className="text-foreground-light">{formatDate(post.createdAt)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Posts Pagination */}
-            {pagination?.posts && pagination.posts.totalPages > 1 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Page {pagination.posts.currentPage} of {pagination.posts.totalPages} ({pagination.posts.totalItems} total)
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchUserPublishedContent(pagination.posts.currentPage - 1, pagination.pages?.currentPage || 1)}
-                    disabled={!pagination.posts.hasPrevPage}
-                    className="disabled:opacity-50"
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchUserPublishedContent(pagination.posts.currentPage + 1, pagination.pages?.currentPage || 1)}
-                    disabled={!pagination.posts.hasNextPage}
-                    className="disabled:opacity-50"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Services Section */}
-      <div className="">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-foreground mb-2">Products</h2>
-        </div>
-
-        {contentLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading services...</div>
-        ) : pages.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">No services found</div>
-        ) : (
-          <>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-muted/40">
-                    <TableHead className="text-xs font-medium text-muted-foreground">Service Title</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">Slug</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">Updated At</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pages.map((page) => (
-                    <TableRow key={page._id} className="hover:bg-muted/40">
-                      <TableCell className="text-foreground font-medium">{page.pageTitle}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{page.pageSlug}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${ page.status === 'published' ? 'border border-brand/30 bg-brand/10 text-brand-link' : 'border border-warning/30 bg-warning/10 text-warning' }`}>
-                          {page.status}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-foreground-light">{formatDate(page.updatedAt)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Services Pagination */}
-            {pagination?.pages && pagination.pages.totalPages > 1 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Page {pagination.pages.currentPage} of {pagination.pages.totalPages} ({pagination.pages.totalItems} total)
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchUserPublishedContent(pagination.posts?.currentPage || 1, pagination.pages.currentPage - 1)}
-                    disabled={!pagination.pages.hasPrevPage}
-                    className="disabled:opacity-50"
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchUserPublishedContent(pagination.posts?.currentPage || 1, pagination.pages.currentPage + 1)}
-                    disabled={!pagination.pages.hasNextPage}
-                    className="disabled:opacity-50"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
     </>
   );
 }

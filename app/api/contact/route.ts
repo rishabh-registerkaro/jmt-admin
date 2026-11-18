@@ -1,7 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 import { NextResponse, NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 // Create — only if no document exists yet
 export async function POST(req: NextRequest) {
     try {
-        const authResult = await requireRole(req, CONTENT_ROLES);
+        const authResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
         if (authResult instanceof NextResponse) return authResult;
 
         const existing = await prisma.contactPage.findFirst();
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
 // Update — deep-merges content field
 export async function PATCH(req: NextRequest) {
     try {
-        const authResult = await requireRole(req, CONTENT_ROLES);
+        const authResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
         if (authResult instanceof NextResponse) return authResult;
 
         const body = await req.json();

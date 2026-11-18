@@ -1,12 +1,13 @@
 import prisma from "@/app/lib/config/db";
 import { intParam } from "@/app/lib/utils/pagination";
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { errorFields } from "@/app/lib/utils/errorFields";
 
 export async function GET(req: NextRequest) {
   try {
-    const userResult = await getCurrentUser(req);
+    const userResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE);
     if (userResult instanceof NextResponse) {
       return userResult;
     }

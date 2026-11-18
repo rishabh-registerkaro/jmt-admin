@@ -1,7 +1,9 @@
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
+import { JOIN_LEAD_SOURCE } from "@/utils/joinForm";
+import { isJoinSource } from "@/app/lib/utils/leadSource";
 import { NextRequest, NextResponse } from "next/server";
 import { LeadStatus, Prisma } from "@prisma/client";
 
@@ -11,7 +13,7 @@ export async function DELETE(
 ) {
   const { id } = await context.params;
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
+    const userResult = await requirePermission(req, PERMISSIONS.LEADS_MANAGE);
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -23,7 +25,8 @@ export async function DELETE(
       );
     }
 
-    const existingLead = await prisma.lead.findUnique({ where: { id } });
+    // Worker applications are managed through /api/applications/[id].
+    const existingLead = await prisma.lead.findFirst({ where: { id, leadSource: { not: JOIN_LEAD_SOURCE } } });
 
     if (!existingLead) {
       return NextResponse.json(
@@ -57,7 +60,7 @@ export async function PUT(
 ) {
   const { id } = await context.params;
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES); // admin-only, same as the list/create routes
+    const userResult = await requirePermission(req, PERMISSIONS.LEADS_MANAGE);
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -88,6 +91,11 @@ export async function PUT(
       }
     }
 
+    // An enquiry can't be turned into a worker application.
+    if (isJoinSource(data.leadSource)) {
+      return NextResponse.json({ message: "That lead source is reserved" }, { status: 400 });
+    }
+
     // Bad input → 400, not a Prisma validation 500.
     if (data.status !== undefined && !(Object.values(LeadStatus) as unknown[]).includes(data.status)) {
       return NextResponse.json({ message: "Invalid lead status" }, { status: 400 });
@@ -98,7 +106,8 @@ export async function PUT(
       return NextResponse.json({ message: "formData must be an object" }, { status: 400 });
     }
 
-    const existingLead = await prisma.lead.findUnique({ where: { id } });
+    // Worker applications are managed through /api/applications/[id].
+    const existingLead = await prisma.lead.findFirst({ where: { id, leadSource: { not: JOIN_LEAD_SOURCE } } });
 
     if (!existingLead) {
       return NextResponse.json(

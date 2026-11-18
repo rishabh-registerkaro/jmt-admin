@@ -1,6 +1,7 @@
 // app/api/post/filter/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import prisma from "@/app/lib/config/db";
 import { Prisma } from "@prisma/client";
 import { intParam } from "@/app/lib/utils/pagination";
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(50, Math.max(1, intParam(searchParams.get('limit'), 10)));
 
     // Auth
-    const userResult = await getCurrentUser(req);
+    const userResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE);
     if (userResult instanceof NextResponse) return userResult;
 
     const userId = userResult.id?.toString();

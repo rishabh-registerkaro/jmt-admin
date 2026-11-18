@@ -5,13 +5,22 @@ export interface User {
     id: string;
     username: string;
     email: string;
+    /** Legacy role enum value — prefer roleId / roleName. */
     role: string;
+    roleId?: string | null;
+    roleKey?: string;
+    roleName?: string;
+    /** The signed-in user may change this user's role / password / delete them. */
+    canManage?: boolean;
     createdAt?: string;
     updatedAt?: string;
 }
 
 export interface UpdateUserRolePayload {
-    role: "superadmin" | "admin" | "editor" | "contributor";
+    /** Role to assign (from /api/roles). */
+    roleId?: string;
+    /** Legacy: still accepted by the API and mapped to the matching built-in role. */
+    role?: "superadmin" | "admin" | "editor" | "contributor";
 }
 
 export interface UpdateUserRoleResponse {
@@ -37,7 +46,7 @@ export interface ChangeUserPasswordResponse {
  * @returns Promise with updated user data
  * 
  * @example
- * const response = await updateUserRole("userId123", { role: "admin" });
+ * const response = await updateUserRole("userId123", { roleId: "role_cuid" });
  */
 
 export const updateUserRole = async (userId: string, payload: UpdateUserRolePayload): Promise<UpdateUserRoleResponse> => {
@@ -55,7 +64,7 @@ export const updateUserRole = async (userId: string, payload: UpdateUserRolePayl
 
 
 /**
- * Delete a user (Super Admin only). Their content is reassigned to the caller.
+ * Delete a user (users.manage, only users the caller outranks). Their content is reassigned to the caller.
  */
 export const deleteUser = async (userId: string): Promise<{ success: boolean; message?: string }> => {
     try {
@@ -72,7 +81,7 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean; me
 
 
 /**
- * Change user password (Admin/SuperAdmin only)
+ * Change user password (users.manage, or your own)
  * @param userId - The ID of the user whose password needs to be changed
  * @param payload - Object containing newPassword and optionally currentPassword (for own password)
  * @returns Promise with response

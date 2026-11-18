@@ -1,7 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { NextResponse, NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const authResult = await requireRole(req, ADMIN_ROLES);
+        const authResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
         if (authResult instanceof NextResponse) return authResult;
 
         const existing = await prisma.termsPolicy.findFirst();
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        const authResult = await requireRole(req, ADMIN_ROLES);
+        const authResult = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
         if (authResult instanceof NextResponse) return authResult;
 
         const body = await req.json();

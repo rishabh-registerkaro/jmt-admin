@@ -39,6 +39,9 @@ import { toast } from "sonner";
 import { toApiError } from "@/app/dashboard/_lib/api-error";
 import axios from "axios";
 import ViewUser from "@/components/common/ViewUser";
+import { usePermissions } from "@/components/common/PermissionsProvider";
+import { roleBadgeClass, roleLabel } from "@/components/common/roleDisplay";
+import { listRoles, type AdminRoleDTO } from "@/lib/apiCallingRoles";
 
 interface User {
   id: string;
@@ -47,6 +50,11 @@ interface User {
   createdAt: string;
   updatedAt: string;
   role: string;
+  roleId?: string | null;
+  roleKey?: string;
+  roleName?: string;
+  /** The signed-in user may change this user's role / password / delete them. */
+  canManage?: boolean;
 }
 
 interface PaginationInfo {
@@ -77,14 +85,17 @@ export default function UsersPage() {
   const [loadingUser, setLoadingUser] = useState(false);
 
   // Current logged-in user info
-  const [currentUserRole, setCurrentUserRole] = useState<string>("");
-  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const { user: currentUser } = usePermissions();
+  const currentUserId = currentUser?.id ?? "";
 
-  // Delete user state (Super Admin only)
+  // Roles the signed-in user may hand out (role picker in Create User)
+  const [assignableRoles, setAssignableRoles] = useState<AdminRoleDTO[]>([]);
+  const [rolesSeeded, setRolesSeeded] = useState(true);
+
+  // Delete user state — only users you outrank; Super Admins must be demoted first
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const isSuperAdmin = currentUserRole === "superadmin";
-  const canDelete = (u: User) => isSuperAdmin && u.id !== currentUserId && u.role !== "superadmin";
+  const canDelete = (u: User) => !!u.canManage && u.id !== currentUserId && u.roleKey !== "superadmin";
 
   // Create user dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -94,7 +105,7 @@ export default function UsersPage() {
     username: "",
     email: "",
     password: "",
-    role: "",
+    roleId: "",
   });
 
   const fetchUsers = async (page: number = 1) => {
@@ -175,14 +186,12 @@ export default function UsersPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/dependency change; the fetcher sets state
     fetchUsers(1);
-    axios.get("/api/auth/profile", { withCredentials: true })
-      .then((res) => {
-        if (res.data.success) {
-          setCurrentUserRole(res.data.user.role);
-          setCurrentUserId(res.data.user.id);
-        }
-      })
-      .catch(() => {});
+    listRoles({ assignable: true }).then((res) => {
+      if (res.success && res.roles) {
+        setAssignableRoles(res.roles);
+        setRolesSeeded(res.seeded !== false);
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -201,7 +210,7 @@ export default function UsersPage() {
       if (res.data.success) {
         toast.success("User created successfully", { closeButton: true, className: "!bg-transparent !text-foreground" });
         setCreateDialogOpen(false);
-        setCreateForm({ username: "", email: "", password: "", role: "" });
+        setCreateForm({ username: "", email: "", password: "", roleId: "" });
         fetchUsers(1);
       }
     } catch (error) {
@@ -265,34 +274,6 @@ export default function UsersPage() {
   };
 
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "superadmin":
-        return "bg-brand/10 text-brand-link border-brand/30";
-      case "admin":
-        return "bg-secondary text-foreground border-border-strong";
-      case "editor":
-        return "bg-brand/10 text-brand-link border-brand/30";
-      case "contributor":
-        return "bg-warning/10 text-warning border-warning/30";
-      default:
-        return "bg-muted text-muted-foreground border-border";
-    }
-  };
-
-  const formatRole = (role: string) => {
-    if (!role) return "N/A";
-    return role === "superadmin"
-      ? "Super Admin"
-      : role === "admin"
-        ? "Admin"
-        : role === "editor"
-          ? "Editor"
-          : role === "contributor"
-            ? "Contributor"
-            : "N/A";
-  };
-
   return (
     <div className="min-h-screen w-full bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -302,15 +283,13 @@ export default function UsersPage() {
             <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-1">Users</h1>
             <p className="text-sm text-muted-foreground">Manage all system users</p>
           </div>
-          {(currentUserRole === "superadmin" || currentUserRole === "admin") && (
-            <Button
-              onClick={() => setCreateDialogOpen(true)}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <UserPlus className="h-4 w-4" />
-              Create User
-            </Button>
-          )}
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <UserPlus className="h-4 w-4" />
+            Create User
+          </Button>
         </div>
 
         {/* Search and Filters */}
@@ -400,9 +379,7 @@ export default function UsersPage() {
                 </TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Updated At</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Role</TableHead>
-                {isSuperAdmin && (
-                  <TableHead className="text-xs font-medium text-muted-foreground text-right">Actions</TableHead>
-                )}
+                <TableHead className="text-xs font-medium text-muted-foreground text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -450,11 +427,11 @@ export default function UsersPage() {
                         {formatDate(user.updatedAt)}
                       </TableCell>
                       <TableCell className="text-foreground-light">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(user.role || "")}`}>
-                          {formatRole(user.role || "")}
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${roleBadgeClass(user.roleKey ?? user.role)}`}>
+                          {roleLabel(user)}
                         </span>
                       </TableCell>
-                      {isSuperAdmin && (
+                      {(
                         <TableCell className="text-right">
                           {canDelete(user) && (
                             <Button
@@ -479,7 +456,7 @@ export default function UsersPage() {
               ) : (
                 <TableRow className="hover:bg-transparent">
                   <TableCell
-                    colSpan={isSuperAdmin ? 6 : 5}
+                    colSpan={6}
                     className="text-center py-8 text-muted-foreground"
                   >
                     {search
@@ -658,7 +635,7 @@ export default function UsersPage() {
         {/* Create User Dialog */}
         <Dialog open={createDialogOpen} onOpenChange={(open) => {
           setCreateDialogOpen(open);
-          if (!open) setCreateForm({ username: "", email: "", password: "", role: "" });
+          if (!open) setCreateForm({ username: "", email: "", password: "", roleId: "" });
         }}>
           <DialogContent className="border sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -715,21 +692,26 @@ export default function UsersPage() {
               <div className="space-y-1">
                 <Label htmlFor="create-role" className="text-sm">Role</Label>
                 <Select
-                  value={createForm.role}
-                  onValueChange={(val) => setCreateForm((p) => ({ ...p, role: val }))}
+                  value={createForm.roleId}
+                  onValueChange={(val) => setCreateForm((p) => ({ ...p, roleId: val }))}
                   required
                 >
                   <SelectTrigger id="create-role" className="">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent className="">
-                    {currentUserRole === "superadmin" && (
-                      <SelectItem value="admin" className="text-foreground! cursor-pointer">Admin</SelectItem>
-                    )}
-                    <SelectItem value="editor" className="text-foreground! cursor-pointer">Editor</SelectItem>
-                    <SelectItem value="contributor" className="text-foreground! cursor-pointer">Contributor</SelectItem>
+                    {assignableRoles.map((r) => (
+                      <SelectItem key={r.id} value={r.id} className="text-foreground! cursor-pointer">
+                        {r.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                {!rolesSeeded && (
+                  <p className="text-xs text-warning">
+                    Roles haven&apos;t been set up yet. Run <code>npm run seed:roles</code> on the server.
+                  </p>
+                )}
               </div>
               <div className="flex gap-3 pt-2">
                 <Button

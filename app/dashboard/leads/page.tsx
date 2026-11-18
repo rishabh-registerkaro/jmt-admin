@@ -39,6 +39,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import AddLeadForm from "@/components/common/AddLead";
+import { usePermissions } from "@/components/common/PermissionsProvider";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 
 type LeadStatus = Lead["status"];
 const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "converted", "lost"];
@@ -69,6 +71,9 @@ interface PaginationInfo {
 }
 
 export default function LeadsPage() {
+  // leads.view opens this page; changing, adding or deleting needs leads.manage.
+  const { can } = usePermissions();
+  const canManage = can(PERMISSIONS.LEADS_MANAGE);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -414,6 +419,7 @@ export default function LeadsPage() {
             </SelectContent>
           </Select>
 
+          {canManage && (
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto">
@@ -438,6 +444,7 @@ export default function LeadsPage() {
               />
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {/* Leads Table — 5 columns with capped widths so it fits without
@@ -563,7 +570,7 @@ export default function LeadsPage() {
                         <Select
                           value={lead.status}
                           onValueChange={(value) => handleStatusChange(lead, value as LeadStatus)}
-                          disabled={updatingId === lead._id}
+                          disabled={!canManage || updatingId === lead._id}
                         >
                           <SelectTrigger
                             className={`!h-7 w-[118px] rounded-full px-2.5 text-xs font-medium ${getStatusColor(lead.status)}`}
@@ -606,6 +613,8 @@ export default function LeadsPage() {
                           >
                             <View className="h-4 w-4" />
                           </Button>
+                          {canManage && (
+                          <>
                           <Button
                             type="button"
                             variant="ghost"
@@ -632,6 +641,8 @@ export default function LeadsPage() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

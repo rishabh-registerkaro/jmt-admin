@@ -10,8 +10,19 @@ import AccessDenied from "@/components/common/AccessDenied";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import SessionTimeout from "@/components/common/SessionTimeout";
+import { PermissionsProvider } from "@/components/common/PermissionsProvider";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  // Role + permissions are loaded once here and shared with the sidebar,
+  // the route gate below and the pages (usePermissions()).
+  return (
+    <PermissionsProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </PermissionsProvider>
+  );
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const { loading, hasAccess } = useRoutePermission();
   return (
     // Collapsed icon rail by default; it slides out on hover and can be pinned.

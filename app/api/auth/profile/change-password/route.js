@@ -22,7 +22,11 @@ export async function PUT(req) {
 
 
         // Validate required fields
-        if (!currentPassword || !newPassword) {
+        // Non-string values would skip the length check and make bcrypt throw (500)
+        if (
+            !currentPassword || !newPassword ||
+            typeof currentPassword !== "string" || typeof newPassword !== "string"
+        ) {
             return NextResponse.json({
                 success: false,
                 message: "Current password and new password are required",

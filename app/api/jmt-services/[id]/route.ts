@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/app/lib/config/db";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES, EDITOR_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import {
   STATUSES,
   errorResponse,
@@ -21,7 +21,7 @@ type Context = { params: Promise<{ id: string }> };
 const notFound = () => NextResponse.json({ success: false, message: "Service page not found" }, { status: 404 });
 
 export async function GET(req: NextRequest, { params }: Context) {
-  const auth = await requireRole(req, CONTENT_ROLES);
+  const auth = await requirePermission(req, CONTENT_PERMISSIONS);
   if (auth instanceof NextResponse) return auth;
   const stale = staleClientResponse();
   if (stale) return stale;
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, { params }: Context) {
 
 // PUT — save. Body: any of { slug, title, status, content }.
 export async function PUT(req: NextRequest, { params }: Context) {
-  const auth = await requireRole(req, CONTENT_ROLES);
+  const auth = await requirePermission(req, PERMISSIONS.SERVICES_MANAGE);
   if (auth instanceof NextResponse) return auth;
   const stale = staleClientResponse();
   if (stale) return stale;
@@ -98,7 +98,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Context) {
-  const auth = await requireRole(req, EDITOR_ROLES);
+  const auth = await requirePermission(req, PERMISSIONS.SERVICES_MANAGE);
   if (auth instanceof NextResponse) return auth;
   const stale = staleClientResponse();
   if (stale) return stale;

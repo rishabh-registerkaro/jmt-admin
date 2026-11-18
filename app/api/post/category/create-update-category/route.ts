@@ -1,8 +1,8 @@
 import prisma from "@/app/lib/config/db";
 import { NextRequest, NextResponse } from "next/server";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { EDITOR_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 import { errorFields } from "@/app/lib/utils/errorFields";
 
@@ -26,7 +26,7 @@ function generateCategoryColor(name: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, EDITOR_ROLES) /* matches the UI: editor and above */;
+    const userResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE) /* matches the UI: editor and above */;
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
 // PUT - Update category
 export async function PUT(req: NextRequest) {
   try {
-    const userResult = await requireRole(req, EDITOR_ROLES) /* matches the UI: editor and above */;
+    const userResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE) /* matches the UI: editor and above */;
     if (userResult instanceof NextResponse) {
       return userResult;
     }
@@ -322,7 +322,7 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     // Get current user (authorization check)
-    const userResult = await requireRole(req, EDITOR_ROLES) /* matches the UI: editor and above */;
+    const userResult = await requirePermission(req, PERMISSIONS.POSTS_MANAGE) /* matches the UI: editor and above */;
 
 
     // Check if getCurrentUser returned an error response (NextResponse)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/config/db";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { SITE_PAGE_KEYS } from "@/app/lib/content/site-pages";
 import {
   MAX_TAGS_PER_REQUEST,
@@ -62,7 +62,7 @@ function mergeResults(chunks: SiteResult[][]): SiteResult[] {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireRole(req, ADMIN_ROLES);
+  const auth = await requirePermission(req, PERMISSIONS.CACHE_RESET);
   if (auth instanceof NextResponse) return auth;
 
   try {

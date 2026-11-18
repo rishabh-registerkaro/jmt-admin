@@ -2,13 +2,21 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/app/lib/config/db";
 import bcrypt from "bcrypt";
 
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, SYSTEM_ROLE_KEYS } from "@/app/lib/constants/permissions";
+import {
+    canAssignRole,
+    countSuperAdmins,
+    resolveRequestedRole,
+    resolveUserAccess,
+    userRoleView,
+} from "@/app/lib/server/rbac";
 
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES, ROLES } from "@/app/lib/constants/role";
+const roleSelect = { select: { id: true, key: true, name: true, permissions: true } } as const;
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
-        const userResult = await requireRole(req, ADMIN_ROLES);
+        const userResult = await requirePermission(req, PERMISSIONS.USERS_MANAGE);
         if (userResult instanceof NextResponse) {
             return userResult;
         }
@@ -33,7 +41,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
         // Fetch the user (excluding password)
         const user = await prisma.user.findUnique({
             where: { id },
-            select: { id: true, username: true, email: true, createdAt: true, updatedAt: true, role: true },
+            select: { id: true, username: true, email: true, createdAt: true, updatedAt: true, role: true, roleId: true, adminRole: roleSelect },
         });
 
         if (!user) {
@@ -49,7 +57,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
             email: user.email,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
-            role: user.role,
+            ...(await userRoleView(user, userResult)),
         }
 
         return NextResponse.json({
@@ -68,7 +76,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
-        const userResult = await requireRole(req, ADMIN_ROLES);
+        const userResult = await requirePermission(req, PERMISSIONS.USERS_MANAGE);
         if (userResult instanceof NextResponse) {
             return userResult;
         }
@@ -89,13 +97,13 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
         const updatePassword = searchParams.get("updatePassword") === "true";
 
         const body = await req.json();
-        const { role, newPassword, currentPassword } = body;
+        const { newPassword, currentPassword } = body;
 
         // Fetched WITH password (needed for password-update comparison);
         // the password is never returned to the client.
         const targetUser = await prisma.user.findUnique({
             where: { id },
-            select: { id: true, username: true, email: true, role: true, password: true },
+            select: { id: true, username: true, email: true, role: true, password: true, roleId: true, adminRole: roleSelect },
         });
 
         if (!targetUser) {
@@ -107,6 +115,9 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
         // checking if user is trying to change their own data
         const isChangingOwnData = currentUser.id === id;
+        const targetAccess = await resolveUserAccess(targetUser);
+        // May the current user manage someone holding the target's role?
+        const outranksTarget = canAssignRole(currentUser, { key: targetAccess.roleKey, permissions: targetAccess.permissions });
 
         // ========== PASSWORD UPDATE LOGIC ==========
         if (updatePassword) {
@@ -119,17 +130,17 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
             }
 
             // validate new password length
-            if (newPassword.length < 8) {
+            if (typeof newPassword !== "string" || newPassword.length < 8) {
                 return NextResponse.json({
                     success: false,
                     message: "New password must be at least 8 characters"
                 }, { status: 400 })
             }
 
-            // Security check: an admin may only manage editors/contributors — not
-            // superadmins or other admins (otherwise one admin could reset another
-            // admin's password and log in as them).
-            if (currentUser.role === "admin" && !isChangingOwnData && (targetUser.role === "superadmin" || targetUser.role === "admin")) {
+            // Security check: you may only reset passwords of users whose role you
+            // could assign yourself — otherwise an admin could reset another
+            // admin's (or a super admin's) password and log in as them.
+            if (!isChangingOwnData && !outranksTarget) {
                 return NextResponse.json({
                     success: false,
                     message: "You don't have permission to change this user's password"
@@ -181,23 +192,20 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
         }
         // ========== ROLE UPDATE LOGIC ==========
         else {
-            // validate role is provided
-            if (!role) {
+            // validate role is provided (roleId; legacy `role` string still accepted)
+            if (!body.roleId && !body.role) {
                 return NextResponse.json({
                     success: false,
                     message: "Role is required"
                 }, { status: 400 })
             }
 
-            // Validate role value — superadmin cannot be assigned via API
-            const validRoles = ["admin", "editor", "contributor"];
-            if (!validRoles.includes(role)) {
+            const newRole = await resolveRequestedRole(body);
+            if (!newRole) {
                 return NextResponse.json({
                     success: false,
-                    message: role === "superadmin"
-                        ? "Super Admin role cannot be assigned through the system."
-                        : "Invalid role."
-                }, { status: 403 })
+                    message: "Invalid role."
+                }, { status: 400 })
             }
 
             // Prevent users from changing their own role
@@ -208,27 +216,40 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
                 }, { status: 403 })
             }
 
-            // security check: an admin cannot change a superadmin's or another admin's role
-            if (currentUser.role === "admin" && (targetUser.role === "superadmin" || targetUser.role === "admin")) {
+            // security check: you can't change the role of someone you don't outrank
+            if (!outranksTarget) {
                 return NextResponse.json({
                     success: false,
                     message: "You don't have permission to change this user's role"
                 }, { status: 403 })
             }
 
-            // Prevent admin from assigning superadmin or admin role
-            if (currentUser.role === "admin" && (role === "superadmin" || role === "admin")) {
+            // Only a Super Admin can hand out Super Admin / Admin (users.manage) roles,
+            // and nobody can grant permissions they don't hold.
+            if (!canAssignRole(currentUser, newRole)) {
                 return NextResponse.json({
                     success: false,
-                    message: `You don't have permission to assign ${role === "superadmin" ? "Super Admin" : "Admin"} role`
+                    message: `You don't have permission to assign the ${newRole.name} role`
                 }, { status: 403 })
             }
 
-            // update the user's role
+            // Never leave the dashboard without a Super Admin.
+            if (
+                targetAccess.roleKey === SYSTEM_ROLE_KEYS.SUPERADMIN &&
+                newRole.key !== SYSTEM_ROLE_KEYS.SUPERADMIN &&
+                (await countSuperAdmins()) <= 1
+            ) {
+                return NextResponse.json({
+                    success: false,
+                    message: "This is the last Super Admin — promote someone else first"
+                }, { status: 403 })
+            }
+
+            // update the user's role (legacy column kept in sync for the shared users table)
             const updatedUser = await prisma.user.update({
                 where: { id },
-                data: { role },
-                select: { id: true, username: true, email: true, role: true },
+                data: { role: newRole.legacy, roleId: newRole.id },
+                select: { id: true, username: true, email: true, role: true, roleId: true, adminRole: roleSelect },
             });
 
             return NextResponse.json({
@@ -238,7 +259,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
                     id: updatedUser.id,
                     username: updatedUser.username,
                     email: updatedUser.email,
-                    role: updatedUser.role,
+                    ...(await userRoleView(updatedUser, currentUser)),
                 }
             }, { status: 200 })
         }
@@ -253,14 +274,16 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 }
 
 /**
- * DELETE /api/users/[id] — Super Admin only.
+ * DELETE /api/users/[id] — users.manage, and only users whose role the caller
+ * could assign (an Admin can remove Editors / Leads Managers; only a Super
+ * Admin can remove Admins). Super Admin accounts can't be deleted — demote first.
  * Content authored by the removed user (posts, service pages, package blocks,
- * JMT service pages) is reassigned to the Super Admin performing the delete,
+ * JMT service pages) is reassigned to the user performing the delete,
  * so nothing is lost and the required author foreign keys stay valid.
  */
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
-        const userResult = await requireRole(req, [ROLES.SUPERADMIN]);
+        const userResult = await requirePermission(req, PERMISSIONS.USERS_MANAGE);
         if (userResult instanceof NextResponse) {
             return userResult;
         }
@@ -284,7 +307,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
         const targetUser = await prisma.user.findUnique({
             where: { id },
-            select: { id: true, role: true },
+            select: { id: true, role: true, roleId: true, adminRole: roleSelect },
         });
 
         if (!targetUser) {
@@ -294,10 +317,19 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
             }, { status: 404 });
         }
 
-        if (targetUser.role === ROLES.SUPERADMIN) {
+        const targetAccess = await resolveUserAccess(targetUser);
+
+        if (targetAccess.isSuperAdmin) {
             return NextResponse.json({
                 success: false,
                 message: "Super Admin accounts cannot be deleted"
+            }, { status: 403 });
+        }
+
+        if (!canAssignRole(currentUser, { key: targetAccess.roleKey, permissions: targetAccess.permissions })) {
+            return NextResponse.json({
+                success: false,
+                message: "You don't have permission to delete this user"
             }, { status: 403 });
         }
 

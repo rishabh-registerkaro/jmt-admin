@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/app/lib/config/db";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { CONTENT_ROLES, EDITOR_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS, CONTENT_PERMISSIONS } from "@/app/lib/constants/permissions";
 import {
   errorResponse,
   isSitePageKey,
@@ -20,7 +20,7 @@ type Context = { params: Promise<{ key: string }> };
 const unknownPage = () => NextResponse.json({ success: false, message: "Unknown page" }, { status: 404 });
 
 export async function GET(req: NextRequest, { params }: Context) {
-  const auth = await requireRole(req, CONTENT_ROLES);
+  const auth = await requirePermission(req, CONTENT_PERMISSIONS);
   if (auth instanceof NextResponse) return auth;
   const { key } = await params;
   if (!isSitePageKey(key)) return unknownPage();
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: Context) {
 
 // PUT — save. Body: { content }.
 export async function PUT(req: NextRequest, { params }: Context) {
-  const auth = await requireRole(req, CONTENT_ROLES);
+  const auth = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
   if (auth instanceof NextResponse) return auth;
   const { key } = await params;
   if (!isSitePageKey(key)) return unknownPage();
@@ -76,7 +76,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
 
 // DELETE — reset to the bundled copy.
 export async function DELETE(req: NextRequest, { params }: Context) {
-  const auth = await requireRole(req, EDITOR_ROLES);
+  const auth = await requirePermission(req, PERMISSIONS.CONTENT_EDIT);
   if (auth instanceof NextResponse) return auth;
   const { key } = await params;
   if (!isSitePageKey(key)) return unknownPage();

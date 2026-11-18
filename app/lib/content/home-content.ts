@@ -250,7 +250,7 @@ export interface HomePageContent {
 export const HOME_META_DEFAULTS = {
   metaTitle: "Joy Maa Tara Bama Kripa — Site crews for bridges, metro and civil works",
   metaDescription:
-    "Skilled and unskilled construction workers from West Bengal, fully registered, deployed fast and managed on site by our own supervisors. PF, ESIC and wage records every month.",
+    "Skilled and unskilled construction workers from West Bengal, fully registered, deployed fast and supervised on site. PF, ESIC and wage records every month.",
 };
 
 // ── Defaults (identical to the Figma page as it shipped) ─────────────────────

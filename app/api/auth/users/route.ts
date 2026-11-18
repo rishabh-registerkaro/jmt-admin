@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/config/db";
-import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 
 export async function GET(req: NextRequest) {
     try {
         // Verify authentication
-        const userResult = await getCurrentUser(req);
+        const userResult = await requirePermission(req, [PERMISSIONS.POSTS_MANAGE, PERMISSIONS.USERS_MANAGE]);
         if (userResult instanceof NextResponse) {
             return userResult; // Error response
         }

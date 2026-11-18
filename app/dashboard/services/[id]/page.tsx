@@ -86,6 +86,8 @@ export default function JmtServiceEditorPage() {
   const [state, setState] = useState<EditorState | null>(null);
   const [saved, setSaved] = useState("");
   const [liveSlug, setLiveSlug] = useState("");
+  // Saved status, not the Status dropdown: only a saved, published page exists on the website.
+  const [isLive, setIsLive] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ settings: true });
@@ -97,6 +99,7 @@ export default function JmtServiceEditorPage() {
     setState(next);
     setSaved(snapshot(next));
     setLiveSlug(page.slug);
+    setIsLive(page.status === "published");
   }, []);
 
   useEffect(() => {
@@ -221,12 +224,14 @@ export default function JmtServiceEditorPage() {
               <Eye className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{previewOpening ? "Opening..." : "Preview"}</span>
             </Button>
-            <Button asChild variant="outline">
-              <a href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label="View live">
-                <ExternalLink className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">View live</span>
-              </a>
-            </Button>
+            {isLive && (
+              <Button asChild variant="outline">
+                <a href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label="View live">
+                  <ExternalLink className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">View live</span>
+                </a>
+              </Button>
+            )}
             {dirty && (
               <Button
                 variant="outline"
@@ -254,7 +259,7 @@ export default function JmtServiceEditorPage() {
               label="URL slug"
               hint={`/service/${state.slug} — changing it moves the page; old links stop working`}
               value={state.slug}
-              onChange={(slug) => setState({ ...state, slug: slug.toLowerCase() })}
+              onChange={(slug) => setState({ ...state, slug: slug.toLowerCase().slice(0, 80) })}
             />
             <SelectField<Status>
               label="Status"

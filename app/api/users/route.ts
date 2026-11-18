@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { intParam } from "@/app/lib/utils/pagination";
 import prisma from "@/app/lib/config/db";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
+import { canAssignRole, loadSystemRoleMap, resolveRequestedRole, userRoleView } from "@/app/lib/server/rbac";
 import bcrypt from "bcrypt";
 import { Prisma } from "@prisma/client";
 import { errorFields } from "@/app/lib/utils/errorFields";
 
+const roleSelect = { select: { id: true, key: true, name: true, permissions: true } } as const;
+
+// POST /api/users — create a user (users.manage).
+// Body: { username, email, password, roleId }  (legacy `role` string still accepted)
 export async function POST(req: NextRequest) {
     try {
-        const userResult = await requireRole(req, ADMIN_ROLES);
+        const userResult = await requirePermission(req, PERMISSIONS.USERS_MANAGE);
         if (userResult instanceof NextResponse) {
             return userResult;
         }
@@ -17,36 +22,35 @@ export async function POST(req: NextRequest) {
         const currentUser = userResult;
 
         const body = await req.json();
-        const { username, password, role } = body;
+        const { username, password } = body;
         // Mongoose schema had lowercase:true on email — normalize on write
         const email = typeof body.email === "string" ? body.email.toLowerCase().trim() : body.email;
 
-        if (!username || !email || !password || !role) {
+        if (!username || !email || !password || (!body.roleId && !body.role)) {
             return NextResponse.json(
                 { success: false, message: "All fields (username, email, password, role) are required" },
                 { status: 400 }
             );
         }
 
-        // Role permission check
-        const validRoles = ["superadmin", "admin", "editor", "contributor"];
-        const adminAllowedRoles = ["editor", "contributor"];
-
-        if (currentUser.role === "admin" && !adminAllowedRoles.includes(role)) {
-            return NextResponse.json(
-                { success: false, message: "Admins can only create Editor or Contributor accounts" },
-                { status: 403 }
-            );
-        }
-
-        if (!validRoles.includes(role)) {
+        const role = await resolveRequestedRole(body);
+        if (!role) {
             return NextResponse.json(
                 { success: false, message: "Invalid role" },
                 { status: 400 }
             );
         }
 
-        if (password.length < 8) {
+        // Anti-escalation: only a Super Admin can create admins / super admins,
+        // and nobody can hand out permissions they don't have themselves.
+        if (!canAssignRole(currentUser, role)) {
+            return NextResponse.json(
+                { success: false, message: `You don't have permission to create ${role.name} accounts` },
+                { status: 403 }
+            );
+        }
+
+        if (typeof password !== "string" || password.length < 8) {
             return NextResponse.json(
                 { success: false, message: "Password must be at least 8 characters" },
                 { status: 400 }
@@ -71,9 +75,10 @@ export async function POST(req: NextRequest) {
                 username,
                 email,
                 password: hashedPassword,
-                role,
+                role: role.legacy,
+                roleId: role.id,
             },
-            select: { id: true, username: true, email: true, role: true },
+            select: { id: true, username: true, email: true, role: true, roleId: true, adminRole: roleSelect },
         });
 
         return NextResponse.json(
@@ -84,7 +89,7 @@ export async function POST(req: NextRequest) {
                     id: newUser.id,
                     username: newUser.username,
                     email: newUser.email,
-                    role: newUser.role,
+                    ...(await userRoleView(newUser, currentUser)),
                 },
             },
             { status: 201 }
@@ -107,7 +112,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest){
     try {
         // verify authentication
-        const userResult = await requireRole(req, ADMIN_ROLES);
+        const userResult = await requirePermission(req, PERMISSIONS.USERS_MANAGE);
         if(userResult instanceof NextResponse){
             return userResult; // error response
         }
@@ -148,28 +153,28 @@ export async function GET(req: NextRequest){
         }
 
         // Optimized: fetch users and total count in parallel
-        const [users, total] = await Promise.all([
+        const [users, total, systemRoles] = await Promise.all([
             prisma.user.findMany({
                 where,
-                select: { id: true, username: true, email: true, createdAt: true, updatedAt: true, role: true },
+                select: { id: true, username: true, email: true, createdAt: true, updatedAt: true, role: true, roleId: true, adminRole: roleSelect },
                 orderBy,
                 skip,
                 take: limit,
             }),
 
             prisma.user.count({ where }),
+            loadSystemRoleMap(),
         ])
 
         // format users data
-        const formattedUsers = users.map((user)=> ({
+        const formattedUsers = await Promise.all(users.map(async (user)=> ({
             id: user.id,
             username: user.username,
             email: user.email,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
-            role: user.role,
-
-        }))
+            ...(await userRoleView(user, userResult, systemRoles)),
+        })))
 
          // Calculate pagination metadata
          const totalPages = Math.ceil(total / limit);

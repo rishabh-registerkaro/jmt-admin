@@ -2,8 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import prisma from "@/app/lib/config/db";
 import { errorFields } from "@/app/lib/utils/errorFields";
+import { resolveUserAccess, userAccessSelect } from "@/app/lib/server/rbac";
+import type { Permission } from "@/app/lib/constants/permissions";
 
-export const getCurrentUser = async (req: NextRequest) => {
+export interface CurrentUser {
+  id: string;
+  username: string;
+  /** Legacy users.role enum value — kept for older callers. Use `permissions` for access checks. */
+  role: string;
+  roleId: string | null;
+  roleKey: string;
+  roleName: string;
+  permissions: Permission[];
+  isSuperAdmin: boolean;
+}
+
+export const getCurrentUser = async (req: NextRequest): Promise<CurrentUser | NextResponse> => {
   try {
     const token = req.cookies.get("authToken")?.value;
     if (!token) {
@@ -20,10 +34,11 @@ export const getCurrentUser = async (req: NextRequest) => {
       role: string;
     };
 
-    // Verify user exists in database
+    // Verify user exists in database — role and permissions always come from
+    // the database, never from the token, so role changes apply immediately.
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, username: true, role: true },
+      select: userAccessSelect,
     });
 
     if (!user) {
@@ -36,11 +51,11 @@ export const getCurrentUser = async (req: NextRequest) => {
       );
     }
 
-    // Return user data (verified from database) - same format as before
+    const access = await resolveUserAccess(user);
     return {
       id: user.id,
       username: user.username,
-      role: user.role
+      ...access,
     };
   } catch (error) {
     // Handle JWT errors

@@ -3,6 +3,9 @@ import { intParam } from "@/app/lib/utils/pagination";
 import prisma from "@/app/lib/config/db"
 import jwt from "jsonwebtoken"
 import { errorFields } from "@/app/lib/utils/errorFields"
+import { resolveUserAccess } from "@/app/lib/server/rbac"
+import { getCurrentUser } from "@/app/lib/utils/getCurrentUser"
+import { PERMISSIONS } from "@/app/lib/constants/permissions"
 
 export async function GET(req: NextRequest) {
     try {
@@ -21,7 +24,10 @@ export async function GET(req: NextRequest) {
 
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
-            select: { id: true, username: true, email: true, role: true, createdAt: true, updatedAt: true },
+            select: {
+                id: true, username: true, email: true, role: true, createdAt: true, updatedAt: true,
+                roleId: true, adminRole: { select: { id: true, key: true, name: true, permissions: true } },
+            },
         });
         if (!user) {
             return NextResponse.json({
@@ -29,15 +35,17 @@ export async function GET(req: NextRequest) {
                 message: "User not found"
             }, { status: 404 })
         }
+        // role (legacy enum) is kept for older screens; access checks use permissions.
+        const access = await resolveUserAccess(user);
         return NextResponse.json({
             success: true,
             user: {
                 id: user.id,
                 email: user.email,
                 username: user.username,
-                role: user.role,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
+                ...access,
             }
         })
     } catch (error) {
@@ -96,6 +104,14 @@ export async function POST(req: NextRequest) {
             }, { status: 404 });
         }
         const body = await req.json();
+
+        // Only your own content, unless you can manage users.
+        const access = await getCurrentUser(req);
+        if (access instanceof NextResponse) return access;
+        if (body.userId && body.userId !== access.id && !access.permissions.includes(PERMISSIONS.USERS_MANAGE)) {
+            return NextResponse.json({ success: false, message: "Access denied." }, { status: 403 });
+        }
+
         const { userId, page: pageParam, limit: limitParam, postsPage: postsPageParam, pagesPage: pagesPageParam, postsLimit: postsLimitParam, pagesLimit: pagesLimitParam } = body;
 
         if (!userId) {

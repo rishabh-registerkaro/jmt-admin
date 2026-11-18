@@ -104,12 +104,12 @@ site accepts per request. The toast shows the tag count and the result for each 
 Use it after changing env vars or secrets, after a site was down for a while,
 or after bulk database edits. Each page's first visit afterwards is a little slower.
 
-Superadmins and admins see the button. Everyone else gets 403 from the API.
+Users with the `cache.reset` permission see the button (Super Admin and Admin by default). Everyone else gets 403 from the API.
 
 ## 6. Security
 
-- **Browser → admin**: session cookie. `/api/revalidate` needs any CMS role;
-  `/api/revalidate/all` needs admin.
+- **Browser → admin**: session cookie. `/api/revalidate` needs any content
+  permission; `/api/revalidate/all` needs `cache.reset`.
 - **Admin → websites**: `REVALIDATE_SECRET` in `x-revalidate-secret`. The
   secret never reaches the browser.
 - Tags must match `/^[a-z0-9_-]{1,100}$/i`, with at most 50 per request. Both
@@ -122,7 +122,7 @@ Superadmins and admins see the button. Everyone else gets 403 from the API.
 |---|---|
 | 200 | Every site cleared |
 | 400 | Bad tags |
-| 401 / 403 | Not signed in / role not allowed |
+| 401 / 403 | Not signed in / missing permission |
 | 502 | At least one site failed (details in `sites`) |
 | 504 | Every failing site timed out |
 | 500 | Unexpected admin error |

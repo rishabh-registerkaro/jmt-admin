@@ -1,7 +1,7 @@
 import prisma from "@/app/lib/config/db";
 import { withMongoId } from "@/app/lib/utils/serialize";
-import { requireRole } from "@/app/lib/utils/authorization";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { requirePermission } from "@/app/lib/utils/authorization";
+import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
@@ -40,7 +40,7 @@ export async function POST(
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const userResult = await requireRole(req, ADMIN_ROLES);
+    const userResult = await requirePermission(req, PERMISSIONS.PACKAGES_MANAGE);
     if (userResult instanceof NextResponse) {
       return userResult;
     }

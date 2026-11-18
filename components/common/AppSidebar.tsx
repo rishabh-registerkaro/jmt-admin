@@ -3,12 +3,10 @@
 import {
   CircleUserRound,
   LogOut,
-  MessageSquareText,
   Music2,
   ChevronRight,
   ChevronDown,
   Plus,
-  FolderTree,
   FileText,
   Users,
   Database,
@@ -18,13 +16,15 @@ import {
   ListStart,
   ListEnd,
   Contact,
-  ScrollText,
-  Package,
   House,
+  LayoutDashboard,
   PanelLeftClose,
   PanelLeftOpen,
   ChevronsUpDown,
   HardHat,
+  ClipboardList,
+  ShieldCheck,
+  type LucideIcon,
 } from "lucide-react";
 import {
   Tooltip,
@@ -50,8 +50,8 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { getUserProfile, UserProfile } from "@/lib/apiCallingProfile";
-import { ADMIN_ROLES } from "@/app/lib/constants/role";
+import { usePermissions } from "./PermissionsProvider";
+import { PERMISSIONS, type Permission } from "@/app/lib/constants/permissions";
 import { ResetCacheButton } from "./ResetCacheButton";
 import {
   DropdownMenu,
@@ -69,8 +69,35 @@ import { ThemeToggle } from "./ThemeToggle";
 
 import { logout } from "@/lib/apiCallingAuth";
 
-// Navigation items organized by category
-const navigationItems = [
+// Navigation — the admin site map. Each item (and sub-item) is shown only to
+// users holding its `permission`; the same page → permission rules gate the
+// pages themselves (app/lib/constants/routeAccess.ts) and the APIs behind them.
+interface NavSubItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  permission?: Permission;
+}
+interface NavItem extends NavSubItem {
+  hasSubmenu?: boolean;
+  submenuItems?: NavSubItem[];
+}
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const navigationItems: NavGroup[] = [
+  {
+    title: "Overview",
+    items: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
   {
     title: "Content",
     items: [
@@ -78,70 +105,28 @@ const navigationItems = [
         title: "Homepage",
         url: "/dashboard/homepage",
         icon: House,
+        permission: PERMISSIONS.CONTENT_EDIT,
       },
-      {
-        title: "Posts",
-        url: "/dashboard/blog",
-        icon: MessageSquareText,
-        hasSubmenu: true,
-        submenuItems: [
-          {
-            title: "All Posts",
-            url: "/dashboard/blog",
-            icon: FileText,
-          },
-          {
-            title: "Add New Post",
-            url: "/dashboard/blog/create-blog",
-            icon: Plus,
-          },
-          {
-            title: "Categories",
-            url: "/dashboard/blog/category",
-            icon: FolderTree,
-          },
-        ],
-      },
+      // Posts (/dashboard/blog) and Packages (/dashboard/packages) are main-website
+      // features, not used by the Joy Maa Tara site, so they're not linked here.
+      // The pages and APIs are kept: the main website still reads its blog and
+      // package blocks from this backend.
       {
         title: "Services",
         url: "/dashboard/services",
         icon: Briefcase,
+        permission: PERMISSIONS.SERVICES_MANAGE,
         hasSubmenu: true,
         submenuItems: [
-          {
-            title: "All Services",
-            url: "/dashboard/services",
-            icon: FileText,
-          },
-          {
-            title: "Add New Service",
-            url: "/dashboard/services/create-service",
-            icon: Plus,
-          },
-        ],
-      },
-      {
-        title: "Packages",
-        url: "/dashboard/packages",
-        icon: Package,
-        hasSubmenu: true,
-        submenuItems: [
-          {
-            title: "All Blocks",
-            url: "/dashboard/packages",
-            icon: FileText,
-          },
-          {
-            title: "Add New Block",
-            url: "/dashboard/packages/create-package",
-            icon: Plus,
-          },
+          { title: "All Services", url: "/dashboard/services", icon: FileText },
+          { title: "Add New Service", url: "/dashboard/services/create-service", icon: Plus },
         ],
       },
       {
         title: "Media Library",
         url: "/dashboard/media",
         icon: Music2,
+        permission: PERMISSIONS.MEDIA_MANAGE,
       },
       // Joy Maa Tara navbar and footer (app/dashboard/site-menus/[part]). The
       // main-website menu editors at /dashboard/header-menu and
@@ -150,18 +135,11 @@ const navigationItems = [
         title: "Menus",
         url: "/dashboard/site-menus/header",
         icon: List,
+        permission: PERMISSIONS.CONTENT_EDIT,
         hasSubmenu: true,
         submenuItems: [
-          {
-            title: "Header Menu",
-            url: "/dashboard/site-menus/header",
-            icon: ListStart,
-          },
-          {
-            title: "Footer Menu",
-            url: "/dashboard/site-menus/footer",
-            icon: ListEnd,
-          },
+          { title: "Header Menu", url: "/dashboard/site-menus/header", icon: ListStart },
+          { title: "Footer Menu", url: "/dashboard/site-menus/footer", icon: ListEnd },
         ],
       },
       // Joy Maa Tara site pages (jmt-frontend /about, /contact, /join-our-crew),
@@ -171,31 +149,53 @@ const navigationItems = [
         title: "About Us",
         url: "/dashboard/site-pages/about",
         icon: Info,
+        permission: PERMISSIONS.CONTENT_EDIT,
       },
       {
         title: "Contact",
         url: "/dashboard/site-pages/contact",
         icon: Contact,
+        permission: PERMISSIONS.CONTENT_EDIT,
       },
       {
         title: "Join Our Crew",
         url: "/dashboard/site-pages/join-our-crew",
         icon: HardHat,
+        permission: PERMISSIONS.CONTENT_EDIT,
       },
-      {
-        title: "Terms & Policy",
-        url: "/dashboard/terms-policy",
-        icon: ScrollText,
-      },
+    ],
+  },
+  {
+    title: "Leads",
+    items: [
       {
         title: "Leads",
         url: "/dashboard/leads",
         icon: Database,
+        permission: PERMISSIONS.LEADS_VIEW,
       },
+      {
+        title: "Applications",
+        url: "/dashboard/applications",
+        icon: ClipboardList,
+        permission: PERMISSIONS.APPLICATIONS_VIEW,
+      },
+    ],
+  },
+  {
+    title: "Administration",
+    items: [
       {
         title: "Users",
         url: "/dashboard/users",
         icon: Users,
+        permission: PERMISSIONS.USERS_MANAGE,
+      },
+      {
+        title: "Roles",
+        url: "/dashboard/roles",
+        icon: ShieldCheck,
+        permission: PERMISSIONS.ROLES_MANAGE,
       },
     ],
   },
@@ -211,41 +211,26 @@ const navigationItems = [
   },
 ];
 
-const filterNavigationItemsByRole = (
-  items: typeof navigationItems,
-  userRole: string | undefined,
-) => {
-  if (!userRole) return [];
-
-  // SuperAdmin and Admin see everything
-  if (userRole === "superadmin" || userRole === "admin") {
-    return items;
-  }
-
-  // Editor and Contributor see content items
-  if (userRole === "editor" || userRole === "contributor") {
-    return items.map((group) => {
-      if (group.title === "Content") {
-        return {
-          ...group,
-          items: group.items.filter(
-            (item) =>
-              item.title === "Homepage" ||
-              item.title === "Posts" ||
-              item.title === "Media Library" ||
-              item.title === "Menus" ||
-              item.title === "Services" ||
-              item.title === "About Us" ||
-              item.title === "Contact" ||
-              item.title === "Join Our Crew",
-          ),
-        };
-      }
-      return group; // Keep Account group
-    });
-  }
-
-  return [];
+/** Keeps only the items (and sub-items) the user may open; drops empty groups. */
+const filterNavigationByPermission = (
+  groups: NavGroup[],
+  can: (perm: Permission) => boolean,
+  signedIn: boolean,
+): NavGroup[] => {
+  if (!signedIn) return [];
+  const allowed = (perm?: Permission) => !perm || can(perm);
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .filter((item) => allowed(item.permission))
+        .map((item) =>
+          item.submenuItems
+            ? { ...item, submenuItems: item.submenuItems.filter((sub) => allowed(sub.permission)) }
+            : item,
+        ),
+    }))
+    .filter((group) => group.items.length > 0);
 };
 
 export function AppSidebar() {
@@ -260,8 +245,7 @@ export function AppSidebar() {
     setHoverLock,
   } = useSidebar();
   const isPinned = pinnedState === "expanded";
-  const [userData, setUserData] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user: userData, loading, can } = usePermissions();
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
     posts: false,
   });
@@ -270,23 +254,6 @@ export function AppSidebar() {
   useEffect(() => {
     setOpenMobile(false);
   }, [pathname, setOpenMobile]);
-
-  // Fetch user profile
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await getUserProfile();
-        if (response.success && response.user) {
-          setUserData(response.user);
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
 
   // Auto-open submenu if current path matches - use useMemo to prevent unnecessary re-renders
   const shouldOpenSubmenus = useMemo(() => {
@@ -422,7 +389,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-3">
-        {filterNavigationItemsByRole(navigationItems, userData?.role).map(
+        {filterNavigationByPermission(navigationItems, can, !!userData).map(
           (group) => (
             <SidebarGroup key={group.title} className="px-0 py-1">
               <SidebarGroupLabel className="h-7 px-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -580,7 +547,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
         {/* Clears every cached page on both websites — admins only (the API enforces it too) */}
-        {(ADMIN_ROLES as readonly string[]).includes(userData?.role ?? "") && (
+        {can(PERMISSIONS.CACHE_RESET) && (
           <div className={state === "expanded" ? "" : "flex justify-center"}>
             <ResetCacheButton collapsed={state !== "expanded"} />
           </div>

@@ -6,7 +6,13 @@ export interface UserProfile {
     id: string;
     email: string;
     username: string;
+    /** Legacy role enum value — use `permissions` / usePermissions().can() for access checks. */
     role: string;
+    roleId?: string | null;
+    roleKey?: string;
+    roleName?: string;
+    permissions?: string[];
+    isSuperAdmin?: boolean;
     createdAt: string;
     updatedAt: string;
 }
