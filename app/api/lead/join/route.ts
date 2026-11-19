@@ -4,13 +4,26 @@ import prisma from "@/app/lib/config/db";
 import { hasSharedSecret, identityOverLimit } from "@/app/lib/utils/leadThrottle";
 import { sendLeadNotification } from "@/app/lib/config/email";
 import {
+  applicationsFolder,
+  buildStoredFilename,
+  matchesMagicBytes,
+  removeFromFolder,
+  uploadToFolder,
+} from "@/app/lib/utils/hostingerFtp";
+import {
   EMPTY_JOIN_VALUES,
   HONEYPOT_FIELD,
+  JOIN_DOC_TYPES,
   JOIN_LEAD_SOURCE,
+  joinDocType,
+  readJoinDocuments,
   readJoinValues,
   validateJoin,
+  validateJoinDocuments,
+  withOtherText,
   type JoinFormState,
 } from "@/utils/joinForm";
+import { DOCUMENTS_KEY, type ApplicationDocument } from "@/app/lib/utils/applicationDocuments";
 
 // POST /api/lead/join — the Joy Maa Tara "Join our crew" worker application.
 //
@@ -23,6 +36,11 @@ import {
 // Worker application" so applications are easy to filter), an email to the
 // admin, and a per-visitor rate limit. There is no email field, so the email
 // column is left empty.
+//
+// Optional documents (CV, letters) go to the private Hostinger folder
+// HOSTINGER_APPLICATIONS_PATH (not web-served); the lead's formData keeps
+// their list under "Documents" and admins open them through
+// GET /api/applications/[id]/documents/[key].
 
 const NOTIFY_TIMEOUT_MS = 8000;
 
@@ -104,6 +122,9 @@ export async function POST(req: NextRequest) {
 
   const values = readJoinValues(formData);
   const fieldErrors = validateJoin(values);
+  const documents = readJoinDocuments(formData);
+  const documentsError = validateJoinDocuments(documents);
+  if (documentsError) fieldErrors.documents = documentsError;
   if (Object.keys(fieldErrors).length > 0) {
     return reply({ status: "error", message: "Please check the highlighted fields.", fieldErrors, values }, 400);
   }
@@ -123,16 +144,57 @@ export async function POST(req: NextRequest) {
   }
 
   const details: Record<string, string> = {
-    Trade: values.trade,
+    Trade: withOtherText(values.trade, values.tradeOther),
     Experience: values.experience,
     "District or town": values.location,
-    Languages: values.languages,
+    Languages: withOtherText(values.languages, values.languageOther),
     "Can start": values.start,
-    "OK to call or WhatsApp": values.consent === "yes" ? "Yes" : "",
+    "Why hire": values.whyHire,
   };
-  const leadFormData = Object.fromEntries(
-    Object.entries(details).filter(([, value]) => value !== ""),
-  ) satisfies Prisma.InputJsonObject;
+  const textDetails = Object.fromEntries(Object.entries(details).filter(([, value]) => value !== ""));
+
+  // Check each file's real content, then upload them all before saving, so a
+  // saved application never points at a missing file.
+  const stored: ApplicationDocument[] = [];
+  const uploads: { buffer: Buffer; filename: string }[] = [];
+  for (const file of documents) {
+    const type = joinDocType(file)!; // validated above
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (!matchesMagicBytes(buffer, type)) {
+      return reply(
+        {
+          status: "error",
+          message: "Please check the highlighted fields.",
+          fieldErrors: { documents: `“${file.name}” doesn't look like a real PDF, image or Word file.` },
+          values,
+        },
+        400,
+      );
+    }
+    const key = buildStoredFilename(file.name, JOIN_DOC_TYPES[type]);
+    uploads.push({ buffer, filename: key });
+    stored.push({ key, name: file.name.slice(0, 150), type, bytes: file.size });
+  }
+
+  try {
+    if (uploads.length > 0) await uploadToFolder(applicationsFolder(), uploads);
+  } catch (error) {
+    console.error("[join] Failed to upload documents:", error);
+    return reply(
+      {
+        status: "error",
+        message: "We couldn't upload your files just now. Please try again, or send them on WhatsApp.",
+        fieldErrors: {},
+        values,
+      },
+      500,
+    );
+  }
+
+  const leadFormData = {
+    ...textDetails,
+    ...(stored.length > 0 ? { [DOCUMENTS_KEY]: stored } : {}),
+  } satisfies Prisma.InputJsonObject;
 
   try {
     const lead = await prisma.lead.create({
@@ -154,7 +216,10 @@ export async function POST(req: NextRequest) {
         email: "Not provided",
         phoneNo: lead.phoneNo,
         leadSource: lead.leadSource,
-        formData: leadFormData,
+        formData: {
+          ...textDetails,
+          ...(stored.length > 0 ? { [DOCUMENTS_KEY]: stored.map((doc) => doc.name).join(", ") } : {}),
+        },
         createdAt: lead.createdAt,
       }),
       new Promise((resolve) => setTimeout(resolve, NOTIFY_TIMEOUT_MS)),
@@ -163,6 +228,7 @@ export async function POST(req: NextRequest) {
     return reply(successState());
   } catch (error) {
     console.error("[join] Failed to save application:", error);
+    await removeFromFolder(applicationsFolder(), uploads.map((u) => u.filename)).catch(() => {});
     return reply(
       {
         status: "error",

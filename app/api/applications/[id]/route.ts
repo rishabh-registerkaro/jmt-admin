@@ -5,6 +5,8 @@ import { withMongoId } from "@/app/lib/utils/serialize";
 import { requirePermission } from "@/app/lib/utils/authorization";
 import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { JOIN_LEAD_SOURCE } from "@/utils/joinForm";
+import { applicationsFolder, removeFromFolder } from "@/app/lib/utils/hostingerFtp";
+import { readApplicationDocuments } from "@/app/lib/utils/applicationDocuments";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -53,10 +55,16 @@ export async function DELETE(req: NextRequest, context: Ctx) {
 
   try {
     const { id } = await context.params;
-    if (!(await findApplication(id))) {
+    const application = await findApplication(id);
+    if (!application) {
       return NextResponse.json({ success: false, message: "Application not found" }, { status: 404 });
     }
     await prisma.lead.delete({ where: { id } });
+    // Best-effort: a file already missing on Hostinger must not fail the delete.
+    const keys = readApplicationDocuments(application.formData).map((doc) => doc.key);
+    await removeFromFolder(applicationsFolder(), keys).catch((error) =>
+      console.error("[applications] Failed to remove documents:", error),
+    );
     return NextResponse.json({ success: true, message: "Application deleted" });
   } catch (error) {
     console.error("Error deleting application", error);

@@ -3,8 +3,13 @@ import { intParam } from "@/app/lib/utils/pagination";
 import { requirePermission } from "@/app/lib/utils/authorization";
 import { CONTENT_PERMISSIONS, PERMISSIONS } from "@/app/lib/constants/permissions";
 import prisma from "@/app/lib/config/db";
-import * as ftp from "basic-ftp";
-import { Readable } from "stream";
+import {
+  buildStoredFilename,
+  matchesMagicBytes,
+  mediaFolder,
+  removeFromFolder,
+  uploadToFolder,
+} from "@/app/lib/utils/hostingerFtp";
 import { revalidateFrontendTags } from "@/app/lib/utils/revalidateFrontend";
 
 // The public homepage swaps in uploaded photos named "home-*" (e.g.
@@ -33,37 +38,7 @@ const ALLOWED_MEDIA_TYPES: Record<string, string> = {
   "video/webm": "webm",
 };
 
-/** Safe base name (no extension, no dots) + the extension fixed by MIME type. */
-function buildStoredFilename(originalName: string, mimeType: string): string {
-  const base = originalName
-    .replace(/\.[^.]*$/, "")
-    .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .slice(0, 120) || "file";
-  return `${Date.now()}_${base}.${ALLOWED_MEDIA_TYPES[mimeType]}`;
-}
-
 const IS_DEV = process.env.NODE_ENV === "development";
-
-/** True when the file's first bytes match what its declared MIME type must start with. */
-function matchesMagicBytes(buffer: Buffer, mimeType: string): boolean {
-  const startsWith = (bytes: number[], offset = 0) =>
-    buffer.length >= offset + bytes.length && bytes.every((b, i) => buffer[offset + i] === b);
-  switch (mimeType) {
-    case "image/jpeg":
-      return startsWith([0xff, 0xd8, 0xff]);
-    case "image/png":
-      return startsWith([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-    case "image/gif":
-      return startsWith([0x47, 0x49, 0x46, 0x38]); // "GIF8"
-    case "image/webp":
-      return startsWith([0x52, 0x49, 0x46, 0x46]) && startsWith([0x57, 0x45, 0x42, 0x50], 8); // "RIFF"…"WEBP"
-    case "application/pdf":
-      // "%PDF-" — readers tolerate a little junk before the header
-      return buffer.subarray(0, 1024).includes("%PDF-");
-    default:
-      return true; // svg is checked as text; no cheap signature check for video
-  }
-}
 
 /**
  * An SVG is a document, not just a picture: opened directly from the media
@@ -94,57 +69,10 @@ function findUnsafeSvgContent(buffer: Buffer): string | null {
   return null;
 }
 
-// FTPS (explicit TLS) unless HOSTINGER_FTP_SECURE=false. There is no fallback
-// to plain FTP: if the server refuses TLS the upload fails.
-async function connectToHostinger(client: ftp.Client): Promise<void> {
-  const host = process.env.HOSTINGER_FTP_HOST!;
-  const secure = (process.env.HOSTINGER_FTP_SECURE ?? "true").trim().toLowerCase() !== "false";
-  const insecureTls = process.env.HOSTINGER_FTP_TLS_INSECURE?.trim().toLowerCase() === "true";
-
-  // Same steps as client.access(), split up so a TLS failure can be told
-  // apart from a wrong password.
-  await client.connect(host, Number(process.env.HOSTINGER_FTP_PORT) || 21);
-  if (secure) {
-    try {
-      await client.useTLS({ host, ...(insecureTls ? { rejectUnauthorized: false } : {}) });
-    } catch (error) {
-      console.error(
-        "Hostinger FTP: could not start TLS (AUTH TLS / handshake failed). " +
-          "Uploads use FTPS because HOSTINGER_FTP_SECURE is not \"false\"; plain FTP is never used as a fallback. " +
-          "If the certificate does not match the host (e.g. HOSTINGER_FTP_HOST is an IP address), set HOSTINGER_FTP_TLS_INSECURE=true. " +
-          "If the server has no TLS support at all, set HOSTINGER_FTP_SECURE=false (credentials and files are then sent unencrypted).",
-        error
-      );
-      throw error;
-    }
-  }
-  await client.sendIgnoringError("OPTS UTF8 ON");
-  await client.login(process.env.HOSTINGER_FTP_USER!, process.env.HOSTINGER_FTP_PASS!);
-  await client.useDefaultSettings();
-}
-
 async function uploadToHostinger(buffer: Buffer, filename: string): Promise<string> {
-  const client = new ftp.Client();
-  try {
-    await connectToHostinger(client);
-    await client.ensureDir(process.env.HOSTINGER_MEDIA_PATH || "/public_html/media");
-    await client.uploadFrom(Readable.from(buffer), filename);
-    const baseUrl = (process.env.HOSTINGER_MEDIA_URL || "").replace(/\/$/, "");
-    return `${baseUrl}/${filename}`;
-  } finally {
-    client.close();
-  }
-}
-
-async function deleteFromHostinger(filename: string): Promise<void> {
-  const client = new ftp.Client();
-  try {
-    await connectToHostinger(client);
-    const remotePath = `${process.env.HOSTINGER_MEDIA_PATH || "/public_html/media"}/${filename}`;
-    await client.remove(remotePath);
-  } finally {
-    client.close();
-  }
+  await uploadToFolder(mediaFolder(), [{ buffer, filename }]);
+  const baseUrl = (process.env.HOSTINGER_MEDIA_URL || "").replace(/\/$/, "");
+  return `${baseUrl}/${filename}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -168,7 +96,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File type not allowed" }, { status: 400 });
     }
 
-    const safeFilename = buildStoredFilename(file.name, file.type);
+    const safeFilename = buildStoredFilename(file.name, ALLOWED_MEDIA_TYPES[file.type]);
     const buffer = Buffer.from(await file.arrayBuffer());
 
     if (file.type === "image/svg+xml") {
@@ -301,7 +229,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     try {
-      await deleteFromHostinger(asset.key);
+      await removeFromFolder(mediaFolder(), [asset.key]);
     } catch {
       // file may already be missing on Hostinger — still clean up DB record
     }

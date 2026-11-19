@@ -7,6 +7,7 @@ import {
   CONTACT_LEAD_SOURCE,
   EMPTY_CONTACT_VALUES,
   HONEYPOT_FIELD,
+  OTHER_SERVICE,
   readContactValues,
   validateContact,
   type ContactFormState,
@@ -126,6 +127,7 @@ export async function POST(req: NextRequest) {
 
   const details: Record<string, string> = {
     Service: values.service,
+    "Other need": values.service === OTHER_SERVICE ? values.serviceOther : "",
     "Company name": values.companyName,
     "Site location": values.siteLocation,
     "Crew size": values.headcount,
