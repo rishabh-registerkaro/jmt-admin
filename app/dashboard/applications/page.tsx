@@ -6,7 +6,7 @@
 // status and deletes.
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, MessageCircle, Phone, Search, Trash2, View } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, MessageCircle, Paperclip, Phone, Search, Trash2, View } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { usePermissions } from "@/components/common/PermissionsProvider";
 import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { JOIN_TRADES } from "@/utils/joinForm";
 import type { Lead } from "@/app/types/lead";
+import { DOCUMENTS_KEY, applicationDocumentUrl, readApplicationDocuments } from "@/app/lib/utils/applicationDocuments";
 
 type Status = Lead["status"];
 const STATUSES: Status[] = ["new", "contacted", "converted", "lost"];
@@ -44,8 +45,12 @@ const F = {
   location: "District or town",
   languages: "Languages",
   start: "Can start",
-  consent: "OK to call or WhatsApp",
+  whyHire: "Why hire",
+  documents: DOCUMENTS_KEY,
 } as const;
+
+const formatSize = (bytes: number) =>
+  bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
 interface PaginationInfo {
   currentPage: number;
@@ -280,20 +285,24 @@ export default function ApplicationsPage() {
 
         {/* Table */}
         <div className="rounded-lg border bg-card p-2 sm:p-4 overflow-x-auto">
-          <Table className="min-w-[900px] table-fixed">
+          {/* Fixed layout: one <col> per column (7), so long values truncate inside
+              their own column instead of spilling into the next one. */}
+          <Table className="min-w-[1040px] table-fixed">
             <colgroup>
-              <col className="w-[22%]" />
               <col className="w-[18%]" />
+              <col className="w-[15%]" />
               <col />
-              <col className="w-[132px]" />
-              <col className="w-[112px]" />
+              <col className="w-[17%]" />
+              <col className="w-[140px]" />
+              <col className="w-[116px]" />
               <col className="w-[96px]" />
             </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-medium text-muted-foreground">Applicant</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Trade / Experience</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Location / Languages / Start</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground whitespace-normal">Location / Languages / Start</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Documents</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Applied</TableHead>
                 <TableHead className="sticky right-0 z-10 bg-card text-xs font-medium text-muted-foreground text-center">
@@ -305,7 +314,7 @@ export default function ApplicationsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={`skeleton-${i}`} className="hover:bg-transparent">
-                    {Array.from({ length: 6 }).map((__, j) => (
+                    {Array.from({ length: 7 }).map((__, j) => (
                       <TableCell key={j}>
                         <div className="h-4 bg-muted rounded animate-pulse w-24 mb-2" />
                         <div className="h-3 bg-muted rounded animate-pulse w-16" />
@@ -319,6 +328,7 @@ export default function ApplicationsPage() {
                   const location = field(app, F.location);
                   const languages = field(app, F.languages);
                   const start = field(app, F.start);
+                  const documents = readApplicationDocuments(app.formData);
                   return (
                     <TableRow
                       key={app._id}
@@ -340,9 +350,11 @@ export default function ApplicationsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="align-top whitespace-normal">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm text-foreground-light">{field(app, F.trade) || "—"}</span>
-                          <span className="text-xs text-muted-foreground">{field(app, F.experience) || "—"}</span>
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="truncate text-sm text-foreground-light" title={field(app, F.trade)}>
+                            {field(app, F.trade) || "—"}
+                          </span>
+                          <span className="truncate text-xs text-muted-foreground">{field(app, F.experience) || "—"}</span>
                         </div>
                       </TableCell>
                       <TableCell className="align-top whitespace-normal">
@@ -350,10 +362,31 @@ export default function ApplicationsPage() {
                           <span className="text-sm text-foreground-light truncate" title={location}>
                             {location || "—"}
                           </span>
-                          <span className="truncate">
+                          <span className="truncate" title={[languages, start && `Can start: ${start}`].filter(Boolean).join(" · ")}>
                             {[languages, start && `Can start: ${start}`].filter(Boolean).join(" · ") || "—"}
                           </span>
                         </div>
+                      </TableCell>
+                      <TableCell className="align-top whitespace-normal" onClick={(e) => e.stopPropagation()}>
+                        {documents.length > 0 ? (
+                          <div className="flex min-w-0 flex-col gap-1">
+                            {documents.map((doc) => (
+                              <a
+                                key={doc.key}
+                                href={applicationDocumentUrl(app._id, doc.key)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`${doc.name} (${formatSize(doc.bytes)})`}
+                                className="inline-flex min-w-0 items-center gap-1.5 text-sm text-foreground-light hover:text-brand-link hover:underline"
+                              >
+                                <Paperclip className="h-3.5 w-3.5 flex-none text-muted-foreground" aria-hidden="true" />
+                                <span className="truncate">{doc.name}</span>
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No documents uploaded</span>
+                        )}
                       </TableCell>
                       <TableCell className="align-top" onClick={(e) => e.stopPropagation()}>
                         {renderStatus(app)}
@@ -400,7 +433,7 @@ export default function ApplicationsPage() {
                 })
               ) : (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     {filtersActive ? "No applications match your filters" : "No applications yet"}
                   </TableCell>
                 </TableRow>
@@ -480,11 +513,10 @@ export default function ApplicationsPage() {
                       ["District or town", field(viewing, F.location)],
                       ["Languages", field(viewing, F.languages)],
                       ["Can start", field(viewing, F.start)],
-                      ["OK to call or WhatsApp", field(viewing, F.consent) || "No"],
-                      // Any other answers a future version of the form adds
-                      ...Object.entries(viewing.formData ?? {}).filter(
-                        ([k]) => !(Object.values(F) as string[]).includes(k),
-                      ),
+                      // Any other answers (older applications' "OK to call or WhatsApp", or a future field)
+                      ...Object.entries(viewing.formData ?? {})
+                        .filter(([k]) => !(Object.values(F) as string[]).includes(k))
+                        .map(([k, v]) => [k, String(v ?? "")]),
                     ].map(([label, value]) => (
                       <div key={label} className="flex justify-between gap-4 py-3">
                         <dt className="text-sm text-muted-foreground">{label}</dt>
@@ -492,6 +524,39 @@ export default function ApplicationsPage() {
                       </div>
                     ))}
                   </dl>
+
+                  <div>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Why should we hire you?
+                    </p>
+                    <p className="whitespace-pre-line break-words text-sm text-foreground">
+                      {field(viewing, F.whyHire) || "—"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Documents</p>
+                    {readApplicationDocuments(viewing.formData).length > 0 ? (
+                      <ul className="space-y-2">
+                        {readApplicationDocuments(viewing.formData).map((doc) => (
+                          <li key={doc.key}>
+                            <a
+                              href={applicationDocumentUrl(viewing._id, doc.key)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                            >
+                              <FileText className="h-4 w-4 flex-none text-muted-foreground" aria-hidden="true" />
+                              <span className="min-w-0 flex-1 truncate font-medium text-foreground">{doc.name}</span>
+                              <span className="flex-none text-xs text-muted-foreground">{formatSize(doc.bytes)}</span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No documents uploaded.</p>
+                    )}
+                  </div>
 
                   {canManage && (
                     <div className="flex justify-end">

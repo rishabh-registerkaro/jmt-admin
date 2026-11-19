@@ -14,11 +14,15 @@ export { HONEYPOT_FIELD, MAX_HEADCOUNT };
 export const CONTACT_LEAD_SOURCE = "Contact page — Send an enquiry";
 
 /** "What do you need?" choices. Stored in English whatever the page language. */
-export const CONTACT_SERVICES = ["Site labour supply", "Supervision and compliance", "Skilled trade crews"] as const;
+export const CONTACT_SERVICES = ["Site labour supply", "Supervision and compliance", "Skilled trade crews", "Others"] as const;
 export type ContactService = (typeof CONTACT_SERVICES)[number];
+
+/** The choice that asks the visitor to describe their need in `serviceOther`. */
+export const OTHER_SERVICE: ContactService = "Others";
 
 export const CONTACT_FIELDS = [
   "service",
+  "serviceOther",
   "name",
   "companyName",
   "phone",
@@ -39,6 +43,7 @@ export interface ContactFormState {
 
 const LIMITS: Record<ContactField, number> = {
   service: 60,
+  serviceOther: 150,
   name: 100,
   companyName: 150,
   phone: 20,
@@ -50,6 +55,7 @@ const LIMITS: Record<ContactField, number> = {
 
 export const EMPTY_CONTACT_VALUES: ContactFormValues = {
   service: CONTACT_SERVICES[0],
+  serviceOther: "",
   name: "",
   companyName: "",
   phone: "",
@@ -87,6 +93,8 @@ export function validateContact(values: ContactFormValues): Partial<Record<Conta
 
   if (!(CONTACT_SERVICES as readonly string[]).includes(values.service)) {
     errors.service = "Choose what you need.";
+  } else if (values.service === OTHER_SERVICE && values.serviceOther.length < 2) {
+    errors.serviceOther = "Tell us what you need.";
   }
 
   if (values.name.length < 2) {

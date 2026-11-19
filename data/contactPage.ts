@@ -57,6 +57,7 @@ export const CONTACT_PAGE = {
     requiredNote: "All fields marked * are required.",
     serviceLabel: "What do you need?",
     labels: {
+      serviceOther: "Tell us what you need",
       name: "Your name",
       companyName: "Company",
       phone: "Phone / WhatsApp",
@@ -66,6 +67,7 @@ export const CONTACT_PAGE = {
       note: "Anything else? (optional)",
     },
     placeholders: {
+      serviceOther: "Tell us what you need, e.g. housekeeping staff",
       name: "Full name",
       companyName: "Company or contractor name",
       phone: "+91",
@@ -78,6 +80,7 @@ export const CONTACT_PAGE = {
       "Site labour supply": "Site labour supply",
       "Supervision and compliance": "Supervision and compliance",
       "Skilled trade crews": "Skilled trade crews",
+      Others: "Others",
     } satisfies Record<ContactService, string>,
     submit: "Send enquiry",
     submitting: "Sending…",

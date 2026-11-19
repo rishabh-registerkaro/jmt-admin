@@ -127,6 +127,8 @@ To see the public homepage too, run [`jmt-frontend`](../jmt-frontend) on port 30
 | `ADMIN_NOTIFY_EMAIL`, `NOTIFY_CC_EMAIL` | for lead alerts | Where new-lead emails go. The CC is optional. |
 | `HOSTINGER_FTP_HOST`, `HOSTINGER_FTP_USER`, `HOSTINGER_FTP_PASS`, `HOSTINGER_FTP_PORT` | for uploads | FTP account from Hostinger → Files → FTP Accounts. The host has no `ftp://` prefix. |
 | `HOSTINGER_MEDIA_PATH`, `HOSTINGER_MEDIA_URL` | for uploads | Server folder for uploaded files, and the public URL of that folder. |
+| `HOSTINGER_APPLICATIONS_PATH` | optional | Private folder (outside `public_html`, default `/applications`) for CVs sent with Join our crew applications. |
+| `HOSTINGER_FTP_SECURE`, `HOSTINGER_FTP_TLS_HOSTNAME`, `HOSTINGER_FTP_TLS_INSECURE` | optional | FTPS settings. An IP host is verified against `hstgr.io` by default; `TLS_INSECURE=true` disables verification (see `.env.example`). |
 
 Without the optional groups the app still runs. Only the matching feature fails: password reset and lead emails without SMTP, image uploads without FTP.
 

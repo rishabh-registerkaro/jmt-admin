@@ -5,7 +5,7 @@ import { intParam } from "@/app/lib/utils/pagination";
 import { withMongoId } from "@/app/lib/utils/serialize";
 import { requirePermission } from "@/app/lib/utils/authorization";
 import { PERMISSIONS } from "@/app/lib/constants/permissions";
-import { JOIN_LEAD_SOURCE } from "@/utils/joinForm";
+import { JOIN_LEAD_SOURCE, JOIN_OTHER } from "@/utils/joinForm";
 
 /**
  * GET /api/applications — Join Our Crew worker applications (applications.view).
@@ -31,7 +31,13 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.LeadWhereInput = { leadSource: JOIN_LEAD_SOURCE };
     if (status && !noMatch) where.status = status as LeadStatus;
-    if (trade) where.formData = { path: "$.Trade", equals: trade };
+    // "Other" is saved with what the applicant typed ("Other: Painter").
+    if (trade) {
+      where.formData =
+        trade === JOIN_OTHER
+          ? { path: "$.Trade", string_starts_with: JOIN_OTHER }
+          : { path: "$.Trade", equals: trade };
+    }
     if (search) where.OR = [{ name: { contains: search } }, { phoneNo: { contains: search } }];
 
     const [total, applications, statusGroups] = noMatch
