@@ -4,6 +4,7 @@ import prisma from "@/app/lib/config/db";
 import { errorFields } from "@/app/lib/utils/errorFields";
 import { resolveUserAccess, userAccessSelect } from "@/app/lib/server/rbac";
 import type { Permission } from "@/app/lib/constants/permissions";
+import { tokenMatchesPassword } from "@/app/lib/utils/session";
 
 export interface CurrentUser {
   id: string;
@@ -32,16 +33,19 @@ export const getCurrentUser = async (req: NextRequest): Promise<CurrentUser | Ne
       id: string;
       username: string;
       role: string;
+      pwv?: string;
     };
 
     // Verify user exists in database — role and permissions always come from
     // the database, never from the token, so role changes apply immediately.
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: userAccessSelect,
+      // password is read only to check the token's pwv; it never leaves this function.
+      select: { ...userAccessSelect, password: true },
     });
 
-    if (!user) {
+    // A password change (reset, or set by an admin) ends every older session.
+    if (!user || !tokenMatchesPassword(decoded, user.password)) {
       return NextResponse.json(
         {
           success: false,

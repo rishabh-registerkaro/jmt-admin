@@ -143,9 +143,13 @@ export const CONTACT_PAGE = {
     officeLabel: "Our office",
     region: "West Bengal, India",
     /** Full street address. null → "Office address to add". */
-    address: null as string | null,
+    address: "Flat 6C, 6th Floor, 195 M.C. Garden Road, Ghugudanga, Kolkata, West Bengal 700030" as string | null,
     addressPlaceholder: "Office address to add",
+    /** Exact Google Maps pin (Share → Copy link). Empty → "Get directions" searches the address. */
+    mapsUrl: "",
     pinTitle: "JMT office",
+    /** Short address on the map pin label (the full one won't fit). */
+    pinAddress: "Ghugudanga, Kolkata 700030",
     pinPlaceholder: "Address to add",
     directions: "Get directions",
     whatsapp: "Prefer WhatsApp? Message us anytime",
@@ -153,9 +157,7 @@ export const CONTACT_PAGE = {
     toAdd: "To add",
     details: [
       { label: "Registered name", value: "Joy Maa Tara Bama Kripa Pvt. Ltd." as string | null },
-      { label: "CIN", value: null as string | null },
-      { label: "GSTIN", value: null as string | null },
-      { label: "CLRA licence", value: null as string | null },
+      { label: "CIN", value: "U78200WB2026PTC289774" as string | null },
     ],
   },
 
@@ -167,9 +169,10 @@ export const CONTACT_PAGE = {
 
 export type ContactPageContent = typeof CONTACT_PAGE;
 
-/** Google Maps search for the office (or the region until the address is set). */
+/** The office's exact Maps pin, else a Google Maps search for the address (or the region). */
 export function officeMapsUrl(page: Pick<ContactPageContent, "office" | "card">): string {
-  const { address, region } = page.office;
-  const query = address ? `${page.card.company}, ${address}` : `${page.card.company}, ${region}`;
+  const { address, region, mapsUrl } = page.office;
+  if (mapsUrl) return mapsUrl;
+  const query = address || `${page.card.company}, ${region}`;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }

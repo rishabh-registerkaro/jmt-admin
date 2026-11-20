@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/config/db";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { getCurrentUser } from "@/app/lib/utils/getCurrentUser";
+import { issueSession, tokenSessionStart } from "@/app/lib/utils/session";
 
 export async function PUT(req) {
     try {
@@ -44,7 +46,7 @@ export async function PUT(req) {
         // Fetch WITH password (needed for comparison); never returned to client
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, password: true },
+            select: { id: true, username: true, role: true, password: true },
         });
         if (!user) {
             return NextResponse.json({
@@ -79,10 +81,16 @@ export async function PUT(req) {
             data: { password: hashedNewPassword },
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             message: "Password changed successfully.",
         }, { status: 200 });
+        // The new hash ends every older session (session.ts → passwordVersion);
+        // keep this one signed in, with the same session start (12-hour cap).
+        const current = jwt.decode(req.cookies.get("authToken")?.value ?? "");
+        const sessionStart = current && typeof current === "object" ? tokenSessionStart(current) : Date.now();
+        issueSession(response, { ...user, password: hashedNewPassword }, sessionStart);
+        return response;
 
     } catch (error) {
         console.error("Change password error:", error);

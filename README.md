@@ -28,8 +28,9 @@ After every content save, `app/lib/utils/revalidateFrontend.ts` calls `POST /api
 | `/about` | **About Us** | `jmt_site_pages` (key `about`) | `/api/site-pages/about` / `/api/site-pages/client/about` |
 | `/contact` | **Contact** | `jmt_site_pages` (key `contact`) | `/api/site-pages/contact` / `/api/site-pages/client/contact` |
 | `/join-our-crew` | **Join Our Crew** | `jmt_site_pages` (key `join-our-crew`) | `/api/site-pages/join-our-crew` / `/api/site-pages/client/join-our-crew` |
+| `/thank-you` (after each form) | **Thank You** | `jmt_site_pages` (key `thank-you`) | `/api/site-pages/thank-you` / `/api/site-pages/client/thank-you` |
 
-About Us, Contact and Join Our Crew are top-level sidebar items, next to Menus.
+About Us, Contact, Join Our Crew and Thank You are top-level sidebar items, next to Menus. The Thank You page also shows each form's own success title and message (Homepage → Contact, Contact, Join Our Crew).
 
 > **Changes to the dashboard URLs**
 > - **Services** (`/dashboard/services`) now lists the Joy Maa Tara service pages: create a page, import a built-in one, edit, delete. "Add New Service" opens the same list with the new-page form open. The old `/dashboard/jmt-services` pages and the main website service editor (`/dashboard/services/update-service`) were removed. The main website service API routes are unchanged.
@@ -56,7 +57,7 @@ Leads from every Joy Maa Tara form (homepage, service pages, Contact, Join our c
 
 ### How the site page editor works
 
-About, Contact and Join our crew share one generic editor (`components/site-page-editor/ContentEditor.tsx`). It has no hand-written form. Instead, it builds the form from each page's **bundled copy** (`data/about.ts`, `data/contactPage.ts`, `data/joinPage.ts`, which are copies of jmt-frontend's `data/` files):
+About, Contact, Join our crew and Thank you share one generic editor (`components/site-page-editor/ContentEditor.tsx`). It has no hand-written form. Instead, it builds the form from each page's **bundled copy** (`data/about.ts`, `data/contactPage.ts`, `data/joinPage.ts`, `data/thankYouPage.ts`, which are copies of jmt-frontend's `data/` files):
 
 - one card per section, with fields for text, the shorter phone versions, orange-accent headings, images (Media Library or upload, with the size read automatically), icon dropdowns, switches and lists you can add to, remove from and reorder;
 - **Reset section to default** per card, and **Reset page to default**, which deletes the saved document so the page goes back to the bundled copy.
@@ -191,6 +192,7 @@ CONTENT
 ├─ About Us                    /dashboard/site-pages/about              content.edit
 ├─ Contact                     /dashboard/site-pages/contact            content.edit
 ├─ Join Our Crew               /dashboard/site-pages/join-our-crew      content.edit
+├─ Thank You                   /dashboard/site-pages/thank-you          content.edit
 └─ Terms & Policy              /dashboard/terms-policy                  content.edit
 LEADS
 ├─ Leads                       /dashboard/leads                         leads.view
@@ -315,7 +317,7 @@ These files have **identical copies** in both repos (marked `SHARED FILE`). When
 - `utils/leadForm.ts` (also defines the lead form's hidden page and services fields), `utils/contactForm.ts`, `utils/joinForm.ts`
 - `lib/service/normalizeServicePage.ts`, `data/services/*`, `types/service.ts`
 - `lib/sitePages/mergeContent.ts`
-- `data/about.ts`, `data/contactPage.ts`, `data/joinPage.ts`, `types/about.ts`, which come **from** jmt-frontend (edit them there first)
+- `data/about.ts`, `data/contactPage.ts`, `data/joinPage.ts`, `data/thankYouPage.ts`, `types/about.ts`, which come **from** jmt-frontend (edit them there first)
 - `TOKEN_PATTERN` in `app/lib/server/previewStore.ts` must match `PREVIEW_TOKEN_PATTERN` in jmt-frontend's `lib/preview.ts`
 - `public/homepage/*`, plus the photos in `public/about/` and `public/join/` and `public/contact/chip-*.svg`
 

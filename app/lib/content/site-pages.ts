@@ -13,6 +13,7 @@
 import { ABOUT_PAGE } from "@/data/about";
 import { CONTACT_PAGE } from "@/data/contactPage";
 import { JOIN_PAGE } from "@/data/joinPage";
+import { THANK_YOU_PAGE } from "@/data/thankYouPage";
 import { prepareDefaults, type PlainObject } from "@/lib/sitePages/mergeContent";
 
 export interface SitePageSection {
@@ -96,6 +97,8 @@ export const SITE_PAGES = {
     },
     hints: {
       "office.address": "Full street address. Leave empty to show the orange “to add” placeholder.",
+      "office.mapsUrl": "Google Maps link to the office pin (Share → Copy link). Empty → “Get directions” searches the address.",
+      "office.pinAddress": "Short address on the map pin label. Keep it to one short line.",
       "office.details[].value": "Leave empty to show “To add”.",
       "form.services": "Labels for the “What do you need?” choices. The choices themselves are fixed.",
     },
@@ -125,6 +128,36 @@ export const SITE_PAGES = {
     locked: ["hero.alsoIn", "apply.introShort", "form.trades", "form.experience", "form.start", "form.languages[].value"],
     hints: {
       "form.languages": "How each language is written on the form. The choices themselves are fixed.",
+    },
+  },
+
+  // One page (/thank-you), three versions: after the Request workers form,
+  // the Contact page enquiry and the Join our crew application.
+  "thank-you": {
+    title: "Thank you",
+    description: "Page shown after any form is sent: greeting, next steps and quick contact",
+    path: "/thank-you",
+    defaults: prepareDefaults(THANK_YOU_PAGE) as unknown as PlainObject,
+    sections: {
+      meta: SEO,
+      hero: {
+        title: "Heading",
+        hint: "“Thank you, <first name>.” and the orange line under it. The small label and the message below come from each form’s success title and message.",
+      },
+      summary: { title: "What you sent us", hint: "Labels on the chips that repeat what the visitor sent" },
+      progress: {
+        title: "What happens next",
+        hint: "Heading and the first, already-done step. The next steps come from Contact → What happens next (contractors) and Join Our Crew → How hiring works (workers).",
+      },
+      ready: { title: "Keep these handy", hint: "Checklist for contractors. Workers see “Keep ready” from Join Our Crew." },
+      actions: { title: "Talk to us now", hint: "Call, WhatsApp and Save our number cards. Phone and hours come from Homepage → Contact details." },
+      explore: { title: "While you wait", hint: "Closing card: links for contractors, links for workers, and the homepage button" },
+    },
+    hints: {
+      "actions.whatsappDraft": "Message typed in WhatsApp for contractors. Workers get the Join our crew message.",
+      "actions.whatsappText": "Contractors only. Workers see the Join our crew form’s WhatsApp text.",
+      "explore.links[].href": "A page path such as /about or /#services.",
+      "explore.workerLinks[].href": "A page path such as /about or /join-our-crew#how-hiring-works.",
     },
   },
 } satisfies Record<string, SitePageDefinition>;

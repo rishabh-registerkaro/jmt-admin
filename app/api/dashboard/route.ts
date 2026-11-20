@@ -23,6 +23,7 @@ const SITE_PAGES = [
   { key: "about", title: "About us" },
   { key: "contact", title: "Contact" },
   { key: "join-our-crew", title: "Join our crew" },
+  { key: "thank-you", title: "Thank you" },
 ] as const;
 
 type StatusCounts = Record<"new" | "contacted" | "converted" | "lost", number>;

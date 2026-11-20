@@ -76,6 +76,22 @@ function withMenuParts(target: HomePageContent, source: HomePageContent, parts: 
   return { ...target, site };
 }
 
+const CONTACT_FIELDS = ["phone", "whatsapp", "email", "hours"] as const;
+
+/**
+ * The Footer Menu's Contact column edits these Homepage → Contact details
+ * fields too. Take only the ones it changed from what it loaded (`base`), so
+ * saving the footer can't revert a newer edit made in the Homepage editor.
+ */
+function withFooterContact(target: HomePageContent, submitted: HomePageContent, base: unknown): HomePageContent {
+  const loaded = base && typeof base === "object" ? (base as Record<string, unknown>) : null;
+  const site = { ...target.site };
+  for (const f of CONTACT_FIELDS) {
+    if (!loaded || submitted.site[f] !== loaded[f]) site[f] = submitted.site[f];
+  }
+  return { ...target, site };
+}
+
 function metaText(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim().slice(0, max);
@@ -138,7 +154,9 @@ export async function POST(req: NextRequest) {
           {
             metaTitle: existing?.metaTitle ?? null,
             metaDescription: existing?.metaDescription ?? null,
-            content: withMenuParts(saved, submitted, [part]) as unknown as Prisma.InputJsonValue,
+            content: (part === "footer"
+              ? withFooterContact(withMenuParts(saved, submitted, [part]), submitted, body.contactBase)
+              : withMenuParts(saved, submitted, [part])) as unknown as Prisma.InputJsonValue,
           }
         : // Homepage editor: everything except the navbar and footer, which keep their saved values.
           {

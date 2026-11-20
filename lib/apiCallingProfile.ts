@@ -101,6 +101,8 @@ export interface GetUserPublishedContentPayload {
 export interface UpdateUserProfilePayload {
     email: string;
     username: string;
+    /** Required by the API when the email changes */
+    currentPassword?: string;
 }
 
 export interface UpdateUserProfileResponse {

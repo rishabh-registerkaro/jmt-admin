@@ -274,8 +274,7 @@ export const ABOUT_PAGE: AboutPageContent = {
     base: {
       eyebrow: "OUR BASE",
       title: "West Bengal, India",
-      // Placeholder text from the Figma frame — replace with the head office address.
-      address: "Head office address to add",
+      address: "Ghugudanga / Dum Dum, Kolkata, West Bengal",
       hours: "Mon to Sat, 8 am to 8 pm",
     },
     siteEyebrow: "SITE TYPE",

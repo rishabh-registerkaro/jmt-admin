@@ -9,7 +9,7 @@
 // or MySQL is unreachable. The bundled photos (FALLBACK_IMAGES) are also used
 // whenever an image field in the CMS is left empty.
 //
-// Square-bracketed values ("[5]", "[info@domain]") are placeholders carried
+// Square-bracketed values (such as "[5]") are placeholders carried
 // over from the design for the client to confirm — keep the brackets until a
 // real value is agreed.
 
@@ -109,12 +109,12 @@ export const SERVICE_IMAGES: HomeImage[] = [
 // ── Contact & chrome ─────────────────────────────────────────────────────────
 
 export const FALLBACK_CONTACT: ContactInfo = {
-  phoneDisplay: "+91 XXXXX XXXXX",
-  phoneHref: null,
-  whatsappDisplay: "WhatsApp",
-  whatsappHref: null,
-  emailDisplay: "[info@domain]",
-  emailHref: null,
+  phoneDisplay: "+91 91237 71914",
+  phoneHref: "tel:+919123771914",
+  whatsappDisplay: "WhatsApp: +91 73840 83609",
+  whatsappHref: "https://wa.me/917384083609",
+  emailDisplay: "info@joymaatarabamakripa.com",
+  emailHref: "mailto:info@joymaatarabamakripa.com",
   hours: "Mon to Sat, 8 am to 8 pm",
   replyTime: "Within 24 hours",
 };

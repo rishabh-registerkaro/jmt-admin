@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/app/lib/config/db";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { issueSession, tokenSessionStart } from "@/app/lib/utils/session";
 
 import { requirePermission } from "@/app/lib/utils/authorization";
 import { PERMISSIONS } from "@/app/lib/constants/permissions";
@@ -188,10 +190,19 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
                 data: { password: hashedNewPassword },
             });
 
-            return NextResponse.json({
+            const response = NextResponse.json({
                 success: true,
                 message: "Password updated successfully"
             }, { status: 200 })
+            // The new hash ends every older session (session.ts → passwordVersion).
+            // Keep the user who changed their own password signed in here, with
+            // the same session start so the 12-hour cap still applies.
+            if (isChangingOwnData) {
+                const current = jwt.decode(req.cookies.get("authToken")?.value ?? "");
+                const sessionStart = current && typeof current === "object" ? tokenSessionStart(current) : Date.now();
+                issueSession(response, { ...targetUser, password: hashedNewPassword }, sessionStart);
+            }
+            return response
         }
         // ========== ROLE UPDATE LOGIC ==========
         else {

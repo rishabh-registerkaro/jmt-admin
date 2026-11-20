@@ -50,7 +50,7 @@ const PARTS: Record<Part, { title: string; icon: ElementType; description: strin
     sections: [
       { key: "brand", title: "Brand", hint: "Footer logo and description", icon: ImageIcon },
       { key: "columns", title: "Link columns", hint: "Columns of links, in footer order", icon: Columns3 },
-      { key: "contact", title: "Contact column", hint: "Title and WhatsApp text of the last column", icon: Phone },
+      { key: "contact", title: "Contact column", hint: "Phone, WhatsApp, email and hours in the last column", icon: Phone },
       { key: "copyright", title: "Copyright line", hint: "Optional line at the very bottom", icon: Copyright },
     ],
   },
@@ -80,6 +80,13 @@ interface EditorState {
 }
 
 const snapshot = (state: EditorState) => JSON.stringify(state);
+
+/** Phone/WhatsApp/email/hours from a saved snapshot, or null before the first load. */
+function contactBase(saved: string) {
+  if (!saved) return null;
+  const { phone, whatsapp, email, hours } = (JSON.parse(saved) as EditorState).content.site;
+  return { phone, whatsapp, email, hours };
+}
 
 const toEditorState = (doc: Record<string, unknown> | null | undefined): EditorState => ({
   metaTitle: typeof doc?.metaTitle === "string" ? doc.metaTitle : HOME_META_DEFAULTS.metaTitle,
@@ -203,7 +210,9 @@ function SiteMenuEditor({ part }: { part: Part }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ ...state, part }),
+        // contactBase: the contact details as loaded, so the server saves only the
+        // ones changed here (they're also edited in Homepage → Contact details).
+        body: JSON.stringify({ ...state, part, contactBase: contactBase(saved) }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
@@ -300,17 +309,36 @@ function SiteMenuEditor({ part }: { part: Part }) {
               onChange={(footerContactTitle) => patchLabels({ footerContactTitle })}
             />
             <TextField
+              label="Phone number"
+              placeholder="+91 98765 43210"
+              value={site.phone}
+              onChange={(phone) => patchSite({ phone })}
+            />
+            <TextField
+              label="WhatsApp number"
+              placeholder="+91 98765 43210"
+              value={site.whatsapp}
+              onChange={(whatsapp) => patchSite({ whatsapp })}
+            />
+            <TextField
               label="WhatsApp link text"
               value={site.labels.whatsappDisplay}
               hint="Leave empty to show the WhatsApp number instead."
               onChange={(whatsappDisplay) => patchLabels({ whatsappDisplay })}
             />
+            <TextField
+              label="Email"
+              placeholder="info@example.com"
+              value={site.email}
+              onChange={(email) => patchSite({ email })}
+            />
+            <TextField label="Working hours" value={site.hours} onChange={(hours) => patchSite({ hours })} />
             <p className="text-xs text-muted-foreground">
-              The phone, WhatsApp number, email and hours in this column are edited on{" "}
+              These are the same contact details as{" "}
               <Link href="/dashboard/homepage" className="font-medium text-brand-link underline-offset-4 hover:underline">
                 Homepage → Contact details
               </Link>
-              .
+              ; a change here shows everywhere on the website.
             </p>
           </>
         );
