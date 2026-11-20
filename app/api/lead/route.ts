@@ -9,7 +9,6 @@ import { requirePermission } from "@/app/lib/utils/authorization";
 import { PERMISSIONS } from "@/app/lib/constants/permissions";
 import { JOIN_LEAD_SOURCE } from "@/utils/joinForm";
 import { isJoinSource } from "@/app/lib/utils/leadSource";
-import { identityOverLimit, ipOverLimit, requestIp } from "@/app/lib/utils/leadThrottle";
 
 export async function OPTIONS(req: NextRequest) {
   return NextResponse.json({}, { headers: getCorsHeaders(req) });
@@ -53,6 +52,11 @@ function sanitizeFormData(raw: unknown): Record<string, string> | undefined {
 
 export async function POST(req: NextRequest) {
   const corsHeaders = getCorsHeaders(req);
+  // Dashboard "Add Lead" only. The website forms post to /api/lead/homepage,
+  // /contact and /join (shared secret); left open, this route let anyone
+  // create leads and trigger notification emails.
+  const admin = await requirePermission(req, PERMISSIONS.LEADS_MANAGE);
+  if (admin instanceof NextResponse) return admin;
   try {
     const body = await req.json();
 
@@ -73,25 +77,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Dashboard "Add Lead" (a signed-in user who can manage leads) is exempt from the spam limits.
-    const admin = req.cookies.has("authToken") ? await requirePermission(req, PERMISSIONS.LEADS_MANAGE) : null;
-    const isAdmin = admin !== null && !(admin instanceof NextResponse);
-
-    if (!isAdmin) {
-      const email = String(body.email).trim().toLowerCase();
-      const phoneNo = String(body.phoneNo).trim();
-      if (ipOverLimit(requestIp(req)) || (await identityOverLimit(email, phoneNo))) {
-        return NextResponse.json(
-          { success: false, message: "Too many submissions. Please try again in a few minutes." },
-          { status: 429, headers: { ...corsHeaders, "Retry-After": "600" } }
-        );
-      }
-    }
-
     // Website visitors always create "new" leads; the dashboard's "Add Lead"
     // form may pick a status, which is honoured only for a logged-in admin.
     let status: LeadStatus = "new";
-    if (isAdmin && typeof body.status === "string" && (Object.values(LeadStatus) as string[]).includes(body.status)) {
+    if (typeof body.status === "string" && (Object.values(LeadStatus) as string[]).includes(body.status)) {
       status = body.status as LeadStatus;
     }
 

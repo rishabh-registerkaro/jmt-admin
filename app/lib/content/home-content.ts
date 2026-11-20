@@ -400,9 +400,9 @@ export function defaultHomeContent(): HomePageContent {
         ...FALLBACK_CHROME.labels,
         whatsappDisplay: FALLBACK_CONTACT.whatsappDisplay,
       },
-      phone: "",
-      whatsapp: "",
-      email: "",
+      phone: "+91 91237 71914",
+      whatsapp: "+91 73840 83609",
+      email: FALLBACK_CONTACT.emailDisplay,
       hours: FALLBACK_CONTACT.hours,
       replyTime: FALLBACK_CONTACT.replyTime,
       nav: FALLBACK_CHROME.nav.map((n) => ({

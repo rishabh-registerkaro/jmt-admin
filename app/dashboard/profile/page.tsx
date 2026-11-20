@@ -24,6 +24,7 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     email: "",
     username: "",
+    currentPassword: "",
   });
 
   const fetchUserProfile = async () => {
@@ -36,6 +37,7 @@ export default function Profile() {
         setFormData({
           email: response.user.email,
           username: response.user.username,
+          currentPassword: "",
         });
       } else {
         toast.error(response.message || "Failed to fetch profile", {
@@ -72,6 +74,7 @@ export default function Profile() {
       setFormData({
         email: userData.email,
         username: userData.username,
+        currentPassword: "",
       });
     }
     setIsEditing(false);
@@ -97,11 +100,11 @@ export default function Profile() {
     });
 
     try {
-      // TODO: Add PUT API call here when ready
-      // const response = await updateUserProfile(formData);
       const response = await updateUserProfile({
         email: formData.email,
         username: formData.username,
+        // Required by the API only when the email changes
+        ...(emailChanged(formData.email, userData) && { currentPassword: formData.currentPassword }),
       })
 
       toast.dismiss(loadingToastId);
@@ -204,11 +207,16 @@ export default function Profile() {
   );
 }
 
+// True when the edited email differs from the saved one (same comparison as the API)
+function emailChanged(email: string, userData: UserProfile | null) {
+  return !!userData && email.toLowerCase().trim() !== userData.email.toLowerCase();
+}
+
 // Profile Tab Component
 interface ProfileTabProps {
   userData: UserProfile | null;
-  formData: { email: string; username: string };
-  setFormData: React.Dispatch<React.SetStateAction<{ email: string; username: string }>>;
+  formData: { email: string; username: string; currentPassword: string };
+  setFormData: React.Dispatch<React.SetStateAction<{ email: string; username: string; currentPassword: string }>>;
   isEditing: boolean;
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
   updating: boolean;
@@ -228,7 +236,8 @@ function ProfileTab({
   handleCancel,
   handleSubmit,
 }: ProfileTabProps) {
-
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const needsPassword = isEditing && emailChanged(formData.email, userData);
 
   return (
     <>
@@ -271,6 +280,38 @@ function ProfileTab({
                   }`}
               />
             </div>
+
+            {needsPassword && (
+              <div className="space-y-2 md:col-span-2">
+                <label htmlFor="profileCurrentPassword" className="block text-sm font-medium text-foreground-light">
+                  Current Password <span className="text-destructive">*</span>
+                </label>
+                <div className="relative">
+                  <Input
+                    id="profileCurrentPassword"
+                    name="currentPassword"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={formData.currentPassword}
+                    onChange={handleChange}
+                    placeholder="Enter current password to change your email"
+                    autoComplete="current-password"
+                    required
+                    className="w-full rounded-lg border pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    {showCurrentPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Row 2: Role and Account Created */}
             <div className="space-y-2">
@@ -327,7 +368,7 @@ function ProfileTab({
               </Button>
               <Button
                 type="submit"
-                disabled={updating || !formData.email || !formData.username}
+                disabled={updating || !formData.email || !formData.username || (needsPassword && !formData.currentPassword)}
                 className="disabled:cursor-not-allowed"
               >
                 {updating ? "Updating..." : "Save Changes"}

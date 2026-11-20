@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { intParam } from "@/app/lib/utils/pagination";
 import prisma from "@/app/lib/config/db"
-import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
 import { errorFields } from "@/app/lib/utils/errorFields"
 import { resolveUserAccess } from "@/app/lib/server/rbac"
 import { getCurrentUser } from "@/app/lib/utils/getCurrentUser"
@@ -9,18 +9,9 @@ import { PERMISSIONS } from "@/app/lib/constants/permissions"
 
 export async function GET(req: NextRequest) {
     try {
-        const token = req.cookies.get("authToken")?.value
-        if (!token) {
-            return NextResponse.json({
-                success: false,
-                message: "Unauthorized. Please login to perform changes"
-            }, { status: 401 })
-        }
-        const decoded = jwt.verify(token as string, process.env.JWT_SECRET!) as {
-            id: string;
-            username: string;
-            role: string;
-        }
+        // Shared check: valid token, user exists, password not changed since sign-in.
+        const decoded = await getCurrentUser(req)
+        if (decoded instanceof NextResponse) return decoded
 
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
@@ -49,12 +40,6 @@ export async function GET(req: NextRequest) {
             }
         })
     } catch (error) {
-        if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === 'TokenExpiredError') {
-            return NextResponse.json(
-                { success: false, message: "Invalid or expired token. Please login again." },
-                { status: 401 }
-            );
-        }
         console.error("Get profile error:", error);
         return NextResponse.json(
             { success: false, message: "Failed to fetch profile data." },
@@ -66,48 +51,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
 
-        // 1. Verify authentication
-        const token = req.cookies.get("authToken")?.value;
-        if (!token) {
-            return NextResponse.json({
-                success: false,
-                message: "Unauthorized. Please login to perform changes"
-            }, { status: 401 });
-        }
+        // Verify authentication (valid token, user exists, password unchanged).
+        const access = await getCurrentUser(req);
+        if (access instanceof NextResponse) return access;
 
-        let decoded: { id: string; username: string; role: string };
-        try {
-            decoded = jwt.verify(token as string, process.env.JWT_SECRET!) as {
-                id: string;
-                username: string;
-                role: string;
-            };
-        } catch (error) {
-            if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === 'TokenExpiredError') {
-                return NextResponse.json(
-                    { success: false, message: "Invalid or expired token. Please login again." },
-                    { status: 401 }
-                );
-            }
-            throw error;
-        }
-
-        // Verify user exists
-        const currentUser = await prisma.user.findUnique({
-            where: { id: decoded.id },
-            select: { id: true },
-        });
-        if (!currentUser) {
-            return NextResponse.json({
-                success: false,
-                message: "User not found"
-            }, { status: 404 });
-        }
         const body = await req.json();
 
         // Only your own content, unless you can manage users.
-        const access = await getCurrentUser(req);
-        if (access instanceof NextResponse) return access;
         if (body.userId && body.userId !== access.id && !access.permissions.includes(PERMISSIONS.USERS_MANAGE)) {
             return NextResponse.json({ success: false, message: "Access denied." }, { status: 403 });
         }
@@ -220,37 +170,16 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
     try {
-        // Verify authentication
-        const token = req.cookies.get("authToken")?.value;
-        if (!token) {
-            return NextResponse.json({
-                success: false,
-                message: "Unauthorized. Please login to perform changes"
-            }, { status: 401 });
-        }
-
-        let decoded: { id: string; username: string };
-        try {
-            decoded = jwt.verify(token as string, process.env.JWT_SECRET!) as {
-                id: string;
-                username: string;
-            };
-        } catch (error) {
-            if (errorFields(error).name === "JsonWebTokenError" || errorFields(error).name === 'TokenExpiredError') {
-                return NextResponse.json(
-                    { success: false, message: "Invalid or expired token. Please login again." },
-                    { status: 401 }
-                );
-            }
-            throw error;
-        }
+        // Verify authentication (valid token, user exists, password unchanged).
+        const decoded = await getCurrentUser(req);
+        if (decoded instanceof NextResponse) return decoded;
 
         // Parse request body
-        const body = await req.json();
-        const { email, username } = body;
+        const body = await req.json().catch(() => null);
+        const { email, username, currentPassword } = body ?? {};
 
-        // Validate required fields
-        if (!email || !username) {
+        // Validate required fields (strings only — anything else would crash below)
+        if (typeof email !== "string" || typeof username !== "string" || !email.trim() || !username.trim()) {
             return NextResponse.json({
                 success: false,
                 message: "Email and username are required"
@@ -277,7 +206,8 @@ export async function PUT(req: NextRequest) {
         // Get current user
         const currentUser = await prisma.user.findUnique({
             where: { id: decoded.id },
-            select: { id: true, email: true, username: true, createdAt: true, updatedAt: true },
+            // password is read only to confirm an email change; never returned.
+            select: { id: true, email: true, username: true, password: true, createdAt: true, updatedAt: true },
         });
         if (!currentUser) {
             return NextResponse.json({
@@ -287,7 +217,23 @@ export async function PUT(req: NextRequest) {
         }
 
         // Check if email is being changed and validate uniqueness
-        if (email.toLowerCase() !== currentUser.email.toLowerCase()) {
+        if (email.toLowerCase().trim() !== currentUser.email.toLowerCase()) {
+            // The email is where password-reset codes go, so changing it needs
+            // the current password — otherwise a stolen session could take the
+            // account over for good via "Forgot password".
+            if (typeof currentPassword !== "string" || !currentPassword) {
+                return NextResponse.json({
+                    success: false,
+                    message: "Enter your current password to change your email"
+                }, { status: 400 });
+            }
+            if (!(await bcrypt.compare(currentPassword, currentUser.password))) {
+                return NextResponse.json({
+                    success: false,
+                    message: "Current password is incorrect"
+                }, { status: 401 });
+            }
+
             const emailExists = await prisma.user.findFirst({
                 where: {
                     email: email.toLowerCase().trim(),

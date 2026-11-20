@@ -28,7 +28,17 @@ export default function proxy(req: NextRequest) {
       id: string;
       username: string;
       role: string;
+      pwv?: string;
     };
+    // Sessions from before the password-version check (session.ts → pwv) are
+    // rejected by every API; sign them out here instead of showing a broken
+    // dashboard. The cookie is cleared, or /login would bounce back here.
+    if (!decoded.pwv) {
+      const res = NextResponse.redirect(new URL("/login", req.url));
+      res.cookies.delete("authToken");
+      res.cookies.delete("loggedIn");
+      return res;
+    }
 
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-user-id", decoded.id);

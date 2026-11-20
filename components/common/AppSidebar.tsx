@@ -24,6 +24,7 @@ import {
   HardHat,
   ClipboardList,
   ShieldCheck,
+  PartyPopper,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -142,7 +143,7 @@ const navigationItems: NavGroup[] = [
           { title: "Footer Menu", url: "/dashboard/site-menus/footer", icon: ListEnd },
         ],
       },
-      // Joy Maa Tara site pages (jmt-frontend /about, /contact, /join-our-crew),
+      // Joy Maa Tara site pages (jmt-frontend /about, /contact, /join-our-crew, /thank-you/*),
       // all edited by app/dashboard/site-pages/[key]. The older main-website
       // editors at /dashboard/about and /dashboard/contact are no longer linked.
       {
@@ -161,6 +162,12 @@ const navigationItems: NavGroup[] = [
         title: "Join Our Crew",
         url: "/dashboard/site-pages/join-our-crew",
         icon: HardHat,
+        permission: PERMISSIONS.CONTENT_EDIT,
+      },
+      {
+        title: "Thank You",
+        url: "/dashboard/site-pages/thank-you",
+        icon: PartyPopper,
         permission: PERMISSIONS.CONTENT_EDIT,
       },
     ],
