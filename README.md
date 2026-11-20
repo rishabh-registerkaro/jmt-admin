@@ -28,7 +28,7 @@ After every content save, `app/lib/utils/revalidateFrontend.ts` calls `POST /api
 | `/about` | **About Us** | `jmt_site_pages` (key `about`) | `/api/site-pages/about` / `/api/site-pages/client/about` |
 | `/contact` | **Contact** | `jmt_site_pages` (key `contact`) | `/api/site-pages/contact` / `/api/site-pages/client/contact` |
 | `/join-our-crew` | **Join Our Crew** | `jmt_site_pages` (key `join-our-crew`) | `/api/site-pages/join-our-crew` / `/api/site-pages/client/join-our-crew` |
-| `/thank-you/request`, `/thank-you/enquiry`, `/thank-you/application` (after each form) | **Thank You** | `jmt_site_pages` (key `thank-you`) | `/api/site-pages/thank-you` / `/api/site-pages/client/thank-you` |
+| `/thank-you` (after each form) | **Thank You** | `jmt_site_pages` (key `thank-you`) | `/api/site-pages/thank-you` / `/api/site-pages/client/thank-you` |
 
 About Us, Contact, Join Our Crew and Thank You are top-level sidebar items, next to Menus. The Thank You page also shows each form's own success title and message (Homepage → Contact, Contact, Join Our Crew).
 

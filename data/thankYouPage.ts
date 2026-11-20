@@ -1,6 +1,6 @@
-// Thank-you page copy — /thank-you/request (Request workers form),
-// /thank-you/enquiry (Contact page enquiry) and /thank-you/application
-// (Join our crew). Visitors land here after a form is sent (lib/thankYou.ts).
+// Thank-you page copy — /thank-you, one version each for the Request workers form,
+// the Contact page enquiry and the Join our crew application.
+// Visitors land here after a form is sent (lib/thankYou.ts).
 //
 // Not here, because editors already change them elsewhere:
 //   • the pill and the message under the heading: each form's success title

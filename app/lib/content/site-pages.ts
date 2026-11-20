@@ -131,12 +131,12 @@ export const SITE_PAGES = {
     },
   },
 
-  // One page, three versions: /thank-you/request (Request workers form),
-  // /thank-you/enquiry (Contact page) and /thank-you/application (Join our crew).
+  // One page (/thank-you), three versions: after the Request workers form,
+  // the Contact page enquiry and the Join our crew application.
   "thank-you": {
     title: "Thank you",
     description: "Page shown after any form is sent: greeting, next steps and quick contact",
-    path: "/thank-you/request",
+    path: "/thank-you",
     defaults: prepareDefaults(THANK_YOU_PAGE) as unknown as PlainObject,
     sections: {
       meta: SEO,
