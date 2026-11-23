@@ -30,6 +30,7 @@ Every cached fetch carries **tags**. Clearing a tag refreshes only the content t
 | `jmt-service-list` | JMT service list and navbar "Services" dropdown |
 | `jmt-service-<slug>` | One JMT service page (`/service/<slug>`) |
 | `jmt-page-<key>` | JMT About, Contact, Join our crew (`about`, `contact`, `join-our-crew`) |
+| `jmt-seo` | SEO & Scripts: GTM, custom scripts and JSON-LD for every JMT page |
 | `post-list`, `post-<slug>` | Blog list and one article (main site) |
 | `service-list`, `service-<slug>` | Main-site division pages |
 | `package-list`, `packages-<page>` | Package blocks and the pages they're injected into |
@@ -67,6 +68,7 @@ list have a small ↻ icon. It clears that screen's tags on both sites.
 | Services (list header) | `jmt-service-list` + every published page (up to 49) |
 | Services (row / editor) | `jmt-service-list`, `jmt-service-<slug>` |
 | Site pages | `jmt-page-<key>` |
+| SEO & Scripts | `jmt-seo` |
 | Header / Footer menu | `header-menu` / `footer-menu` |
 | Blog (row) | `post-list`, `post-<slug>` |
 | Blog categories | `post-list` |

@@ -35,6 +35,7 @@ import {
   type PlainObject,
 } from "@/lib/sitePages/mergeContent";
 import type { SitePageDefinition } from "@/app/lib/content/site-pages";
+import SeoScriptsNote from "@/components/seo-editor/SeoScriptsNote";
 
 type Path = (string | number)[];
 
@@ -483,9 +484,12 @@ export default function ContentEditor({
             onToggle={() => onToggle(key)}
           >
             {key === "meta" && (
-              <p className="text-xs text-warning/80">
-                Not shown on the page — browser tab title, Google results and link previews only.
-              </p>
+              <>
+                <p className="text-xs text-warning/80">
+                  Not shown on the page — browser tab title, Google results and link previews only.
+                </p>
+                <SeoScriptsNote path={page.path} />
+              </>
             )}
             {fields}
             <div className="flex justify-end pt-2">

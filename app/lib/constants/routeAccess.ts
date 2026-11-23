@@ -37,6 +37,8 @@ export const ROUTE_ACCESS: readonly RouteRule[] = [
   ["/dashboard/packages/update-package", P.PACKAGES_MANAGE],
 
   ["/dashboard/media", P.MEDIA_MANAGE],
+  // Either one opens the screen; each section shows only what the user may edit.
+  ["/dashboard/seo", [P.SEO_MANAGE, P.SEO_SCRIPTS]],
 
   // Leads
   ["/dashboard/leads", P.LEADS_VIEW],

@@ -46,6 +46,7 @@ import {
 import type { ServicePageContent, ServiceSectionKey } from "@/types/service";
 import { liveSiteUrl, useDraftPreview } from "@/hooks/useDraftPreview";
 import { useServiceAutosave } from "@/hooks/useServiceAutosave";
+import SeoScriptsNote from "@/components/seo-editor/SeoScriptsNote";
 
 type Status = "draft" | "published";
 interface EditorState {
@@ -357,6 +358,7 @@ export default function JmtServiceEditorPage() {
             Meta title and description do not appear on the page itself — only in the browser tab, Google results and
             link previews. To change the text under the headline, edit <strong>Hero → Subtitle</strong>.
           </p>
+          {liveSlug && <SeoScriptsNote path={`/service/${liveSlug}`} />}
           <TextField
             label="Meta title"
             hint={`${content.meta.title.length} characters — about 50–60 is ideal`}
