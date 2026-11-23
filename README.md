@@ -150,6 +150,8 @@ Access depends on the user's **role**. A role is a named set of **permissions**.
 | `services.manage` | Service pages |
 | `packages.manage` | Packages |
 | `media.manage` | Media library (anyone with a content permission can still upload images from inside an editor) |
+| `seo.manage` | SEO & Scripts: structured data (JSON-LD), site-wide and per page |
+| `seo.scripts` | SEO & Scripts: the Google Tag Manager ID and custom script snippets. These run code on the live website, so give it only to trusted admins |
 | `leads.view` / `leads.manage` | See client enquiries / change status, edit, add and delete them |
 | `applications.view` / `applications.manage` | See Join Our Crew worker applications / change status and delete them |
 | `users.manage` | Users: create, change role, reset password, delete |
@@ -162,10 +164,12 @@ The built-in roles are created by `npm run seed:roles`:
 |---|---|---|
 | **Super Admin** | everything | Locked. Can't be edited or deleted. |
 | **Admin** | everything except `roles.manage` | Permissions can be edited; can't be deleted |
-| **Editor** | content, posts, services, packages, media | Contributors were merged into this role |
+| **Editor** | content, posts, services, packages, media, `seo.manage` | Contributors were merged into this role |
 | **Leads Manager** | leads and applications (view and manage) | |
 
 You can add your own roles, such as "Recruiter" with only the applications permissions.
+
+**After adding a new permission** (such as `seo.manage` / `seo.scripts`): `npm run seed:roles` refreshes only the Super Admin role, so existing Admin and Editor roles don't get it automatically. A Super Admin ticks it on those roles in **Administration → Roles**: `seo.manage` + `seo.scripts` for Admin, `seo.manage` for Editor.
 
 **Rules enforced by the API** (`app/lib/server/rbac.ts`):
 - There is exactly one Super Admin account. Nobody can give someone the Super Admin role.
@@ -193,6 +197,7 @@ CONTENT
 ├─ Contact                     /dashboard/site-pages/contact            content.edit
 ├─ Join Our Crew               /dashboard/site-pages/join-our-crew      content.edit
 ├─ Thank You                   /dashboard/site-pages/thank-you          content.edit
+├─ SEO & Scripts               /dashboard/seo[?scope=/path]             seo.manage or seo.scripts
 └─ Terms & Policy              /dashboard/terms-policy                  content.edit
 LEADS
 ├─ Leads                       /dashboard/leads                         leads.view
@@ -392,3 +397,38 @@ If `prisma/schema.prisma` changed, preview the change and apply it with `npm run
 - **A form says "Too many submissions".** The spam limit was hit (see [Leads](#leads)). It clears after 10 minutes.
 - **An upload fails with "File too large" on Vercel.** The limit there is 4 MB. Resize the image first.
 - **`npm run typecheck` reports missing `app/dashboard/jmt-services/...` modules.** Those are stale generated types in `.next/` from removed pages. Delete the `.next` folder and run it again.
+
+---
+
+## SEO & Scripts
+
+**Dashboard → SEO & Scripts** (`app/dashboard/seo`) adds tracking and structured data to the Joy Maa Tara site without a deploy.
+
+| What | Where it shows | Permission |
+|---|---|---|
+| Google Tag Manager container ID | Every page (GTM script, plus the `<noscript>` iframe right after `<body>`) | `seo.scripts` |
+| Custom scripts (pasted vendor snippets) | Site-wide, or one page | `seo.scripts` |
+| Schema / JSON-LD | Site-wide, or one page | `seo.manage` |
+
+- **Use GTM for tracking.** GA4, Google Ads, Meta Pixel, Clarity and similar tags are added inside GTM. Custom scripts are for tools GTM can't handle.
+- **JSON-LD is rendered on the server** into the page HTML, never through GTM, because search engines read it from the HTML.
+- **Custom scripts are allow-listed.** Only top-level `<script>`, `<noscript>`, `<meta>` and `<link>` tags are accepted, with https URLs and no `on*` handlers. The snippet is parsed on save (`app/lib/content/seo.ts`) and the website renders the parsed form, never the raw text.
+- **Timing.** *Early* runs before the page is interactive (`beforeInteractive`, site-wide only). *Default* runs after it is interactive. *Lazy* runs when the browser is idle.
+- **Test traffic is left out.** GTM and custom scripts don't load on Vercel preview deployments or while previewing unsaved edits. JSON-LD always loads.
+
+**Storage.** Table `jmt_seo`, one row per scope: `global`, or a page path (`/`, `/about`, `/service/<slug>`). Renaming a service slug moves its row, and deleting the service deletes it. A row whose page no longer exists is listed as **No page**.
+
+**API.**
+
+| Route | Purpose |
+|---|---|
+| `GET /api/seo` | Dashboard overview: the site-wide row and the page list |
+| `GET`, `PUT`, `DELETE /api/seo/entry?scope=…` | One scope |
+| `GET /api/seo/client` | Public. The whole config for jmt-frontend (`server/seo.ts`): enabled scripts only, parsed nodes only |
+
+Every save expires the `jmt-seo` cache tag on the website.
+
+**On the website.**
+- `app/layout.tsx` renders the site-wide items.
+- Each page renders its own with `<PageSeo path=… />` (`components/seo/SeoTags.tsx`).
+- **A new page must add that line**, using the same path as its canonical, or its page-level SEO won't show.

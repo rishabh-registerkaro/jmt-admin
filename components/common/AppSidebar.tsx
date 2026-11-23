@@ -25,6 +25,7 @@ import {
   ClipboardList,
   ShieldCheck,
   PartyPopper,
+  SearchCode,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -77,7 +78,8 @@ interface NavSubItem {
   title: string;
   url: string;
   icon: LucideIcon;
-  permission?: Permission;
+  /** A list means any one of them. */
+  permission?: Permission | readonly Permission[];
 }
 interface NavItem extends NavSubItem {
   hasSubmenu?: boolean;
@@ -170,6 +172,13 @@ const navigationItems: NavGroup[] = [
         icon: PartyPopper,
         permission: PERMISSIONS.CONTENT_EDIT,
       },
+      // GTM, custom scripts and JSON-LD for every page (app/dashboard/seo).
+      {
+        title: "SEO & Scripts",
+        url: "/dashboard/seo",
+        icon: SearchCode,
+        permission: [PERMISSIONS.SEO_MANAGE, PERMISSIONS.SEO_SCRIPTS],
+      },
     ],
   },
   {
@@ -221,11 +230,11 @@ const navigationItems: NavGroup[] = [
 /** Keeps only the items (and sub-items) the user may open; drops empty groups. */
 const filterNavigationByPermission = (
   groups: NavGroup[],
-  can: (perm: Permission) => boolean,
+  can: (perm: Permission | readonly Permission[]) => boolean,
   signedIn: boolean,
 ): NavGroup[] => {
   if (!signedIn) return [];
-  const allowed = (perm?: Permission) => !perm || can(perm);
+  const allowed = (perm?: Permission | readonly Permission[]) => !perm || can(perm);
   return groups
     .map((group) => ({
       ...group,

@@ -10,6 +10,8 @@ export const PERMISSIONS = {
   SERVICES_MANAGE: "services.manage",
   PACKAGES_MANAGE: "packages.manage",
   MEDIA_MANAGE: "media.manage",
+  SEO_MANAGE: "seo.manage",
+  SEO_SCRIPTS: "seo.scripts",
   LEADS_VIEW: "leads.view",
   LEADS_MANAGE: "leads.manage",
   APPLICATIONS_VIEW: "applications.view",
@@ -40,6 +42,8 @@ export const PERMISSION_CATALOG: readonly PermissionInfo[] = [
   { key: PERMISSIONS.SERVICES_MANAGE, group: "Website content", grantable: true, label: "Manage services", description: "Create, edit and delete service pages" },
   { key: PERMISSIONS.PACKAGES_MANAGE, group: "Website content", grantable: true, label: "Manage packages", description: "Main-website package blocks", hidden: true },
   { key: PERMISSIONS.MEDIA_MANAGE, group: "Website content", grantable: true, label: "Media library", description: "Upload, browse and delete media files" },
+  { key: PERMISSIONS.SEO_MANAGE, group: "Website content", grantable: true, label: "SEO & schema", description: "Structured data (JSON-LD) for the whole site and each page" },
+  { key: PERMISSIONS.SEO_SCRIPTS, group: "Website content", grantable: true, label: "Tracking & custom scripts", description: "Google Tag Manager ID and custom script snippets. These run code on the live website: give only to trusted admins" },
   { key: PERMISSIONS.LEADS_VIEW, group: "Leads", grantable: true, label: "View leads", description: "See client enquiries" },
   { key: PERMISSIONS.LEADS_MANAGE, group: "Leads", grantable: true, label: "Manage leads", description: "Change status, edit, add and delete enquiries" },
   { key: PERMISSIONS.APPLICATIONS_VIEW, group: "Leads", grantable: true, label: "View applications", description: "See Join Our Crew worker applications" },
@@ -59,6 +63,7 @@ export const CONTENT_PERMISSIONS: readonly Permission[] = [
   PERMISSIONS.SERVICES_MANAGE,
   PERMISSIONS.PACKAGES_MANAGE,
   PERMISSIONS.MEDIA_MANAGE,
+  PERMISSIONS.SEO_MANAGE,
 ];
 
 export function isPermission(value: unknown): value is Permission {
@@ -118,6 +123,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       PERMISSIONS.SERVICES_MANAGE,
       PERMISSIONS.PACKAGES_MANAGE,
       PERMISSIONS.MEDIA_MANAGE,
+      PERMISSIONS.SEO_MANAGE,
     ],
     legacyRole: "editor",
   },

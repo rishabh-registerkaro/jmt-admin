@@ -370,3 +370,25 @@ model JmtSitePage {
 
   @@map("jmt_site_pages")
 }
+
+// SEO & tracking for the Joy Maa Tara site (jmt-frontend). One row per scope:
+//   "global"                              → every page (also holds the GTM ID)
+//   "/", "/about", "/service/<slug>", …   → that page only
+// Edited at /dashboard/seo; read by the frontend through the public
+// GET /api/seo/client. Shapes and validation: app/lib/server/jmtSeo.ts.
+model JmtSeo {
+  id        String   @id @default(cuid())
+  scope     String   @unique @db.VarChar(191)
+  // Google Tag Manager container ID ("GTM-XXXXXXX"). Global row only.
+  gtmId     String?  @db.VarChar(20)
+  // JSON-LD objects, already parsed and validated.
+  schemas   Json?
+  // Custom snippets: [{ id, name, enabled, timing, code, nodes }].
+  // `code` is what the admin pasted (for editing); `nodes` is its parsed,
+  // allow-listed form, the only part the website renders.
+  scripts   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("jmt_seo")
+}

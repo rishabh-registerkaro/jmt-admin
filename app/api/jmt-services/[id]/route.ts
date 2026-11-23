@@ -14,6 +14,7 @@ import {
   validSlug,
   validTitle,
 } from "@/app/lib/server/jmtServicePages";
+import { moveServiceSeo } from "@/app/lib/server/jmtSeo";
 
 // One JMT service page — dashboard read / save / delete.
 
@@ -100,6 +101,8 @@ export async function PUT(req: NextRequest, { params }: Context) {
     // These edits are saved now, so the autosave of them is done with.
     if (body.content !== undefined) await prisma.jmtServiceAutosave.deleteMany({ where: { pageId: id, userId: auth.id } });
 
+    // The page's SEO & Scripts entry follows it to the new URL.
+    if (page.slug !== existing.slug) await moveServiceSeo(existing.slug, page.slug);
     // Old and (if renamed) new URL both change on the live site.
     await revalidatePages(existing.slug, page.slug);
     return NextResponse.json({ success: true, message: "Service page saved", page: serialize(page) });
@@ -119,6 +122,7 @@ export async function DELETE(req: NextRequest, { params }: Context) {
     const existing = await prisma.jmtServicePage.findUnique({ where: { id }, select: { slug: true } });
     if (!existing) return notFound();
     await prisma.jmtServicePage.delete({ where: { id } });
+    await moveServiceSeo(existing.slug, null);
     await revalidatePages(existing.slug);
     return NextResponse.json({ success: true, message: "Service page deleted" });
   } catch (error) {

@@ -47,6 +47,7 @@ import ContactEditor from "@/components/homepage-editor/ContactEditor";
 import SiteEditor from "@/components/homepage-editor/SiteEditor";
 import { liveSiteUrl, useDraftPreview } from "@/hooks/useDraftPreview";
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
+import SeoScriptsNote from "@/components/seo-editor/SeoScriptsNote";
 // Must match HOMEPAGE_CHANNEL in jmt-frontend/components/homepage/LiveRefresh.tsx.
 // BroadcastChannel is same-origin only, so it reaches homepage tabs only when the
 // frontend is served from the same origin as this admin; otherwise open tabs
@@ -326,6 +327,7 @@ export default function HomepageDashboardPage() {
             These texts do not appear on the website itself. To change the text under the main headline,
             edit <strong>Hero → Subtitle</strong>.
           </p>
+          <SeoScriptsNote path="/" />
           <TextField
             label="Meta title"
             value={state.metaTitle}

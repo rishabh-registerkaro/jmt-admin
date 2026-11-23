@@ -6,6 +6,12 @@
 //   • main website      — service-*, post-*, package*, about/contact/terms, menus
 //   • jmt-frontend      — homepage*, jmt-service-*, jmt-page-*, menus
 
+/**
+ * SEO & Scripts (GTM, custom scripts, JSON-LD) for every Joy Maa Tara page —
+ * jmt-frontend server/seo.ts fetches the whole config under this one tag.
+ */
+export const JMT_SEO_TAG = "jmt-seo";
+
 /** Tags that don't depend on any record. */
 export const STATIC_TAGS = [
   "homepage",
@@ -19,6 +25,7 @@ export const STATIC_TAGS = [
   "about-page",
   "contact-page",
   "terms-policy",
+  JMT_SEO_TAG,
 ] as const;
 
 /** Most tags one revalidate request may carry (both frontends enforce it). */
